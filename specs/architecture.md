@@ -1,5 +1,6 @@
 # Technical Architecture Document
 ## Dell Internal Short-Form Video Platform ("DellClips")
+### Version 2.0
 
 ---
 
@@ -16,9 +17,13 @@ replaced without modifying core business logic.
   strictly decoupled.
 - **Component Replaceability:** Every external service is accessed through
   an abstract Port (interface), with the current vendor implemented as a
-  swappable Adapter.
+  swappable Adapter. No vendor-specific naming exists in the core domain.
 - **Serverless-First:** No servers to manage; compute, database, and CDN
   scale automatically.
+- **Free-Tier Maximization:** The MVP stack is designed to run at near-zero
+  cost (~$6-10/month) by leveraging free tiers wherever possible.
+- **AI-Assisted Development:** ~90% of the codebase will be generated via
+  AI coding assistants, dramatically reducing time-to-launch.
 
 ---
 
@@ -32,7 +37,7 @@ core business logic.
 flowchart TB
     subgraph CORE ["🧠 Application Core (Business Logic)"]
         direction TB
-        BL["Pure Business Rules<br/>─────────────────────<br/>• Create/delete video records<br/>• Validate upload permissions<br/>• Calculate feed ranking<br/>• Manage likes/comments<br/><br/>⚠️ Contains ZERO vendor imports"]
+        BL["Pure Business Rules<br/>─────────────────────<br/>• Create/delete video records<br/>• Validate upload permissions<br/>• Calculate feed ranking<br/>• Manage likes/comments<br/><br/>⚠️ Contains ZERO vendor imports<br/>⚠️ Contains ZERO vendor-specific naming"]
     end
 
     subgraph PORTS ["🔌 Ports (Abstract Interfaces)"]
@@ -42,24 +47,27 @@ flowchart TB
         P3["VideoPort"]
         P4["EmailPort"]
         P5["StoragePort"]
+        P6["PlayerPort"]
     end
 
-    subgraph ADAPTERS_CURRENT ["🟢 Current Adapters (V1)"]
+    subgraph ADAPTERS_CURRENT ["🟢 Current Adapters (V1 — MVP)"]
         direction LR
         A1["Auth.js<br/>(Magic Links)"]
         A2["Neon<br/>(PostgreSQL)"]
-        A3["Mux<br/>(Video CDN)"]
+        A3["Cloudflare<br/>Stream"]
         A4["Resend<br/>(Email)"]
         A5["Vercel Blob<br/>(Avatars)"]
+        A6["hls.js<br/>(Video Player)"]
     end
 
     subgraph ADAPTERS_FUTURE ["🔵 Future Adapters (V2 Swap)"]
         direction LR
         F1["Okta / Entra<br/>(Enterprise SSO)"]
-        F2["Supabase DB<br/>(PostgreSQL)"]
-        F3["Cloudflare<br/>Stream"]
+        F2["Supabase or<br/>AWS RDS"]
+        F3["Mux or<br/>Bunny Stream"]
         F4["SendGrid<br/>(Email)"]
-        F5["AWS S3<br/>(Storage)"]
+        F5["AWS S3 or<br/>MinIO"]
+        F6["Mux Player or<br/>Video.js"]
     end
 
     CORE --- PORTS
@@ -68,12 +76,14 @@ flowchart TB
     P3 --- A3
     P4 --- A4
     P5 --- A5
+    P6 --- A6
 
     A1 -.-|"swap"| F1
     A2 -.-|"swap"| F2
     A3 -.-|"swap"| F3
     A4 -.-|"swap"| F4
     A5 -.-|"swap"| F5
+    A6 -.-|"swap"| F6
 
     style CORE fill:#fef3c7,stroke:#d97706,stroke-width:3px
     style PORTS fill:#e0e7ff,stroke:#4338ca,stroke-width:2px
@@ -101,16 +111,48 @@ export interface VideoService {
 }
 ```
 
-**Adapter (Implementation) — swappable per vendor:**
+**Adapter (Default — Cloudflare Stream):**
 
 ```typescript
-// lib/adapters/mux-video-service.ts
+// lib/adapters/cloudflare-video-service.ts
 import { VideoService } from '../ports/video-service';
 
-export class MuxVideoService implements VideoService {
-  async createUploadUrl(userId: string) { /* Mux API calls */ }
-  getPlaybackUrl(assetId: string) { /* Mux URL format */ }
-  async deleteVideo(assetId: string) { /* Mux delete API */ }
+export class CloudflareVideoService implements VideoService {
+  private accountId = process.env.CF_ACCOUNT_ID!;
+  private apiToken = process.env.CF_STREAM_TOKEN!;
+
+  async createUploadUrl(userId: string) {
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/stream/direct_upload`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${this.apiToken}` },
+        body: JSON.stringify({
+          maxDurationSeconds: 60,
+          meta: { userId },
+        }),
+      }
+    );
+    const data = await res.json();
+    return {
+      uploadUrl: data.result.uploadURL,
+      assetId: data.result.uid,
+    };
+  }
+
+  getPlaybackUrl(assetId: string) {
+    return `https://customer-${this.accountId}.cloudflarestream.com/${assetId}/manifest/video.m3u8`;
+  }
+
+  async deleteVideo(assetId: string) {
+    await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/stream/${assetId}`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${this.apiToken}` },
+      }
+    );
+  }
 }
 ```
 
@@ -118,51 +160,95 @@ export class MuxVideoService implements VideoService {
 
 ```typescript
 // lib/services.ts (Composition Root)
-import { MuxVideoService } from './adapters/mux-video-service';
+import { CloudflareVideoService } from './adapters/cloudflare-video-service';
 import { NeonDatabaseService } from './adapters/neon-database-service';
 import { ResendEmailService } from './adapters/resend-email-service';
 
-// To swap Mux for Cloudflare, change ONLY this file:
-export const videoService = new MuxVideoService();
+// To swap ANY provider, change ONLY the import + instantiation here.
+// Zero changes to business logic, API routes, or UI components.
+export const videoService = new CloudflareVideoService();
 export const databaseService = new NeonDatabaseService();
 export const emailService = new ResendEmailService();
 ```
-
-**Swap Example — switching from Mux to Cloudflare Stream:**
-1. Create `lib/adapters/cloudflare-video-service.ts` implementing
-   `VideoService`
-2. Change one line in `lib/services.ts`:
-   `export const videoService = new CloudflareVideoService();`
-3. Zero changes to any business logic, API routes, or UI components.
 
 ---
 
 ### 3. Technology Stack
 
-| Layer              | Technology                  | Port Interface     | Purpose                                                            |
-| :----------------- | :-------------------------- | :----------------- | :----------------------------------------------------------------- |
-| **Framework**      | Next.js 15 (App Router)     | —                  | Full-stack React framework: UI + Server Actions + API Routes       |
-| **Language**       | TypeScript                  | —                  | Type safety across the entire codebase                             |
-| **Styling**        | Tailwind CSS                | —                  | Utility-first CSS for rapid mobile-first UI development            |
-| **PWA**            | Serwist                     | —                  | Service worker, manifest, install prompts                          |
-| **Authentication** | Auth.js + Resend            | `AuthPort`         | Magic Link login restricted to `@dell.com`                         |
-| **Database**       | PostgreSQL on Neon          | `DatabasePort`     | All relational data (users, videos, likes, comments)               |
-| **ORM**            | Drizzle ORM                 | (Part of DB layer) | Type-safe queries and schema migrations                            |
-| **Video Platform** | Mux Video                   | `VideoPort`        | Upload, transcode, HLS adaptive streaming, global CDN              |
-| **Video Player**   | `@mux/mux-player-react`     | `PlayerPort`       | Drop-in React component (swappable to Video.js, hls.js, etc.)     |
-| **Hosting**        | Vercel                      | —                  | Zero-config deployment, edge network, auto-scaling                 |
-| **Email**          | Resend                      | `EmailPort`        | Transactional email for magic links                                |
+| Layer              | Technology                  | Port Interface     | Free Tier?   | Purpose                                                            |
+| :----------------- | :-------------------------- | :----------------- | :----------- | :----------------------------------------------------------------- |
+| **Framework**      | Next.js 15 (App Router)     | —                  | ✅ OSS        | Full-stack React: UI + Server Actions + API Routes                 |
+| **Language**       | TypeScript                  | —                  | ✅ OSS        | Type safety across the entire codebase                             |
+| **Styling**        | Tailwind CSS                | —                  | ✅ OSS        | Utility-first CSS for rapid mobile-first UI development            |
+| **PWA**            | Serwist                     | —                  | ✅ OSS        | Service worker, manifest, install prompts                          |
+| **Authentication** | Auth.js + Resend            | `AuthPort`         | ✅ Free       | Magic Link login restricted to `@dell.com`                         |
+| **Database**       | PostgreSQL on Neon          | `DatabasePort`     | ✅ Free       | All relational data (users, videos, likes, comments)               |
+| **ORM**            | Drizzle ORM                 | (Part of DB layer) | ✅ OSS        | Type-safe queries and schema migrations                            |
+| **Video Platform** | Cloudflare Stream           | `VideoPort`        | ⚠️ ~$5-10/mo | Upload, transcode, HLS adaptive streaming, global CDN             |
+| **Video Player**   | hls.js (or Video.js)        | `PlayerPort`       | ✅ OSS        | Vendor-neutral HLS player; works with any HLS source              |
+| **Hosting**        | Vercel                      | —                  | ✅ Free       | Zero-config deployment, edge network, auto-scaling                 |
+| **Email**          | Resend                      | `EmailPort`        | ✅ Free       | Transactional email for magic links (3,000/mo free)                |
 
 ---
 
-### 4. Why PostgreSQL?
+### 4. Where Videos Are Stored
+
+This section explains the complete lifecycle of a video file — from upload
+to playback. Understanding this is critical: **your application never
+stores, hosts, or serves video files.** Videos live entirely within the
+video platform provider's infrastructure.
+
+#### 4.1 Video Storage Architecture
+
+```mermaid
+flowchart LR
+    A["📱 User records<br/>30-sec video<br/>(Raw MP4, ~50-150 MB)"] -->|"Direct Upload"| B["☁️ Cloudflare Stream<br/>Ingestion Server"]
+    B -->|"Transcode to<br/>360p / 720p / 1080p"| C["📦 Cloudflare R2<br/>Object Storage<br/>(Permanent Home)"]
+    C -->|"Cache at edge"| D["🌍 300+ CDN<br/>Edge Servers<br/>Worldwide"]
+    D -->|"HLS stream<br/>(adaptive bitrate)"| E["📱 Viewer watches<br/>with zero buffering"]
+
+    style B fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    style C fill:#d1fae5,stroke:#059669,stroke-width:3px
+    style D fill:#dbeafe,stroke:#2563eb,stroke-width:2px
+```
+
+#### 4.2 Storage Layers Explained
+
+| Layer | What Lives There | Where Physically | Managed By | You Touch It? |
+| :---- | :--------------- | :--------------- | :--------- | :------------ |
+| **Ingestion** | Raw MP4 uploaded by user | Video platform's upload servers | Cloudflare | ❌ No |
+| **Transcoding** | Temporary processing (converting to multiple resolutions) | Video platform's compute | Cloudflare | ❌ No |
+| **Permanent Storage** | Transcoded HLS chunks (`.ts` segments) + manifests (`.m3u8`) in 360p, 720p, 1080p | **Cloudflare R2** (S3-compatible object storage) | Cloudflare | ❌ No |
+| **Edge Cache** | Cached copies of popular video chunks for fast delivery | **300+ CDN edge nodes** distributed globally | Cloudflare | ❌ No |
+| **Your Database** | **Only metadata**: title, description, user ID, and a `playback_id` text string pointing to the video | Neon PostgreSQL | You | ✅ Yes |
+
+#### 4.3 What Your Database Actually Stores Per Video
+
+```sql
+-- This is ALL that lives in your database per video:
+INSERT INTO videos (video_playback_id, title, user_id, status)
+VALUES ('a1b2c3d4e5f6', 'My Cool Demo', 'user-uuid-here', 'ready');
+
+-- Total storage per video record: ~0.5 KB
+-- Compare to the actual video file: ~50,000 KB (50 MB)
+-- Your database stores 0.001% of the total data
+```
+
+#### 4.4 The Key Insight
+
+Your application is a **lightweight metadata layer + beautiful UI** sitting
+on top of the video platform's storage and CDN infrastructure. You never
+touch a video file after the user uploads it. The `video_playback_id`
+string in your database is essentially a pointer — like a URL — to the
+video living on the CDN.
+
+---
+
+### 5. Why PostgreSQL?
 
 PostgreSQL is chosen as the primary database for the following reasons:
 
-#### 4.1 Extensibility ("The Everything Database")
-
-PostgreSQL is not just a relational database. Its architecture allows it
-to serve as multiple database types simultaneously:
+#### 5.1 Extensibility ("The Everything Database")
 
 | Capability                      | PostgreSQL Feature        | Separate System It Replaces    |
 | :------------------------------ | :------------------------ | :----------------------------- |
@@ -172,91 +258,73 @@ to serve as multiple database types simultaneously:
 | AI/Vector similarity search     | pgvector extension        | Pinecone, Weaviate             |
 | Geospatial queries              | PostGIS extension         | Specialized geo databases      |
 
-This means we maintain **one database system** instead of 3-4 separate ones.
+One database system instead of 3-4 separate ones.
 
-#### 4.2 Concurrency & Performance
+#### 5.2 Concurrency & Performance
 
 PostgreSQL uses **Multi-Version Concurrency Control (MVCC)**. When one user
-writes a like or comment, it does **not** lock out other users from reading
-the video feed. This is critical for a high-traffic, real-time-feeling
-application.
+writes a like or comment, it does not lock out other users from reading
+the video feed.
 
-#### 4.3 Reliability & Data Integrity
+#### 5.3 Reliability & Data Integrity
 
-- **Strictly ACID-compliant**: Data consistency is guaranteed even during
-  system crashes, via Write-Ahead Logging (WAL).
-- **Open source**: Zero vendor lock-in. You can migrate between any
-  PostgreSQL-compatible host (Neon, Supabase, AWS RDS, self-hosted)
-  with zero schema changes.
+- **Strictly ACID-compliant**: Data consistency guaranteed even during
+  crashes via Write-Ahead Logging (WAL).
+- **Open source**: Zero vendor lock-in. Migrate between any PostgreSQL
+  host with zero schema changes.
 
-#### 4.4 Replaceability
+#### 5.4 Replaceability
 
-Because all database access goes through the `DatabasePort` interface and
-Drizzle ORM, swapping from Neon to Supabase, AWS RDS, or Azure Database
-requires changing only the connection string and adapter configuration.
-The ORM-generated SQL is standard PostgreSQL and works identically across
-all providers.
+All database access goes through the `DatabasePort` interface and Drizzle
+ORM. Swapping from Neon to Supabase, AWS RDS, or Azure Database requires
+changing only the connection string and adapter configuration.
 
 ---
 
-### 5. Where PostgreSQL Resides
+### 6. Where PostgreSQL Resides
 
-#### 5.1 Deployment Model by Environment
+#### 6.1 Deployment Model by Environment
 
-| Environment        | Deployment Model            | Service / Tool                 | Why                                                          |
-| :----------------- | :-------------------------- | :----------------------------- | :----------------------------------------------------------- |
-| **Local Dev**      | Containerized (Docker)      | `postgres:16` Docker image     | Instant setup, disposable, matches production schema         |
-| **Staging**        | Managed DBaaS (Branching)   | Neon Database Branch           | Free branch per preview deploy; isolated test data           |
-| **Production**     | Managed DBaaS               | **Neon Serverless PostgreSQL** | Auto-scaling, built-in pooling, zero idle cost               |
+| Environment        | Deployment Model            | Service / Tool                 |
+| :----------------- | :-------------------------- | :----------------------------- |
+| **Local Dev**      | Containerized (Docker)      | `postgres:16` Docker image     |
+| **Staging**        | Managed DBaaS (Branching)   | Neon Database Branch           |
+| **Production**     | Managed DBaaS               | Neon Serverless PostgreSQL     |
 
-#### 5.2 Why Managed DBaaS (Not Self-Hosted)?
+#### 6.2 Why Managed DBaaS (Not Self-Hosted)?
 
-| Concern                     | Self-Hosted (VPS)                      | Managed (Neon / Supabase)               |
+| Concern                     | Self-Hosted (VPS)                      | Managed (Neon)                          |
 | :-------------------------- | :------------------------------------- | :-------------------------------------- |
-| OS & security patches       | Your team's responsibility             | Handled automatically by provider       |
-| Automated failover          | Must configure manually (Patroni, etc.)| Built-in, automatic                     |
-| Backups & PITR              | Must set up and monitor pg_basebackup  | Built-in, one-click restore             |
-| Connection pooling           | Must deploy and manage PgBouncer       | Built-in to the service                 |
-| Scaling                     | Manual vertical scaling (resize VPS)   | Automatic scale-to-zero and scale-up    |
-| Cost at MVP scale           | ~$20-50/mo for always-on VPS           | $0-19/mo (scales to zero when idle)     |
+| OS & security patches       | Your responsibility                    | Automatic                               |
+| Automated failover          | Must configure manually                | Built-in                                |
+| Backups & PITR              | Must set up pg_basebackup              | Built-in, one-click restore             |
+| Connection pooling           | Must deploy PgBouncer                 | Built-in                                |
+| Scaling                     | Manual resize                          | Auto scale-to-zero                      |
+| Cost at MVP                 | ~$20-50/mo (always-on)                | $0 (free tier)                          |
 
-**Recommendation:** Use **Neon** for production. It is purpose-built for
-serverless applications on Vercel, includes built-in connection pooling,
-and supports database branching (like Git branches for your database),
-which maps perfectly to Vercel's preview deployment model.
+#### 6.3 Required PostgreSQL Infrastructure
 
-#### 5.3 Future Migration Path
+Whether self-hosted or managed, production PostgreSQL requires:
 
-If Dell IT requires the database to run on Dell-managed infrastructure:
+| Layer                  | Requirement                          | Managed by Neon? |
+| :--------------------- | :----------------------------------- | :--------------- |
+| **Storage**            | Persistent SSD block storage         | ✅ Yes            |
+| **Compute**            | Min 4 vCPUs, 16 GB RAM (production)  | ✅ Yes            |
+| **Connection Pooling** | PgBouncer or built-in pooler         | ✅ Yes            |
+| **Backups**            | Point-in-Time Recovery (PITR)        | ✅ Yes            |
+| **Replication**        | Read replicas                        | ✅ Yes            |
+| **Networking**         | Private VPC / firewall rules         | ✅ Yes            |
 
-1. Export the schema and data using `pg_dump`
-2. Import into AWS RDS, Azure Database for PostgreSQL, or a self-hosted
-   instance
+> When using Neon, all of this is handled automatically. You receive a
+> connection string and never configure infrastructure yourself.
+
+#### 6.4 Future Migration Path
+
+If Dell IT requires the database on Dell-managed infrastructure:
+1. Export with `pg_dump`
+2. Import into AWS RDS, Azure Database, or self-hosted PostgreSQL
 3. Update the connection string in the `DatabasePort` adapter
-4. Zero application code changes required
-
----
-
-### 6. Required Infrastructure for PostgreSQL
-
-Whether self-hosted or managed, a production PostgreSQL deployment requires
-the following foundational infrastructure:
-
-| Layer                  | Requirement                          | Details                                                                                        |
-| :--------------------- | :----------------------------------- | :--------------------------------------------------------------------------------------------- |
-| **Storage**            | Persistent SSD block storage         | SSDs are mandatory for high IOPS. Network File Systems (NFS) are not recommended.              |
-| **Compute**            | Min 4 vCPUs, 16 GB RAM (production)  | PostgreSQL uses a process-per-connection model; each active connection consumes memory.         |
-| **Connection Pooling** | PgBouncer or built-in pooler         | Prevents the database from being overwhelmed by concurrent serverless function invocations.     |
-| **Backups**            | Automated Point-in-Time Recovery     | Ability to restore to any second in time, not just nightly snapshots.                          |
-| **Replication**        | Read replicas                        | Feed reads (high volume) route to replicas; writes go to the primary.                          |
-| **Networking**         | Private VPC / firewall rules         | Database must never be publicly accessible; only the application servers connect.              |
-| **Monitoring**         | Query performance tracking           | Slow query logs, connection count monitoring, disk usage alerts.                               |
-
-> **Key Insight:** When using a managed service like Neon, **all of the
-> above is handled for you automatically**. You receive an optimized
-> connection string and never configure SSDs, PgBouncer, PITR, or
-> replication yourself. This is why DBaaS is strongly recommended for
-> a small team.
+4. Zero application code changes
 
 ---
 
@@ -273,19 +341,19 @@ flowchart TB
     end
 
     subgraph DATABASE ["🗄️ PostgreSQL (Neon)"]
-        C["Serverless PostgreSQL<br/>─────────────────<br/>• Users, Videos, Likes, Comments<br/>• JSONB for flexible metadata<br/>• Built-in connection pooling<br/>• Auto PITR backups<br/>• Database branching"]
+        C["Serverless PostgreSQL<br/>─────────────────<br/>• Users, Videos metadata<br/>• Likes, Comments<br/>• JSONB for flexible data<br/>• Built-in connection pooling<br/>• Free tier: 0.5 GB"]
     end
 
-    subgraph VIDEO ["🎬 Video Infrastructure (Mux)"]
-        D["Mux Video CDN<br/>─────────────────<br/>• Direct Upload Ingestion<br/>• Auto Transcoding (720p/1080p/4K)<br/>• HLS Adaptive Streaming<br/>• Global Edge Delivery"]
+    subgraph VIDEO ["🎬 Cloudflare Stream"]
+        D["Video Infrastructure<br/>─────────────────<br/>• Direct Upload Ingestion<br/>• Auto Transcoding<br/>• Permanent Storage (R2)<br/>• HLS Adaptive Streaming<br/>• 300+ Edge CDN Nodes"]
     end
 
-    subgraph EMAIL ["📧 Email Service (Resend)"]
-        E["Resend<br/>─────────────────<br/>• Magic Link Delivery<br/>• @dell.com domain verification"]
+    subgraph EMAIL ["📧 Resend"]
+        E["Email Service<br/>─────────────────<br/>• Magic Link Delivery<br/>• @dell.com verification<br/>• Free tier: 3,000/mo"]
     end
 
     A <-->|"UI Rendering &<br/>API Requests"| B
-    B <-->|"Read/Write via<br/>DatabasePort"| C
+    B <-->|"Read/Write metadata<br/>via DatabasePort"| C
     B -->|"1. Request Upload URL<br/>via VideoPort"| D
     D -->|"4. Webhook:<br/>Video Ready"| B
     A -->|"2. Direct Upload<br/>(Raw MP4)"| D
@@ -327,8 +395,6 @@ sequenceDiagram
 - Magic link tokens expire after 10 minutes
 - Sessions stored in secure, HttpOnly, SameSite cookies
 - CSRF protection built into Auth.js
-- **Replaceability:** Swap to Okta/Entra SSO by writing a new `AuthPort`
-  adapter — zero changes to any other part of the system
 
 #### 8.2 Video Upload Flow
 
@@ -336,29 +402,29 @@ sequenceDiagram
 sequenceDiagram
     participant U as User (PWA)
     participant V as Vercel (Next.js)
-    participant M as Mux Video CDN
+    participant CF as Cloudflare Stream
     participant DB as Neon (PostgreSQL)
 
     U->>V: 1. Request to upload a video
     V->>V: 2. Validate user session via AuthPort
-    V->>M: 3. Create Direct Upload URL via VideoPort
-    M-->>V: 4. Return signed upload URL
+    V->>CF: 3. Create Direct Upload URL via VideoPort
+    CF-->>V: 4. Return signed upload URL + video UID
     V-->>U: 5. Return signed upload URL to client
-    U->>M: 6. Upload raw MP4 DIRECTLY to Mux
-    Note over U,M: Video bypasses Vercel entirely<br/>(no timeout, no file-size limit)
-    M->>M: 7. Transcode to 720p, 1080p, 4K
-    M->>V: 8. Webhook: asset.ready (includes Playback ID)
-    V->>DB: 9. Save video metadata via DatabasePort
-    V-->>U: 10. Video appears in feed
+    U->>CF: 6. Upload raw MP4 DIRECTLY to Cloudflare
+    Note over U,CF: Video bypasses Vercel entirely<br/>(no timeout, no file-size limit)
+    CF->>CF: 7. Store original in R2 object storage
+    CF->>CF: 8. Transcode to 360p, 720p, 1080p HLS
+    CF->>CF: 9. Push HLS chunks to 300+ edge nodes
+    CF->>V: 10. Webhook: video ready (includes UID)
+    V->>DB: 11. Save video metadata + playback ID via DatabasePort
+    V-->>U: 12. Video appears in feed
 ```
 
 **Why Direct Upload?**
-- Vercel serverless functions have a 4.5 MB body size limit and a
+- Vercel serverless functions have a 4.5 MB body size limit and
   60-second execution timeout
-- A 30-second 1080p video can easily be 50-150 MB
-- Direct-to-Mux upload eliminates this bottleneck entirely
-- **Replaceability:** Swap Mux for Cloudflare Stream by writing a new
-  `VideoPort` adapter — the upload flow logic remains identical
+- A 30-second 1080p video can be 50-150 MB
+- Direct-to-Cloudflare upload eliminates this bottleneck
 
 #### 8.3 Video Playback Flow
 
@@ -367,20 +433,24 @@ sequenceDiagram
     participant U as User (PWA)
     participant V as Vercel (Next.js)
     participant DB as Neon (PostgreSQL)
-    participant M as Mux CDN (Edge)
+    participant CF as Cloudflare CDN (Edge)
 
     U->>V: 1. Scroll feed / load page
     V->>DB: 2. Fetch next batch of video metadata via DatabasePort
-    DB-->>V: 3. Return video records (inc. Playback IDs)
-    V-->>U: 4. Render feed with video player components
-    U->>M: 5. Player requests HLS manifest (.m3u8)
-    M-->>U: 6. Stream adaptive bitrate video segments
-    Note over U,M: Quality adapts automatically:<br/>360p on 3G, 1080p on Wi-Fi
+    DB-->>V: 3. Return video records (inc. playback IDs)
+    V-->>U: 4. Render feed with hls.js player components
+    U->>CF: 5. Player requests HLS manifest (.m3u8)
+    CF-->>U: 6. Stream adaptive bitrate video segments
+    Note over U,CF: Quality adapts automatically:<br/>360p on 3G, 1080p on Wi-Fi
 ```
 
 ---
 
 ### 9. Database Schema
+
+All column names are **vendor-neutral** — no references to Mux, Cloudflare,
+or any specific provider. This ensures the schema remains valid regardless
+of which video platform adapter is active.
 
 ```sql
 -- Users table
@@ -394,20 +464,20 @@ CREATE TABLE users (
     updated_at    TIMESTAMP DEFAULT NOW()
 );
 
--- Videos table
+-- Videos table (vendor-neutral column names)
 CREATE TABLE videos (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title           VARCHAR(500),
-    description     TEXT,
-    mux_asset_id    VARCHAR(255) UNIQUE NOT NULL,
-    mux_playback_id VARCHAR(255) UNIQUE NOT NULL,
-    mux_upload_id   VARCHAR(255),
-    status          VARCHAR(20) DEFAULT 'processing',
-    duration        FLOAT,
-    like_count      INTEGER DEFAULT 0,
-    comment_count   INTEGER DEFAULT 0,
-    created_at      TIMESTAMP DEFAULT NOW()
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id          UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title            VARCHAR(500),
+    description      TEXT,
+    video_asset_id   VARCHAR(255) UNIQUE NOT NULL,
+    video_playback_id VARCHAR(255) UNIQUE NOT NULL,
+    video_upload_id  VARCHAR(255),
+    status           VARCHAR(20) DEFAULT 'processing',
+    duration         FLOAT,
+    like_count       INTEGER DEFAULT 0,
+    comment_count    INTEGER DEFAULT 0,
+    created_at       TIMESTAMP DEFAULT NOW()
 );
 
 -- Likes table
@@ -460,7 +530,7 @@ erDiagram
         uuid id PK
         uuid user_id FK
         string title
-        string mux_playback_id UK
+        string video_playback_id UK
         string status
         float duration
         int like_count
@@ -504,7 +574,7 @@ dellclips/
 │   │   └── profile/[id]/page.tsx
 │   └── api/
 │       ├── auth/[...nextauth]/
-│       ├── mux/
+│       ├── video/
 │       │   ├── upload-url/route.ts
 │       │   └── webhook/route.ts
 │       └── videos/
@@ -514,23 +584,24 @@ dellclips/
 │               └── comments/route.ts
 │
 ├── lib/
-│   ├── ports/                      # ← Abstract Interfaces (stable)
-│   │   ├── auth-service.ts         #   AuthPort interface
-│   │   ├── database-service.ts     #   DatabasePort interface
-│   │   ├── video-service.ts        #   VideoPort interface
-│   │   └── email-service.ts        #   EmailPort interface
+│   ├── ports/                              # Abstract Interfaces (stable)
+│   │   ├── auth-service.ts                 #   AuthPort interface
+│   │   ├── database-service.ts             #   DatabasePort interface
+│   │   ├── video-service.ts                #   VideoPort interface
+│   │   ├── email-service.ts                #   EmailPort interface
+│   │   └── player-config.ts                #   PlayerPort interface
 │   │
-│   ├── adapters/                   # ← Vendor Implementations (swappable)
-│   │   ├── authjs-auth-service.ts  #   Auth.js adapter
-│   │   ├── neon-database-service.ts#   Neon/Drizzle adapter
-│   │   ├── mux-video-service.ts    #   Mux adapter
-│   │   └── resend-email-service.ts #   Resend adapter
+│   ├── adapters/                           # Vendor Implementations (swappable)
+│   │   ├── authjs-auth-service.ts          #   Auth.js Magic Link adapter
+│   │   ├── neon-database-service.ts        #   Neon + Drizzle adapter
+│   │   ├── cloudflare-video-service.ts     #   Cloudflare Stream adapter
+│   │   └── resend-email-service.ts         #   Resend adapter
 │   │
-│   ├── services.ts                 # ← Composition Root (swap vendors here)
+│   ├── services.ts                         # Composition Root (swap vendors here)
 │   └── utils.ts
 │
 ├── components/
-│   ├── video-player.tsx
+│   ├── video-player.tsx                    # Uses hls.js (vendor-neutral)
 │   ├── video-card.tsx
 │   ├── video-feed.tsx
 │   ├── upload-form.tsx
@@ -544,45 +615,54 @@ dellclips/
 │   ├── icons/
 │   └── sw.js
 │
-├── docker-compose.yml              # ← Local dev PostgreSQL
+├── docker-compose.yml                      # Local dev PostgreSQL
 ├── tailwind.config.ts
 ├── next.config.ts
 ├── package.json
 └── tsconfig.json
 ```
 
-Key difference from the previous version: the `lib/ports/` and
-`lib/adapters/` directories enforce the Hexagonal Architecture pattern.
-All vendor-specific code is isolated in adapters.
-
 ---
 
 ### 11. Key Design Decisions
 
-| Decision                                | Rationale                                                                                                      |
-| :-------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
-| **Hexagonal Architecture**              | Every external service is behind an interface. Swapping vendors requires changing only the adapter file and one line in the composition root. |
-| **PWA over Native Apps**                | Eliminates App Store / Play Store approval; single codebase for all platforms.                                  |
-| **PostgreSQL over NoSQL**               | One database handles relational data, JSONB, full-text search, and future vector search. ACID-compliant, open-source, zero vendor lock-in. |
-| **Neon over self-hosted PostgreSQL**     | Serverless auto-scaling, built-in connection pooling and PITR, database branching for preview deploys. Eliminates need for DevOps/DBA team. |
-| **Mux over Google Drive / S3 / GitHub** | Drive has no streaming. S3 serves raw files without transcoding. GitHub has 100MB limits. Mux provides transcoding, HLS, and a global CDN.  |
-| **Direct-to-Mux Upload**               | Avoids Vercel's 4.5 MB body limit and 60s timeout.                                                             |
-| **Magic Links over Enterprise SSO**     | 10x faster for MVP. SSO added later via a new AuthPort adapter.                                                |
-| **Drizzle ORM over raw SQL**            | Type-safe queries, compile-time schema validation, clean migration tooling.                                    |
-| **Tailwind CSS over component library** | Maximum flexibility for custom TikTok-style full-screen vertical layout.                                       |
+| Decision                                    | Rationale                                                                                                      |
+| :------------------------------------------ | :------------------------------------------------------------------------------------------------------------- |
+| **Hexagonal Architecture**                  | Every external service is behind an interface. Swapping vendors requires changing one adapter + one line in the composition root. |
+| **Vendor-Neutral Naming**                   | Database columns use `video_asset_id` / `video_playback_id` instead of `mux_asset_id`. API routes use `/video/` not `/mux/`. No vendor names leak into the domain. |
+| **Cloudflare Stream over Mux (MVP)**        | Cloudflare Stream starts at ~$5/mo vs Mux's higher entry price. Both provide transcoding + HLS + CDN. Mux can be swapped in later via a new adapter. |
+| **hls.js over vendor-specific players**     | hls.js is open-source and works with ANY HLS source (Cloudflare, Mux, Bunny, self-hosted). No player lock-in. |
+| **PWA over Native Apps**                    | Eliminates App Store / Play Store approval; single codebase for all platforms.                                  |
+| **PostgreSQL over NoSQL**                   | One database handles relational data, JSONB, full-text search, and future vector search. ACID-compliant, open-source, zero vendor lock-in. |
+| **Neon over self-hosted PostgreSQL**        | Serverless auto-scaling, built-in pooling and PITR, database branching. Free tier covers MVP entirely.         |
+| **Direct-to-CDN Upload**                   | Avoids Vercel's 4.5 MB body limit and 60s timeout. Videos go straight from browser to Cloudflare.              |
+| **Magic Links over Enterprise SSO**        | 10x faster for MVP. SSO added later via a new AuthPort adapter.                                                |
+| **AI-Assisted Development**                | ~90% of code generated via AI. Reduces 4-6 week traditional timeline to 1-2 weeks.                            |
 
 ---
 
-### 12. Infrastructure & Cost Estimates (MVP Scale)
+### 12. Infrastructure & Cost Estimates (MVP)
 
-| Service         | Free Tier                           | Estimated MVP Cost (post-free)   |
-| :-------------- | :---------------------------------- | :------------------------------- |
-| **Vercel**      | 100 GB bandwidth, 100 hrs compute  | $20/mo (Pro plan)                |
-| **Neon**        | 0.5 GB storage, 190 hrs compute    | $0-19/mo                        |
-| **Mux**         | No free tier; pay-as-you-go        | ~$50-100/mo for 500 videos       |
-| **Resend**      | 3,000 emails/mo free               | $0 for MVP scale                 |
-| **Domain**      | N/A                                | ~$12/year                        |
-| **Total (MVP)** |                                     | **~$70-140/month**               |
+| Service               | Free Tier Available?       | MVP Monthly Cost            |
+| :-------------------- | :------------------------- | :-------------------------- |
+| **Vercel**            | ✅ Yes (100 GB BW)          | **$0**                      |
+| **Neon PostgreSQL**   | ✅ Yes (0.5 GB, 190 hrs)    | **$0**                      |
+| **Auth.js**           | ✅ Yes (OSS)                | **$0**                      |
+| **Resend**            | ✅ Yes (3,000 emails/mo)    | **$0**                      |
+| **Serwist (PWA)**     | ✅ Yes (OSS)                | **$0**                      |
+| **Drizzle ORM**       | ✅ Yes (OSS)                | **$0**                      |
+| **hls.js**            | ✅ Yes (OSS)                | **$0**                      |
+| **Cloudflare Stream** | ❌ No (pay-as-you-go)       | **~$5-10**                  |
+| **Domain**            | Not needed for MVP          | **$0** (use *.vercel.app)   |
+| **TOTAL**             |                             | **~$5-10/month**            |
+
+#### Cost Scaling Projections
+
+| Scale              | Videos Stored | Monthly Views | Est. Monthly Cost |
+| :----------------- | :------------ | :------------ | :---------------- |
+| **MVP (Pilot)**    | 50            | 500           | ~$6-10            |
+| **Departmental**   | 500           | 5,000         | ~$15-30           |
+| **Company-wide**   | 5,000         | 50,000        | ~$80-150          |
 
 ---
 
@@ -598,11 +678,11 @@ flowchart LR
     E --> G["Neon DB Branch<br/>(Isolated data)"]
 ```
 
-- Every push to `main` triggers an automatic production deployment
-- Every pull request gets a unique Preview URL for testing and review
-- Each preview URL connects to its own Neon database branch (isolated data)
-- Zero-downtime deployments with instant rollback capability
-- Environment variables managed securely in Vercel's dashboard
+- Every push to `main` triggers automatic production deployment
+- Every pull request gets a unique Preview URL
+- Each preview URL can connect to its own Neon database branch
+- Zero-downtime deployments with instant rollback
+- Environment variables managed securely in Vercel dashboard
 
 ---
 
@@ -612,58 +692,65 @@ flowchart LR
 | :------------------------- | :-------------------------------------------------------------------------- |
 | **Unauthorized Access**    | Email domain validation (`@dell.com` only) at authentication layer          |
 | **Session Hijacking**      | HttpOnly, Secure, SameSite=Strict cookies; short-lived JWT tokens           |
-| **Video Access Control**   | Mux Signed Playback URLs (V2) to prevent unauthorized video sharing         |
+| **Video Access Control**   | Cloudflare Signed URLs (V2) to prevent unauthorized video sharing           |
 | **CSRF Attacks**           | Built-in CSRF protection via Auth.js                                        |
-| **Webhook Spoofing**       | Mux webhook signature verification on all incoming webhook requests         |
+| **Webhook Spoofing**       | Cloudflare webhook signature verification on all incoming requests          |
 | **SQL Injection**          | Parameterized queries via Drizzle ORM; no raw string concatenation          |
 | **File Upload Abuse**      | File type validation (video/mp4, video/webm only); 200 MB size cap          |
 | **Rate Limiting**          | Vercel Edge Middleware rate limiting on auth and upload endpoints            |
-| **Database Exposure**      | PostgreSQL accessible only via private VPC; no public IP exposure           |
+| **Database Exposure**      | PostgreSQL accessible only via private connection; no public IP             |
 
 ---
 
-### 15. MVP Timeline Estimate
+### 15. Development Timeline (AI-Assisted)
 
-| Week   | Milestone                                                           |
-| :----- | :------------------------------------------------------------------ |
-| Week 1 | Project setup, Hexagonal scaffolding, Auth.js + Magic Links, PWA, DB schema |
-| Week 2 | Mux integration (upload + webhook + playback), Video feed UI        |
-| Week 3 | Likes, Comments, User Profiles, Responsive polish                   |
-| Week 4 | Testing, bug fixes, security review, internal soft launch           |
+The following timeline assumes ~90% of code is AI-generated with human
+guidance, review, and real-device testing.
 
-**Total estimated MVP delivery: 4 weeks** with 1-2 engineers.
+| Day       | Milestone                                                           |
+| :-------- | :------------------------------------------------------------------ |
+| Day 1-2   | Account setup (Vercel, Neon, Cloudflare, Resend), project scaffold  |
+| Day 3-4   | Auth.js Magic Links + email domain validation + PWA manifest        |
+| Day 5-7   | Cloudflare Stream integration (upload + webhook + playback)         |
+| Day 8-9   | Video feed UI (TikTok-style vertical scroll with hls.js)           |
+| Day 10-11 | Likes, Comments, User Profiles                                      |
+| Day 12-13 | Responsive polish, mobile PWA testing on real devices               |
+| Day 14    | Internal soft launch with pilot group                               |
+
+**Total estimated MVP delivery: ~2 weeks** with 1 engineer + AI.
+
+*Compare to traditional development: 4-6 weeks with 2 engineers.*
 
 ---
 
 ### 16. Component Replacement Guide
 
-This table serves as a reference for future engineers who need to swap
-any component:
-
-| Component        | Current Adapter          | How to Replace                                                                                           |
-| :--------------- | :----------------------- | :------------------------------------------------------------------------------------------------------- |
-| **Authentication** | Auth.js (Magic Links)  | 1. Create new adapter implementing `AuthPort`<br/>2. Update `lib/services.ts`<br/>3. No other changes    |
-| **Database**     | Neon (PostgreSQL)        | 1. Spin up new PostgreSQL instance (RDS, Supabase, etc.)<br/>2. Run `drizzle-kit push`<br/>3. Update connection string in adapter |
-| **Video CDN**    | Mux                      | 1. Create new adapter implementing `VideoPort`<br/>2. Update `lib/services.ts`<br/>3. Update webhook endpoint to parse new provider's format |
-| **Email**        | Resend                   | 1. Create new adapter implementing `EmailPort`<br/>2. Update `lib/services.ts`<br/>3. No other changes   |
-| **Hosting**      | Vercel                   | Next.js supports deployment on Netlify, AWS Amplify, Cloudflare Pages, or self-hosted Node.js            |
-| **ORM**          | Drizzle                  | Can be swapped to Prisma or Kysely; only the `DatabasePort` adapter internals change                     |
+| Component          | Current Adapter              | How to Replace                                                                                                                              |
+| :----------------- | :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Authentication** | Auth.js (Magic Links)        | Create new adapter implementing `AuthPort`, update `lib/services.ts`. No other changes.                                                     |
+| **Database**       | Neon (PostgreSQL)            | Spin up new PostgreSQL instance, run `drizzle-kit push`, update connection string in adapter. Zero app code changes.                         |
+| **Video CDN**      | Cloudflare Stream            | Create new adapter implementing `VideoPort`, update `lib/services.ts`, update webhook endpoint to parse new provider's payload format.       |
+| **Video Player**   | hls.js                       | Swap to Video.js, Mux Player, or Plyr. Update the `video-player.tsx` component. Feed and API remain unchanged.                              |
+| **Email**          | Resend                       | Create new adapter implementing `EmailPort`, update `lib/services.ts`. No other changes.                                                    |
+| **Hosting**        | Vercel                       | Next.js deploys to Netlify, AWS Amplify, Cloudflare Pages, or self-hosted Node.js with zero framework changes.                              |
+| **ORM**            | Drizzle                      | Swap to Prisma or Kysely. Only the `DatabasePort` adapter internals change.                                                                 |
+| **Full Self-Hosted** | N/A (future)               | Video: MinIO (object storage) + FFmpeg (transcode) + Nginx (CDN). DB: Self-hosted PostgreSQL. Auth: Keycloak. All via new adapters.         |
 
 ---
 
 ### 17. Future Architecture Considerations (V2+)
 
 - **Enterprise SSO:** Add Okta/Microsoft Entra provider via a new
-  `AuthPort` adapter (minimal effort due to Hexagonal Architecture).
+  `AuthPort` adapter.
+- **Upgrade Video Provider:** Swap Cloudflare Stream for Mux when budget
+  allows — Mux offers superior analytics, AI captions, and moderation.
 - **Real-Time Features:** WebSocket support for live comment updates
-  via Pusher or Ably.
-- **Content Moderation:** AI-based moderation before publishing
-  (Mux offers built-in moderation features).
-- **Analytics:** Mux Data provides built-in video quality analytics
-  (buffering rate, startup time, engagement metrics).
-- **Multi-Region Database:** Neon supports read replicas for global
-  latency optimization.
-- **Event-Driven Video Pipeline:** For advanced video processing
-  (e.g., AI captioning, thumbnail generation), abstract the workload
-  into an event-driven microservice that listens to the same webhook
-  pipeline, making the processing engine independently replaceable.
+  via Pusher, Ably, or Vercel's native WebSocket support.
+- **Content Moderation:** AI-based moderation before publishing.
+- **Analytics Dashboard:** Video engagement metrics for leadership.
+- **Multi-Region Database:** Neon read replicas for global latency
+  optimization.
+- **Self-Hosted Fallback:** If Dell IT requires on-premises video
+  infrastructure, deploy MinIO (S3-compatible object storage) + FFmpeg
+  (transcoding) + Nginx (caching/CDN) on Dell servers. The `VideoPort`
+  interface ensures this is an adapter swap, not a rewrite.
