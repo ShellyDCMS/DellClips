@@ -477,6 +477,7 @@ CREATE TABLE videos (
     duration         FLOAT,
     like_count       INTEGER DEFAULT 0,
     comment_count    INTEGER DEFAULT 0,
+    search_vector    TSVECTOR,
     created_at       TIMESTAMP DEFAULT NOW()
 );
 
@@ -497,7 +498,52 @@ CREATE TABLE comments (
     text        TEXT NOT NULL,
     created_at  TIMESTAMP DEFAULT NOW()
 );
+-- Reports table (user-driven content moderation)
+CREATE TABLE reports (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    video_id    UUID NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+    reason      VARCHAR(50) NOT NULL,
+    description TEXT,
+    status      VARCHAR(20) DEFAULT 'pending' NOT NULL,
+    reviewed_by UUID REFERENCES users(id),
+    reviewed_at TIMESTAMP,
+    created_at  TIMESTAMP DEFAULT NOW()
+);
 
+-- Follows table (user-to-user subscriptions)
+CREATE TABLE follows (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    follower_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    following_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at    TIMESTAMP DEFAULT NOW(),
+    UNIQUE(follower_id, following_id)
+);
+
+-- Hashtags table
+CREATE TABLE hashtags (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        VARCHAR(100) UNIQUE NOT NULL,
+    created_at  TIMESTAMP DEFAULT NOW()
+);
+
+-- Video-Hashtag junction table (many-to-many)
+CREATE TABLE video_hashtags (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    video_id    UUID NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+    hashtag_id  UUID NOT NULL REFERENCES hashtags(id) ON DELETE CASCADE,
+    UNIQUE(video_id, hashtag_id)
+);
+
+-- Additional indexes
+CREATE INDEX idx_reports_video_id ON reports(video_id);
+CREATE INDEX idx_reports_status ON reports(status);
+CREATE INDEX idx_follows_follower ON follows(follower_id);
+CREATE INDEX idx_follows_following ON follows(following_id);
+CREATE INDEX idx_hashtags_name ON hashtags(name);
+CREATE INDEX idx_video_hashtags_video ON video_hashtags(video_id);
+CREATE INDEX idx_video_hashtags_hashtag ON video_hashtags(hashtag_id);
+CREATE INDEX idx_videos_search ON videos USING GIN(search_vector);
 -- Indexes for performance
 CREATE INDEX idx_videos_user_id ON videos(user_id);
 CREATE INDEX idx_videos_status ON videos(status);
@@ -508,14 +554,19 @@ CREATE INDEX idx_comments_created_at ON comments(created_at DESC);
 ```
 
 **Entity Relationship Diagram:**
-
 ```mermaid
 erDiagram
     USERS ||--o{ VIDEOS : uploads
     USERS ||--o{ LIKES : gives
     USERS ||--o{ COMMENTS : writes
+    USERS ||--o{ REPORTS : submits
+    USERS ||--o{ FOLLOWS : follows
+    USERS ||--o{ FOLLOWS : "is followed by"
     VIDEOS ||--o{ LIKES : receives
     VIDEOS ||--o{ COMMENTS : receives
+    VIDEOS ||--o{ REPORTS : "is reported in"
+    VIDEOS ||--o{ VIDEO_HASHTAGS : tagged_with
+    HASHTAGS ||--o{ VIDEO_HASHTAGS : applied_to
 
     USERS {
         uuid id PK
@@ -535,6 +586,7 @@ erDiagram
         float duration
         int like_count
         int comment_count
+        tsvector search_vector
         timestamp created_at
     }
 
@@ -552,8 +604,37 @@ erDiagram
         string text
         timestamp created_at
     }
-```
 
+    REPORTS {
+        uuid id PK
+        uuid user_id FK
+        uuid video_id FK
+        string reason
+        string description
+        string status
+        uuid reviewed_by FK
+        timestamp created_at
+    }
+
+    FOLLOWS {
+        uuid id PK
+        uuid follower_id FK
+        uuid following_id FK
+        timestamp created_at
+    }
+
+    HASHTAGS {
+        uuid id PK
+        string name UK
+        timestamp created_at
+    }
+
+    VIDEO_HASHTAGS {
+        uuid id PK
+        uuid video_id FK
+        uuid hashtag_id FK
+    }
+```
 ---
 
 ### 10. Project Structure (Next.js App Router + Hexagonal)
@@ -582,6 +663,18 @@ dellclips/
 │           └── [id]/
 │               ├── like/route.ts
 │               └── comments/route.ts
+│       ├── videos/
+│       │   ├── route.ts
+│       │   ├── search/route.ts         # GET search by title/hashtag
+│       │   └── [id]/
+│       │       ├── like/route.ts
+│       │       ├── comments/route.ts
+│       │       └── report/route.ts     # POST report a video
+│       ├── users/
+│       │   └── [id]/
+│       │       └── follow/route.ts     # POST/DELETE follow a user
+│       └── hashtags/
+│           └── route.ts                # GET trending hashtags
 │
 ├── lib/
 │   ├── ports/                              # Abstract Interfaces (stable)
@@ -601,11 +694,15 @@ dellclips/
 │   └── utils.ts
 │
 ├── components/
-│   ├── video-player.tsx                    # Uses hls.js (vendor-neutral)
+│   ├── video-player.tsx               # Uses hls.js 
 │   ├── video-card.tsx
 │   ├── video-feed.tsx
 │   ├── upload-form.tsx
 │   ├── comment-section.tsx
+│   ├── report-dialog.tsx              # Report video modal
+│   ├── follow-button.tsx              # Follow/unfollow toggle
+│   ├── hashtag-input.tsx              # Hashtag picker for uploads
+│   ├── search-bar.tsx                 # Search by title/hashtag
 │   └── nav-bar.tsx
 │
 ├── drizzle/
@@ -702,7 +799,7 @@ flowchart LR
 
 ---
 
-### 15. Development Timeline (AI-Assisted)
+#### 15. Development Timeline (AI-Assisted)
 
 The following timeline assumes ~90% of code is AI-generated with human
 guidance, review, and real-device testing.
@@ -714,12 +811,17 @@ guidance, review, and real-device testing.
 | Day 5-7   | Cloudflare Stream integration (upload + webhook + playback)         |
 | Day 8-9   | Video feed UI (TikTok-style vertical scroll with hls.js)           |
 | Day 10-11 | Likes, Comments, User Profiles                                      |
-| Day 12-13 | Responsive polish, mobile PWA testing on real devices               |
-| Day 14    | Internal soft launch with pilot group                               |
+| Day 12-13 | Report Video feature (report dialog + API + DB)                     |
+| Day 14-15 | Follow/Subscribe (follow button + feed personalization)             |
+| Day 16-17 | Hashtags & Search (hashtag input on upload + search bar + tsvector) |
+| Day 18-19 | Responsive polish, mobile PWA testing on real devices               |
+| Day 20    | Internal soft launch with pilot group                               |
 
-**Total estimated MVP delivery: ~2 weeks** with 1 engineer + AI.
+**Total estimated MVP delivery: ~3 weeks** with 1 engineer + AI.
 
-*Compare to traditional development: 4-6 weeks with 2 engineers.*
+*Note: Timeline increased from 2 weeks to 3 weeks due to the addition
+of Report Video, Follow/Subscribe, and Hashtags/Search to Phase 1 MVP
+scope.*
 
 ---
 
@@ -754,3 +856,13 @@ guidance, review, and real-device testing.
   infrastructure, deploy MinIO (S3-compatible object storage) + FFmpeg
   (transcoding) + Nginx (caching/CDN) on Dell servers. The `VideoPort`
   interface ensures this is an adapter swap, not a rewrite.
+  - **Video Platform Migration Path:**
+  - **Current (MVP):** Cloudflare Stream (~$5-10/mo, single API)
+  - **Scale:** Mux (superior analytics, AI captions, ~$50-100/mo)
+  - **Enterprise/IT-mandated:** AWS S3 + MediaConvert + CloudFront
+    (~$85-90/mo, requires 4-5 services). See HLD Appendix A for full
+    AWS architecture diagram and cost breakdown.
+  - **Self-hosted:** MinIO + FFmpeg + Nginx (maximum control, highest
+    DevOps effort)
+  - All migrations require only a new `VideoPort` adapter + one-line
+    change in composition root. Zero application code changes.
