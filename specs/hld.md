@@ -319,10 +319,91 @@ flowchart LR
 
     style G fill:#d1fae5,stroke:#059669,stroke-width:2px
 ```
+### 6.5 Report Video Flow
 
+```mermaid
+flowchart LR
+    A["User sees<br/>problematic video"] --> B["Taps ⋮ menu<br/>→ 'Report Video'"]
+    B --> C["Selects reason:<br/>• Offensive content<br/>• Restricted/confidential data<br/>• Harassment<br/>• Spam<br/>• Other"]
+    C --> D["Optional:<br/>adds description"]
+    D --> E["Client sends<br/>POST to API"]
+    E --> F["Application Tier<br/>validates session"]
+    F --> G["Write report to<br/>Database<br/>(status: pending)"]
+    G --> H["✅ User sees<br/>'Report submitted'<br/>confirmation"]
+    G -.-> I["(V2) Admin gets<br/>notification in<br/>moderation dashboard"]
+
+    style H fill:#d1fae5,stroke:#059669
+    style I fill:#dbeafe,stroke:#2563eb,stroke-dasharray: 5 5
+```
+
+**Why user-driven reporting?**
+- Video files cannot be automatically scanned for offensive content or
+  restricted data at the application layer without specialized (and
+  expensive) AI moderation services
+- User reporting provides an immediate, zero-cost moderation mechanism
+- Every report is tied to a verified `@dell.com` identity, creating
+  accountability
+- Reports are stored with status tracking (pending → reviewed →
+  actioned) for the V2 moderation dashboard
+
+**Report Reasons (predefined):**
+| Reason Code | Display Text |
+|:------------|:-------------|
+| `offensive` | Offensive or inappropriate content |
+| `restricted_data` | Contains restricted or confidential Dell data |
+| `harassment` | Harassment or bullying |
+| `spam` | Spam or misleading content |
+| `other` | Other (with free-text description) |
+
+### 6.6 Follow / Subscribe Flow
+
+```mermaid
+flowchart LR
+    A["User visits<br/>colleague's profile"] --> B["Taps 'Follow'<br/>button"]
+    B --> C["Client sends<br/>POST to API"]
+    C --> D["Application Tier<br/>validates session"]
+    D --> E["Write follow<br/>relationship<br/>to Database"]
+    E --> F["✅ Button changes<br/>to 'Following'"]
+
+    style F fill:#d1fae5,stroke:#059669
+```
+
+**Feed personalization logic:**
+- When a user opens the feed, the query prioritizes videos from
+  followed users
+- Videos from non-followed users are still shown (to enable discovery)
+  but ranked lower
+- Feed algorithm (simplified): `followed users' recent videos first`
+  → `trending videos` → `chronological backfill`
+
+### 6.7 Search & Hashtag Flow
+
+```mermaid
+flowchart LR
+    A["User types in<br/>search bar or<br/>taps a #hashtag"] --> B["Client sends<br/>GET request<br/>with query"]
+    B --> C["Application Tier<br/>queries Database"]
+    C --> D{"Search type?"}
+    D -->|Text search| E["PostgreSQL<br/>tsvector full-text<br/>search on title<br/>+ description"]
+    D -->|Hashtag| F["Query<br/>video_hashtags<br/>junction table"]
+    E --> G["Return matching<br/>videos"]
+    F --> G
+    G --> H["✅ Display results<br/>in feed format"]
+
+    style H fill:#d1fae5,stroke:#059669
+```
+
+**Search implementation notes:**
+- Full-text search uses PostgreSQL's built-in `tsvector` / `tsquery`
+  — no external search engine (like Elasticsearch) is needed for
+  MVP scale
+- Hashtags are normalized (lowercase, no spaces) and stored in a
+  dedicated table with a many-to-many junction to videos
+- The search bar supports both free text and hashtag prefix (#)
 ---
 
 ## 7. Data Architecture
+
+### 7.1 Data Classification
 
 ### 7.1 Data Classification
 
@@ -332,6 +413,10 @@ flowchart LR
 | Video metadata | Database (Data Tier) | ~0.5 KB | ~50-200 videos |
 | Likes | Database (Data Tier) | ~0.1 KB | ~1,000-5,000 |
 | Comments | Database (Data Tier) | ~0.2 KB | ~500-2,000 |
+| **Reports** | **Database (Data Tier)** | **~0.3 KB** | **~50-200** |
+| **Follows** | **Database (Data Tier)** | **~0.1 KB** | **~500-2,000** |
+| **Hashtags** | **Database (Data Tier)** | **~0.1 KB** | **~100-500** |
+| **Video-Hashtag links** | **Database (Data Tier)** | **~0.1 KB** | **~200-1,000** |
 | Video files (MP4/HLS) | Object Storage (Video Tier) | ~50-150 MB | ~50-200 videos |
 | User avatars | Blob Storage | ~0.1-1 MB | ~100-500 |
 
@@ -810,12 +895,13 @@ future reference.
 |:--|:---------|:-------------------|:-------|:----------|
 | D1 | App delivery method | Native iOS + Android, PWA, Hybrid (React Native) | **PWA** | Avoids App Store processes; single codebase; installable on all platforms |
 | D2 | Authentication (MVP) | Enterprise SSO, Magic Links, Username/Password | **Magic Links** | Fastest to implement; verifies Dell employment via email domain; no passwords to manage |
-| D3 | Video infrastructure | Google Drive, GitHub, S3 + custom transcoder, Cloudflare Stream, Mux | **Cloudflare Stream** | Lowest cost entry point; full transcoding + HLS + CDN; swappable later via VideoPort |
-| D4 | Database | MongoDB, Supabase, PlanetScale, Neon PostgreSQL | **Neon PostgreSQL** | Free tier; serverless; built-in pooling; DB branching; PostgreSQL's extensibility (JSONB, pgvector) |
+| D3 | Video infrastructure | YouTube, AWS (S3+MediaConvert+CloudFront), Cloudflare Stream, Mux, Bunny Stream, Self-hosted (MinIO+FFmpeg) | **Cloudflare Stream** | YouTube violates ToS and locks UI. AWS costs ~$85-90/mo and requires 3-4 services. Cloudflare Stream offers same capabilities (transcoding, HLS, CDN) at ~$5-10/mo with a single API. Swappable via VideoPort. |
+| D4 | Database | MongoDB, Supabase, PlanetScale, Neon PostgreSQL | **Neon PostgreSQL** | Free tier; serverless; built-in pooling; DB branching; PostgreSQL extensibility (JSONB, pgvector) |
 | D5 | Architecture pattern | Monolithic, Microservices, Hexagonal | **Hexagonal** | Maximum replaceability; vendor independence; clean separation of concerns |
 | D6 | Video player | Mux Player, Video.js, hls.js, Plyr | **hls.js** | Open-source; vendor-neutral; works with any HLS source |
 | D7 | Upload strategy | Through application server, Direct-to-CDN | **Direct-to-CDN** | Avoids serverless size limits and timeouts; better performance |
 | D8 | Development approach | Traditional engineering, AI-assisted | **AI-assisted** | ~90% code generation; 2-week delivery vs 4-6 weeks traditional |
+| D9 | Video platform cost strategy | Premium vendor (Mux), Budget vendor (Cloudflare/Bunny), Free (YouTube), Enterprise (AWS) | **Budget vendor (Cloudflare Stream)** | MVP must validate concept at minimal cost. YouTube is unusable (ToS, ads, no custom UI). AWS is 8-15x more expensive. Cloudflare provides identical streaming quality at ~$5-10/mo. AWS remains the documented migration path if Dell IT requires it. |
 
 ---
 
@@ -836,3 +922,191 @@ future reference.
 | **ACID** | Atomicity, Consistency, Isolation, Durability — properties that guarantee reliable database transactions |
 | **Serverless** | A cloud execution model where the provider manages server infrastructure; compute scales from 0 to N automatically |
 | **ORM** | Object-Relational Mapping — a library that maps database tables to programming language objects |
+
+
+---
+
+## Appendix A: Video Platform Evaluation
+
+This appendix documents the detailed evaluation of video storage and
+streaming platforms considered for DellClips.
+
+### A.1 Requirements for Video Infrastructure
+
+The video platform must provide:
+1. **Direct upload from client** (bypass application server limits)
+2. **Automatic transcoding** to multiple resolutions (360p, 720p, 1080p)
+3. **HLS adaptive bitrate streaming** (quality adjusts to network speed)
+4. **Global CDN delivery** (low latency worldwide)
+5. **Private access control** (prevent unauthorized external access)
+6. **API-driven** (no proprietary UI requirements)
+7. **Reasonable MVP cost** (under $20/month)
+
+### A.2 Candidates Evaluated
+
+#### A.2.1 YouTube (REJECTED)
+
+**Status: Rejected — not viable for this use case.**
+
+YouTube is a free consumer video-sharing platform. Despite its
+excellent infrastructure, it cannot serve as a headless video backend
+for a private enterprise application.
+
+**Disqualifying Issues:**
+
+| Issue | Detail |
+|:------|:-------|
+| **Terms of Service violation** | YouTube ToS Section 5.B explicitly prohibits using the service as a backend for third-party applications. Using YouTube as a headless CDN risks account termination. |
+| **No custom player UI** | YouTube requires use of its proprietary iFrame embedded player. This makes it impossible to build a custom TikTok-style vertical scrolling feed with custom controls and overlays. |
+| **Ads and competitor recommendations** | YouTube's player displays advertisements and, upon video completion, recommends algorithmically selected content — which may include Dell competitor material. |
+| **Inadequate privacy model** | "Unlisted" videos can be shared via URL with anyone. "Private" videos require each viewer to have a Google account that is manually added to an access list — impractical for hundreds of Dell employees. |
+| **Content moderation risk** | YouTube's automated content moderation algorithms can flag and remove videos without warning. Internal Dell content (e.g., product demos with music, or screen recordings) could be incorrectly flagged for copyright. |
+| **No raw file access** | YouTube does not provide API access to raw video files, HLS manifests, or transcoded chunks. All playback must go through YouTube's player. |
+
+#### A.2.2 AWS — S3 + MediaConvert + CloudFront (DEFERRED)
+
+**Status: Deferred to V2/V3 — viable but unnecessarily complex and
+expensive for MVP.**
+
+AWS provides enterprise-grade, fully controlled video infrastructure.
+However, it requires configuring and wiring together 3-4 separate
+services.
+
+**Architecture Required:**
+
+```mermaid
+flowchart LR
+    A["User uploads<br/>MP4"] -->|"Presigned URL"| B["Amazon S3<br/>(Raw storage)"]
+    B -->|"S3 Event<br/>Trigger"| C["AWS Lambda<br/>(Orchestrator)"]
+    C -->|"Create Job"| D["MediaConvert<br/>(Transcoding)"]
+    D -->|"Output HLS"| E["Amazon S3<br/>(Transcoded storage)"]
+    E -->|"Origin"| F["CloudFront<br/>(CDN)"]
+    F -->|"HLS Stream"| G["User watches"]
+
+    style B fill:#fef3c7,stroke:#d97706
+    style D fill:#fde8e8,stroke:#e81a1a
+    style F fill:#dbeafe,stroke:#2563eb
+```
+
+**Services required:**
+- **Amazon S3** — raw video storage + transcoded output storage
+- **AWS Lambda** — event-driven orchestration (trigger transcoding)
+- **AWS Elemental MediaConvert** — video transcoding to HLS
+- **Amazon CloudFront** — CDN distribution
+- **AWS IAM** — roles and policies for cross-service access
+
+**Cost Analysis (MVP: 100 GB stored, 1 TB streamed/month):**
+
+| AWS Service | Calculation | Monthly Cost |
+|:------------|:------------|:-------------|
+| S3 Storage (raw + transcoded) | 200 GB × $0.023/GB | $4.60 |
+| S3 Requests | ~10,000 GET requests | $0.04 |
+| MediaConvert | 50 videos × 1 min × $0.70 | $35.00 (one-time) |
+| CloudFront Data Transfer | 900 GB × $0.085/GB | $76.50 |
+| Lambda | Minimal invocations | $0.00 (free tier) |
+| **Total (ongoing monthly)** | | **~$81-85/mo** |
+
+**Comparison to Cloudflare Stream:**
+
+| Factor | AWS | Cloudflare Stream |
+|:-------|:----|:------------------|
+| Services to configure | 4-5 | 1 |
+| IAM roles to create | 3+ | 0 |
+| Lines of infrastructure config | ~200+ (Terraform/CloudFormation) | ~20 (env vars only) |
+| Setup time | 2-5 days | 2-3 hours |
+| Monthly cost (MVP) | ~$85/mo | ~$5-10/mo |
+| Streaming quality | Identical (HLS + CDN) | Identical (HLS + CDN) |
+
+**Migration Path:** If Dell IT mandates AWS in the future:
+1. Create `lib/adapters/aws-video-service.ts` implementing `VideoPort`
+2. Configure S3 bucket, MediaConvert job template, CloudFront distribution
+3. Change one line in `lib/services.ts`
+4. Zero changes to UI, database, auth, or business logic
+
+#### A.2.3 Cloudflare Stream (SELECTED)
+
+**Status: Selected as MVP video platform.**
+
+Cloudflare Stream provides a single, unified API that handles upload
+ingestion, automatic transcoding, permanent storage (on Cloudflare R2),
+and global CDN delivery via 300+ edge nodes.
+
+**Why Selected:**
+
+| Requirement | How Cloudflare Stream Meets It |
+|:------------|:-------------------------------|
+| Direct upload from client | ✅ Presigned direct upload URLs via API |
+| Automatic transcoding | ✅ Automatic to 360p, 720p, 1080p on upload |
+| HLS adaptive streaming | ✅ Built-in HLS manifest generation |
+| Global CDN | ✅ 300+ edge nodes worldwide |
+| Private access control | ✅ Signed URLs with expiry (V2) |
+| API-driven | ✅ Full REST API, no proprietary player required |
+| MVP cost under $20/mo | ✅ ~$5-10/mo at MVP scale |
+| Replaceability | ✅ Accessed via VideoPort interface; swappable |
+
+**Pricing (pay-as-you-go):**
+
+| Item | Rate |
+|:-----|:-----|
+| Base fee | $5/month |
+| Video storage | $5 per 1,000 minutes stored |
+| Video delivery | $1 per 1,000 minutes viewed |
+
+#### A.2.4 Mux (DEFERRED)
+
+**Status: Deferred to V2 — superior features but higher cost.**
+
+Mux offers the best developer experience and includes AI-powered
+features (auto-captions, content moderation, detailed analytics).
+However, its pricing has no free tier and starts higher than
+Cloudflare Stream.
+
+**When to upgrade to Mux:**
+- When the platform reaches departmental scale (500+ users)
+- When AI captions become a requirement (accessibility)
+- When detailed video analytics are needed for leadership reporting
+
+#### A.2.5 Bunny Stream (CONSIDERED)
+
+**Status: Viable alternative — lowest absolute cost.**
+
+Bunny.net Stream offers extremely low pricing ($0.005/GB storage,
+$0.01/GB delivery) with no monthly minimum. For very small MVPs,
+costs could be as low as $1-3/month. However, Bunny has a smaller
+CDN network and fewer enterprise features compared to Cloudflare.
+
+#### A.2.6 Self-Hosted — MinIO + FFmpeg + Nginx (DOCUMENTED)
+
+**Status: Documented as fallback if Dell IT requires on-premises.**
+
+A fully self-hosted video pipeline is possible using open-source tools:
+- **MinIO** — S3-compatible object storage
+- **FFmpeg** — video transcoding
+- **Nginx** — caching reverse proxy / CDN
+
+This option provides maximum control and data residency compliance
+but requires significant DevOps effort to build, maintain, and scale.
+It is documented as a future adapter option in the Component
+Replacement Guide.
+
+### A.3 Cost Comparison Summary
+
+| Platform | MVP Monthly Cost | Setup Complexity | Streaming Quality | Custom UI | Replaceability |
+|:---------|:-----------------|:-----------------|:------------------|:----------|:---------------|
+| YouTube | $0 | 🟢 Low | ✅ Good* | ❌ No | ❌ No |
+| Bunny Stream | ~$1-3 | 🟢 Low | ✅ Good | ✅ Yes | ✅ Yes |
+| **Cloudflare Stream** | **~$5-10** | **🟢 Low** | **✅ Excellent** | **✅ Yes** | **✅ Yes** |
+| Mux | ~$50-100 | 🟢 Low | ✅ Excellent | ✅ Yes | ✅ Yes |
+| AWS | ~$85-90 | 🔴 High | ✅ Excellent | ✅ Yes | ✅ Yes |
+| Self-Hosted | $20-50 (infra) | 🔴 Very High | ⚠️ Variable | ✅ Yes | ✅ Yes |
+
+*YouTube quality is excellent but locked inside their proprietary player.
+
+### A.4 Final Decision
+
+Cloudflare Stream is selected for the MVP. The Hexagonal Architecture
+ensures that migration to any alternative (Mux, AWS, Bunny, or
+self-hosted) requires only:
+1. A new adapter file implementing the `VideoPort` interface
+2. A one-line change in the composition root (`lib/services.ts`)
+3. Zero changes to UI, database, authentication, or business logic
