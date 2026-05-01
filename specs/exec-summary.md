@@ -25,27 +25,13 @@ vertical video content.
 
 ---
 
-## 2. Approval Status
-
-### ✅ Approved to Move Forward with MVP Development
-
-The project has been approved to proceed with Minimum Viable Product
-(MVP) development, **subject to mandatory pre-launch review gates**
-outlined in Section 3 below.
-
-Development may begin immediately. However, the MVP **will not launch
-to Dell employees** until all pre-launch reviews are completed and
-formal approvals are obtained.
-
----
-
-## 3. Pre-Launch Review Gates
+## 2. Pre-Launch Review Gates
 
 To mitigate organizational risk and ensure compliance, the MVP will
 not launch until formal reviews and approvals are completed by the
 following departments:
 
-### 3.1 Security Team Review
+### 2.1 Security Team Review
 
 | Review Area | Details |
 |:------------|:--------|
@@ -58,7 +44,7 @@ following departments:
 | **Content moderation** | User-driven reporting system (Phase 1). Users can flag videos for offensive content, restricted data exposure, harassment, or spam. All reports tied to verified `@dell.com` identity. |
 | **Required action** | Comprehensive security assessment to identify and mitigate vulnerabilities before launch. |
 
-### 3.2 Legal Team Review
+### 2.2 Legal Team Review
 
 | Review Area | Details |
 |:------------|:--------|
@@ -69,7 +55,7 @@ following departments:
 | **Data residency** | Confirmation that video storage locations (Cloudflare's global infrastructure) and database locations (Neon/AWS) comply with Dell's data handling requirements. |
 | **Required action** | Full legal review of IP ownership, open-source license compliance, and third-party vendor agreements. |
 
-### 3.3 Human Resources (HR) Review
+### 2.3 Human Resources (HR) Review
 
 | Review Area | Details |
 |:------------|:--------|
@@ -81,32 +67,53 @@ following departments:
 
 ---
 
-## 4. Required Documentation & Deliverables
+## 3. Requirments
 
-The project team must provide the following detailed documentation
-before launch approval is granted:
+### 3. Scope & Features (MVP vs. V2)
 
-### 4.1 Project Requirements
+#### 3.1 Must-Have Features (Phase 1 — MVP)
 
-A complete Product Requirements Document (PRD) has been prepared,
-covering:
+| #   | Feature                        | Description                                                                                                  |
+| :-- | :----------------------------- | :----------------------------------------------------------------------------------------------------------- |
+| F1  | **Email-Based Authentication** | Passwordless login via Magic Link or OTP sent to `*@dell.com` email addresses only. No password to remember. |
+| F2  | **PWA Installability**         | Full Progressive Web App support with `manifest.json`, service worker, and "Add to Home Screen" prompt.      |
+| F3  | **Vertical Video Feed**        | Infinite-scroll, full-screen vertical video feed with auto-play on scroll (muted by default).                |
+| F4  | **Video Upload**               | Users can upload or record short vertical videos (max 60 seconds, max 200 MB) from mobile or desktop.        |
+| F5  | **Like / React**               | Single-tap like button on each video with real-time count.                                                   |
+| F6  | **Comments**                   | Threaded text comments on each video.                                                                        |
+| F7  | **User Profiles**              | Basic profile page showing the user's name, email, avatar, and their uploaded videos.                        |
+| F8  | **Responsive Design**          | Fully functional on mobile (portrait), tablet, and desktop viewports.                                        |
+| F9  | **Report Video**               | Users can flag a video as offensive, inappropriate, or containing restricted/confidential data. Reports are stored in the database and surfaced to admins. This is the primary content moderation mechanism since automated video scanning is not implemented. |
+| F10 | **Follow / Subscribe**         | Follow specific colleagues or departments to personalize the feed with content from people you care about.   |
+| F11 | **Hashtags & Search**          | Tag videos with hashtags (#DellTech, #SalesWin, #Engineering). Search bar to find content by title, description, or hashtag. |
 
-- **11 Phase 1 (MVP) features:** Email authentication, PWA
-  installability, vertical video feed, video upload, likes, comments,
-  user profiles, responsive design, video reporting, follow/subscribe,
-  and hashtags/search
-- **6 Phase 2 (V2) features:** Enterprise SSO, push notifications,
-  moderation dashboard, in-app video editing, analytics dashboard,
-  and AI captions
-- **Non-functional requirements:** Performance (<2s video start time),
-  availability (99.9%), security (HTTPS, HttpOnly cookies), accessibility
-  (WCAG 2.1 AA), and scalability (10,000 concurrent users)
-- **Success metrics:** 500+ registered users, 200+ videos, 100+ DAU
-  within 3 months of launch
+#### 3.2 Nice-to-Have Features (Phase 2 — V2)
 
-📄 *Full document: `PRD.md`*
+| #   | Feature                         | Description                                                                                              |
+| :-- | :------------------------------ | :------------------------------------------------------------------------------------------------------- |
+| F12 | **Enterprise SSO (Okta/Entra)** | Replace Magic Links with Dell's official SSO provider for tighter IT compliance.                          |
+| F13 | **Push Notifications**          | Web Push API notifications for replies, likes, or company-wide featured videos.                          |
+| F14 | **Content Moderation Dashboard**| Admin panel for HR/IT to review reported videos, take action (remove/warn), and manage report queue.     |
+| F15 | **In-App Video Editing**        | Basic trim, crop, and text-overlay tools before publishing.                                              |
+| F16 | **Analytics Dashboard**         | View counts, engagement rates, and trending content metrics for leadership.                              |
+| F17 | **Video Captions (AI)**         | Auto-generated captions/subtitles for accessibility compliance.                                          |
+---
 
-### 4.2 Vendor Replacement Strategy
+### 3.3 Non-Functional Requirements
+
+| Requirement       | Target                                                                   |
+| :---------------- | :----------------------------------------------------------------------- |
+| **Performance**   | Video playback must begin within 2 seconds on 4G connections             |
+| **Availability**  | 99.9% uptime (leveraging Vercel + Mux SLAs)                             |
+| **Security**      | All traffic over HTTPS; authentication tokens in HttpOnly cookies        |
+| **Data Residency**| Video content and user data must comply with Dell's data policies        |
+| **Accessibility** | WCAG 2.1 AA compliance (captions, keyboard navigation, screen readers)   |
+| **Scalability**   | Must support up to 10,000 concurrent users without degradation           |
+
+---
+
+
+### 3.4 Vendor Replacement Strategy
 
 The application is built on a **Hexagonal Architecture (Ports &
 Adapters)** pattern that ensures every external vendor can be replaced
@@ -128,18 +135,7 @@ choices are made. Swapping any vendor requires:
 2. Changing one import line in the composition root
 3. **Zero changes** to business logic, UI, database, or API routes
 
-📄 *Full document: `ARCHITECTURE.md`*
-
-### 4.3 Stage-by-Stage Cost Analysis
-
-#### Development Phase (Weeks 1-3)
-
-| Item | Cost |
-|:-----|:-----|
-| Engineering labor | 1 engineer × 3 weeks (existing headcount) |
-| AI coding assistant | Already available |
-| Development infrastructure | $0 (free tiers + local Docker) |
-| **Total development cost** | **$0 incremental** (existing resources) |
+### 3.6 Stage-by-Stage Cost Analysis
 
 #### MVP Launch Phase (Month 1-3)
 
@@ -185,61 +181,9 @@ choices are made. Swapping any vendor requires:
 | Native iOS + Android apps | $50-200/mo + store fees | 3-6 months | High (platform-specific) |
 | Off-the-shelf enterprise video platform | $500-5,000/mo (licensing) | 1-2 months (config) | Very high (vendor-specific) |
 
-📄 *Full documents: `ARCHITECTURE.md`, `HLD.md`*
-
 ---
 
-## 5. Technical Summary
-
-### 5.1 Architecture
-
-```
-┌──────────────────────────────────────────────────────┐
-│              Application Core                        │
-│         (Pure business logic — ZERO vendor imports)   │
-├──────────┬──────────┬──────────┬──────────┬──────────┤
-│ AuthPort │ DBPort   │VideoPort │EmailPort │PlayerPort│
-│(interface)│(interface)│(interface)│(interface)│(interface)│
-├──────────┼──────────┼──────────┼──────────┼──────────┤
-│ Auth.js  │ Neon     │Cloudflare│ Resend   │ hls.js   │
-│ Adapter  │ Adapter  │ Adapter  │ Adapter  │ Adapter  │
-├──────────┼──────────┼──────────┼──────────┼──────────┤
-│ Okta     │ AWS RDS  │ Mux /    │ SendGrid │ Video.js │
-│ (future) │ (future) │AWS(future)│ (future) │ (future) │
-└──────────┴──────────┴──────────┴──────────┴──────────┘
-```
-
-### 5.2 Technology Stack
-
-| Layer | Technology | Cost |
-|:------|:-----------|:-----|
-| Framework | Next.js 15 (React) | Free (OSS) |
-| Language | TypeScript | Free (OSS) |
-| Styling | Tailwind CSS | Free (OSS) |
-| PWA | Serwist | Free (OSS) |
-| Authentication | Auth.js + Resend | Free |
-| Database | PostgreSQL on Neon | Free tier |
-| ORM | Drizzle | Free (OSS) |
-| Video Platform | Cloudflare Stream | ~$5-10/mo |
-| Video Player | hls.js | Free (OSS) |
-| Hosting | Vercel | Free tier |
-
-### 5.3 MVP Feature Set (Phase 1)
-
-1. Passwordless login (magic links to `@dell.com`)
-2. PWA installable on any phone or desktop
-3. TikTok-style vertical scrolling video feed
-4. Video upload (max 60 sec, max 200 MB)
-5. Likes and comments
-6. User profiles
-7. Report video (content moderation)
-8. Follow/subscribe to colleagues
-9. Hashtags and search
-10. Responsive design (mobile + desktop)
-
----
-
-## 6. Risk Assessment
+## 4. Risk Assessment
 
 | Risk | Likelihood | Impact | Mitigation |
 |:-----|:-----------|:-------|:-----------|
@@ -252,7 +196,7 @@ choices are made. Swapping any vendor requires:
 
 ---
 
-## 7. Timeline
+## 5. Timeline
 
 | Phase | Duration | Milestone |
 |:------|:---------|:----------|
@@ -263,7 +207,7 @@ choices are made. Swapping any vendor requires:
 
 ---
 
-## 8. Recommendation
+## 6. Recommendation
 
 We recommend **proceeding immediately with MVP development** while
 initiating the Security, Legal, and HR review processes in parallel.
@@ -281,16 +225,98 @@ pre-launch review sessions with Security, Legal, and HR.
 
 ---
 
-## 9. Supporting Documents
-
-| Document | File | Description |
-|:---------|:-----|:------------|
-| Product Requirements | `PRD.md` | Complete feature specifications, MVP vs V2 scope, ROI analysis, success metrics |
-| Technical Architecture | `ARCHITECTURE.md` | Technology stack, Hexagonal Architecture, database schema, code structure, vendor replacement guide |
-| High-Level Design | `HLD.md` | System overview, data flows, deployment architecture, scalability model, security architecture, failure modes |
-
+# APENDIX
 ---
+## 1. Why Can't We Use YouTube for Storing Videos?
+YouTube is free, so the instinct to use it makes sense. But YouTube is a consumer video-sharing platform, not a backend storage or CDN service. Using it as a headless video backend for DellClips would break down in several critical ways:
 
-*Prepared by: [Your Name]*
-*Date: [Date]*
-*Version: 1.0*
+| Problem | Why It Kills DellClips |
+|:---|:---|
+| **No Raw File Access** | YouTube does not give you access to the raw video files (`.mp4`, `.m3u8`) via API. You are forced to use their proprietary embedded iFrame player. You cannot build a custom TikTok-style vertical scrolling UI — you'd get a YouTube rectangle with YouTube's controls. |
+| **Ads & Competitor Content** | YouTube's player displays YouTube branding, watermarks, and potentially **ads**. Worse — when a video finishes, YouTube's algorithm recommends **other videos**, which could include content from Dell's competitors. Imagine an internal Dell video ending with a recommendation for an HP ad. |
+| **Terms of Service Violation** | YouTube's Terms of Service **explicitly prohibit** using the platform as a "headless" hosting backend to serve your own application. Doing so can result in your API access being revoked or your channel being banned entirely. |
+| **Privacy & Security** | You can set videos to "Unlisted" or "Private," but this is not secure access control. Anyone with an unlisted link can share it freely. Private videos require every viewer to have a Google account that you manually authorize — completely impractical for hundreds or thousands of Dell employees. |
+| **Content Moderation Risk** | Your content is subject to YouTube's automated copyright and community guideline algorithms. False flags can result in your videos being **taken down instantly** with little recourse. Imagine Dell's CEO posting a strategy update and YouTube's bot flagging it. |
+
+Bottom line: YouTube is designed for public video sharing, not as infrastructure for private enterprise apps. Using it would violate their ToS, give you no control over the player UI, and expose Dell content to ads and competitor recommendations.
+Claude Opus 4.6
+Great questions — and worth answering clearly before we commit to a stack. Let me break down both.
+
+1. Why Can't We Use YouTube for Storing Videos?
+YouTube is free, so the instinct to use it makes sense. But YouTube is a consumer video-sharing platform, not a backend storage or CDN service. Using it as a headless video backend for DellClips would break down in several critical ways:
+
+Problem
+Why It Kills DellClips
+No Raw File Access
+YouTube does not give you access to the raw video files (.mp4, .m3u8) via API. You are forced to use their proprietary embedded iFrame player. You cannot build a custom TikTok-style vertical scrolling UI — you'd get a YouTube rectangle with YouTube's controls.
+Ads & Competitor Content
+YouTube's player displays YouTube branding, watermarks, and potentially ads. Worse — when a video finishes, YouTube's algorithm recommends other videos, which could include content from Dell's competitors. Imagine an internal Dell video ending with a recommendation for an HP ad.
+Terms of Service Violation
+YouTube's Terms of Service explicitly prohibit using the platform as a "headless" hosting backend to serve your own application. Doing so can result in your API access being revoked or your channel being banned entirely.
+Privacy & Security
+You can set videos to "Unlisted" or "Private," but this is not secure access control. Anyone with an unlisted link can share it freely. Private videos require every viewer to have a Google account that you manually authorize — completely impractical for hundreds or thousands of Dell employees.
+Content Moderation Risk
+Your content is subject to YouTube's automated copyright and community guideline algorithms. False flags can result in your videos being taken down instantly with little recourse. Imagine Dell's CEO posting a strategy update and YouTube's bot flagging it.
+Bottom line: YouTube is designed for public video sharing, not as infrastructure for private enterprise apps. Using it would violate their ToS, give you no control over the player UI, and expose Dell content to ads and competitor recommendations.
+
+## 2. What Would It Cost If We Used AWS Instead?
+AWS gives you 100% control over your files, security, and video player, but uses a pay-as-you-go model. Your bill breaks into three pillars:
+
+### AWS Cost Breakdown
+| Service | What It Does | Pricing (2026) | MVP Example |
+|:---|:---|:---|:---|
+| **Amazon S3** (Storage) | Stores the video files permanently | **$0.023 per GB/month** | 100 GB of video = **$2.30/month** |
+| **Data Transfer** (Bandwidth/Egress) | Delivers video data from AWS to your users over the internet | First 100 GB/month **free**, then **$0.09 per GB** | 1 TB streamed = 900 GB billable = **$81.00/month** |
+| **AWS Elemental MediaConvert** (Transcoding) | Converts raw uploads into web-friendly HLS adaptive streaming formats | Based on video length and resolution | One 60-min 1080p video ≈ **$4.23** (one-time) |
+
+### MVP Scenario with AWS
+| Item | Calculation | Cost |
+|:---|:---|:---|
+| Store 100 GB of video | 100 × $0.023 | $2.30/mo |
+| Stream 1 TB to users | (1,000 - 100 free) × $0.09 | $81.00/mo |
+| Transcode 50 videos (avg 1 min each) | ~50 × $0.70 | $35.00 one-time |
+| **Ongoing monthly total** | | **~$85-90/month** |
+
+### AWS vs. Cloudflare Stream vs. YouTube
+
+| Criteria | YouTube | AWS (S3 + MediaConvert + CloudFront) | Cloudflare Stream |
+|:---|:---|:---|:---|
+| **Monthly Cost (MVP)** | $0 | ~$85-90/mo | **~$5-10/mo** |
+| **Custom Player UI** | ❌ Forced iFrame | ✅ Full control | ✅ Full control |
+| **No Ads** | ❌ YouTube shows ads | ✅ | ✅ |
+| **Adaptive Bitrate (HLS)** | ✅ (but locked in player) | ✅ (must configure yourself) | ✅ (automatic) |
+| **Transcoding** | ✅ (automatic) | ⚠️ Must configure MediaConvert pipeline | ✅ (automatic) |
+| **CDN Delivery** | ✅ | ⚠️ Must configure CloudFront | ✅ (built-in, 300+ nodes) |
+| **Setup Complexity** | Low (but unusable for our case) | 🔴 High (3-4 AWS services to wire together) | 🟢 Low (single API) |
+| **Private Access Control** | ❌ Weak (unlisted links) | ✅ Signed URLs | ✅ Signed URLs |
+| **ToS Risk** | 🔴 Violates ToS | ✅ None | ✅ None |
+| **Replaceability** | ❌ Locked to YouTube player | ✅ Via VideoPort adapter | ✅ Via VideoPort adapter |
+
+
+### The Key Insight
+AWS is the "enterprise gold standard" but costs 8-15x more than
+Cloudflare Stream for MVP-scale usage, and requires you to configure
+and wire together 3-4 separate services (S3, MediaConvert, CloudFront,
+IAM roles) yourself.
+
+Cloudflare Stream gives you the same end result — transcoding, HLS,
+global CDN — in a single API at a fraction of the cost.
+
+###So Why Are We Using Cloudflare Stream?
+| Reason | Detail |
+|:---|:---|
+| **Lowest MVP cost** | ~$5-10/mo vs ~$85-90/mo (AWS) vs $0 but unusable (YouTube) |
+| **Simplest integration** | One API to upload, transcode, and stream — no wiring multiple services |
+| **Same quality** | Adaptive bitrate HLS streaming from a global CDN, just like AWS CloudFront |
+| **Replaceable** | If Dell IT later mandates AWS, we swap in an `AwsVideoService` adapter implementing the same `VideoPort` interface — zero app changes |
+
+If Dell IT Later Requires AWS
+Thanks to the Hexagonal Architecture, migrating is straightforward.
+
+### Summary
+
+| Option | Viable? | MVP Cost | Complexity | Our Choice? |
+|:---|:---|:---|:---|:---|
+| **YouTube** | ❌ No (ToS violation, no custom UI, ads, privacy issues) | $0 | Low | ❌ |
+| **AWS** | ✅ Yes (full control, enterprise-grade) | ~$85-90/mo | 🔴 High | ❌ for MVP (future option via adapter swap) |
+| **Cloudflare Stream** | ✅ Yes (full control, simple, cheap) | ~$5-10/mo | 🟢 Low | ✅ **MVP choice** |

@@ -431,8 +431,14 @@ erDiagram
     USERS ||--o{ VIDEOS : uploads
     USERS ||--o{ LIKES : gives
     USERS ||--o{ COMMENTS : writes
+    USERS ||--o{ REPORTS : submits
+    USERS ||--o{ FOLLOWS : follows
+    USERS ||--o{ FOLLOWS : "is followed by"
     VIDEOS ||--o{ LIKES : receives
     VIDEOS ||--o{ COMMENTS : receives
+    VIDEOS ||--o{ REPORTS : "is reported in"
+    VIDEOS ||--o{ VIDEO_HASHTAGS : tagged_with
+    HASHTAGS ||--o{ VIDEO_HASHTAGS : applied_to
 
     USERS {
         uuid id PK
@@ -452,6 +458,7 @@ erDiagram
         float duration
         int like_count
         int comment_count
+        tsvector search_vector
         timestamp created_at
     }
 
@@ -469,8 +476,37 @@ erDiagram
         string text
         timestamp created_at
     }
-```
 
+    REPORTS {
+        uuid id PK
+        uuid user_id FK
+        uuid video_id FK
+        string reason
+        string description
+        string status
+        uuid reviewed_by FK
+        timestamp created_at
+    }
+
+    FOLLOWS {
+        uuid id PK
+        uuid follower_id FK
+        uuid following_id FK
+        timestamp created_at
+    }
+
+    HASHTAGS {
+        uuid id PK
+        string name UK
+        timestamp created_at
+    }
+
+    VIDEO_HASHTAGS {
+        uuid id PK
+        uuid video_id FK
+        uuid hashtag_id FK
+    }
+```
 ### 7.3 Data Retention & Lifecycle
 
 | Data | Retention Policy | Deletion Behavior |
