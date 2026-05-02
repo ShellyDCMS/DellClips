@@ -8,8 +8,8 @@ describe("VideoService Port (interface contract via ts-stubber)", () => {
 
   beforeEach(() => {
     // given — lazy-stub the interface (no real implementation needed)
-    service = StubbedInstanceCreator<VideoService, sinon.SinonStub>(
-      () => sinon.stub(),
+    service = StubbedInstanceCreator<VideoService, sinon.SinonStub>(() =>
+      sinon.stub()
     ).createStubbedInstance();
   });
 

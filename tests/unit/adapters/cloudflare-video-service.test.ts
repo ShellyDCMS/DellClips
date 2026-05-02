@@ -124,8 +124,8 @@ describe("VideoService interface (stubbed with ts-stubber)", () => {
 
   beforeEach(() => {
     // given — create a lazy-stubbed instance using ts-stubber + sinon
-    stubbedService = StubbedInstanceCreator<VideoService, sinon.SinonStub>(
-      () => sinon.stub(),
+    stubbedService = StubbedInstanceCreator<VideoService, sinon.SinonStub>(() =>
+      sinon.stub()
     ).createStubbedInstance();
   });
 

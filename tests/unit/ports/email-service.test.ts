@@ -8,8 +8,8 @@ describe("EmailService Port (interface contract via ts-stubber)", () => {
 
   beforeEach(() => {
     // given
-    service = StubbedInstanceCreator<EmailService, sinon.SinonStub>(
-      () => sinon.stub(),
+    service = StubbedInstanceCreator<EmailService, sinon.SinonStub>(() =>
+      sinon.stub()
     ).createStubbedInstance();
   });
 
