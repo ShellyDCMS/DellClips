@@ -41,10 +41,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
       <div>
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-300 mb-1"
-        >
+        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
           Dell Email Address
         </label>
         <input
@@ -81,11 +78,7 @@ export default function LoginForm() {
       >
         {isLoading ? (
           <span data-testid="loading-indicator" className="flex items-center gap-2">
-            <svg
-              className="animate-spin h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
               <circle
                 className="opacity-25"
                 cx="12"

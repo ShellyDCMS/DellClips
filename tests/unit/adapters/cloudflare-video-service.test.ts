@@ -48,9 +48,7 @@ describe("CloudflareVideoService", () => {
             }),
           })
         );
-        expect(result.uploadUrl).toBe(
-          "https://upload.cloudflarestream.com/abc123"
-        );
+        expect(result.uploadUrl).toBe("https://upload.cloudflarestream.com/abc123");
         expect(result.assetId).toBe("video-uid-123");
       });
 
@@ -126,8 +124,8 @@ describe("VideoService interface (stubbed with ts-stubber)", () => {
 
   beforeEach(() => {
     // given — create a lazy-stubbed instance using ts-stubber + sinon
-    stubbedService = new StubbedInstanceCreator<VideoService>(
-      () => sinon.stub()
+    stubbedService = StubbedInstanceCreator<VideoService, sinon.SinonStub>(
+      () => sinon.stub(),
     ).createStubbedInstance();
   });
 

@@ -1,8 +1,8 @@
-import { CypressHelper } from '@shellygo/cypress-test-utils';
+import { CypressHelper } from "@shellygo/cypress-test-utils";
 
 export class BaseTestDriver<T> {
   protected helper = new CypressHelper();
-  protected children = '';
+  protected children = "";
   protected renderer: { render: () => void } = { render: () => {} };
   protected props: Partial<T> = {};
 

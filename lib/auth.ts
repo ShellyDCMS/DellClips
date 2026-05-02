@@ -1,9 +1,4 @@
-import {
-    accounts,
-    sessions,
-    users,
-    verificationTokens,
-} from "@/drizzle/schema";
+import { accounts, sessions, users, verificationTokens } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { isDellEmail } from "@/lib/utils";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
@@ -18,10 +13,7 @@ const resendProvider = Resend({
 
 // In development, log magic link to console instead of sending email
 if (process.env.NODE_ENV === "development") {
-  resendProvider.sendVerificationRequest = async ({
-    identifier: email,
-    url,
-  }) => {
+  resendProvider.sendVerificationRequest = async ({ identifier: email, url }) => {
     console.log("\n========================================");
     console.log("🔗 MAGIC LINK (dev only — click to sign in)");
     console.log(`📧 Email: ${email}`);
@@ -66,9 +58,4 @@ export const authConfig: NextAuthConfig = {
   },
 };
 
-export const {
-  handlers,
-  auth,
-  signIn,
-  signOut,
-} = NextAuth(authConfig);
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

@@ -55,7 +55,11 @@ export interface DatabaseService {
     videoUploadId?: string;
     hashtags?: string[];
   }): Promise<{ id: string }>;
-  updateVideoStatus(videoAssetId: string, status: string, duration?: number): Promise<void>;
+  updateVideoStatus(
+    videoAssetId: string,
+    status: string,
+    duration?: number
+  ): Promise<void>;
   deleteVideo(videoId: string): Promise<void>;
 
   // Likes
@@ -64,34 +68,40 @@ export interface DatabaseService {
   hasUserLikedVideo(userId: string, videoId: string): Promise<boolean>;
 
   // Comments
-  getCommentsByVideoId(videoId: string): Promise<{
-    id: string;
-    text: string;
-    createdAt: Date;
-    author: { id: string; name: string | null; avatarUrl: string | null };
-  }[]>;
+  getCommentsByVideoId(videoId: string): Promise<
+    {
+      id: string;
+      text: string;
+      createdAt: Date;
+      author: { id: string; name: string | null; avatarUrl: string | null };
+    }[]
+  >;
   createComment(userId: string, videoId: string, text: string): Promise<{ id: string }>;
   deleteComment(commentId: string, userId: string): Promise<void>;
 
   // Reports
   createReport(input: CreateReportInput): Promise<{ id: string }>;
-  getReportsByVideoId(videoId: string): Promise<{
-    id: string;
-    reason: string;
-    description: string | null;
-    status: string;
-    createdAt: Date;
-    reportedBy: { id: string; name: string | null; email: string };
-  }[]>;
-  getPendingReports(): Promise<{
-    id: string;
-    reason: string;
-    description: string | null;
-    status: string;
-    createdAt: Date;
-    video: { id: string; title: string | null };
-    reportedBy: { id: string; name: string | null; email: string };
-  }[]>;
+  getReportsByVideoId(videoId: string): Promise<
+    {
+      id: string;
+      reason: string;
+      description: string | null;
+      status: string;
+      createdAt: Date;
+      reportedBy: { id: string; name: string | null; email: string };
+    }[]
+  >;
+  getPendingReports(): Promise<
+    {
+      id: string;
+      reason: string;
+      description: string | null;
+      status: string;
+      createdAt: Date;
+      video: { id: string; title: string | null };
+      reportedBy: { id: string; name: string | null; email: string };
+    }[]
+  >;
   updateReportStatus(reportId: string, status: string, reviewedBy: string): Promise<void>;
 
   // Follows
@@ -104,7 +114,11 @@ export interface DatabaseService {
 
   // Search & Hashtags
   searchVideos(input: SearchVideosInput): Promise<VideoWithAuthor[]>;
-  getVideosByHashtag(hashtag: string, limit?: number, offset?: number): Promise<VideoWithAuthor[]>;
+  getVideosByHashtag(
+    hashtag: string,
+    limit?: number,
+    offset?: number
+  ): Promise<VideoWithAuthor[]>;
   getTrendingHashtags(limit?: number): Promise<{ name: string; count: number }[]>;
 
   // Users
@@ -116,5 +130,7 @@ export interface DatabaseService {
     role: string;
     createdAt: Date;
   } | null>;
-  getUserByEmail(email: string): Promise<{ id: string; email: string; name: string | null } | null>;
+  getUserByEmail(
+    email: string
+  ): Promise<{ id: string; email: string; name: string | null } | null>;
 }

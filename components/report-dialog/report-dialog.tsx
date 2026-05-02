@@ -11,7 +11,7 @@ interface ReportDialogProps {
 }
 
 export default function ReportDialog({
-  videoId,
+  videoId: _videoId,
   isOpen,
   onClose,
   onSubmit,
@@ -29,7 +29,10 @@ export default function ReportDialog({
   };
 
   return (
-    <div data-testid="report-dialog" className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+    <div
+      data-testid="report-dialog"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+    >
       <div className="bg-gray-900 rounded-xl p-6 w-full max-w-sm mx-4">
         <h2 className="text-lg font-bold text-white mb-4">Report Video</h2>
 

@@ -8,8 +8,8 @@ describe("EmailService Port (interface contract via ts-stubber)", () => {
 
   beforeEach(() => {
     // given
-    service = new StubbedInstanceCreator<EmailService>(
-      () => sinon.stub()
+    service = StubbedInstanceCreator<EmailService, sinon.SinonStub>(
+      () => sinon.stub(),
     ).createStubbedInstance();
   });
 
@@ -20,10 +20,7 @@ describe("EmailService Port (interface contract via ts-stubber)", () => {
         (service.sendMagicLink as sinon.SinonStub).resolves(undefined);
 
         // when
-        await service.sendMagicLink(
-          "user@dell.com",
-          "https://app.com/verify?token=abc"
-        );
+        await service.sendMagicLink("user@dell.com", "https://app.com/verify?token=abc");
 
         // then
         expect(

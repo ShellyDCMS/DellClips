@@ -1,4 +1,4 @@
-import { BaseTestDriver } from '../__test-utils__/base-test-driver';
+import { BaseTestDriver } from "../__test-utils__/base-test-driver";
 
 interface FollowButtonDriverProps {
   userId?: string;
@@ -25,12 +25,12 @@ export class FollowButtonDriver extends BaseTestDriver<FollowButtonDriverProps> 
 
   when = {
     ...this._when,
-    clickFollow: () => this.helper.when.click('follow-button'),
+    clickFollow: () => this.helper.when.click("follow-button"),
   };
 
   get = {
     ...this._get,
-    followButton: () => this.helper.get.elementByTestId('follow-button'),
-    followButtonText: () => this.helper.get.elementsText('follow-button'),
+    followButton: () => this.helper.get.elementByTestId("follow-button"),
+    followButtonText: () => this.helper.get.elementsText("follow-button"),
   };
 }

@@ -37,9 +37,7 @@ export const videos = pgTable(
     title: varchar("title", { length: 500 }),
     description: text("description"),
     videoAssetId: varchar("video_asset_id", { length: 255 }).unique().notNull(),
-    videoPlaybackId: varchar("video_playback_id", { length: 255 })
-      .unique()
-      .notNull(),
+    videoPlaybackId: varchar("video_playback_id", { length: 255 }).unique().notNull(),
     videoUploadId: varchar("video_upload_id", { length: 255 }),
     status: varchar("status", { length: 20 }).default("processing").notNull(),
     duration: real("duration"),

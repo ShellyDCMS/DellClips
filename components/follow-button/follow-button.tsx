@@ -8,7 +8,7 @@ interface FollowButtonProps {
 }
 
 export default function FollowButton({
-  userId,
+  userId: _userId,
   initialIsFollowing = false,
 }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);

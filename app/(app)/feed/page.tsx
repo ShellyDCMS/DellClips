@@ -10,12 +10,8 @@ export default async function FeedPage() {
         <h1 className="text-3xl font-bold text-white mb-2">
           Dell<span className="text-blue-500">Clips</span>
         </h1>
-        <p className="text-gray-400 mb-6">
-          Welcome, {session.user?.email} 🎉
-        </p>
-        <p className="text-green-400 mb-8 text-sm">
-          ✅ Authentication is working!
-        </p>
+        <p className="text-gray-400 mb-6">Welcome, {session.user?.email} 🎉</p>
+        <p className="text-green-400 mb-8 text-sm">✅ Authentication is working!</p>
 
         <form
           action={async () => {

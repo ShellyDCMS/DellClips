@@ -28,11 +28,11 @@ Each driver extends a local `BaseTestDriver<T>` class. This is a local replaceme
 **Setup**: Create `BaseTestDriver.ts` in a `__test-utils__/` directory:
 
 ```typescript
-import { CypressHelper } from '@shellygo/cypress-test-utils';
+import { CypressHelper } from "@shellygo/cypress-test-utils";
 
 export class BaseTestDriver<T> {
   protected helper = new CypressHelper();
-  protected children = '';
+  protected children = "";
   protected renderer: { render: () => void } = { render: () => {} };
   protected props: Partial<T> = {};
 
@@ -61,6 +61,7 @@ export class BaseTestDriver<T> {
 Rendering is handled by `RenderFactory` from `__test-utils__/renderer.ts`. It decouples drivers from JSX and `mount()` — drivers are plain `.ts` files, and the **test file** configures how the component is rendered.
 
 **How it works:**
+
 1. The test file creates a `RenderFactory` with `getReactOptions` (component type + props) and optional `wrappers` (context providers)
 2. `createRenderer()` returns an `IRenderer` that is passed to the driver via `given.renderer()`
 3. When `when.render()` is called, the base class calls `this.renderer.render()`, which uses `React.createElement` to build the component tree programmatically (no JSX needed)
@@ -69,18 +70,18 @@ Rendering is handled by `RenderFactory` from `__test-utils__/renderer.ts`. It de
 **Key interfaces:**
 
 ```typescript
-import { RenderFactory } from '__test-utils__/renderer';
+import { RenderFactory } from "__test-utils__/renderer";
 
 // Wrapper — a context provider to wrap around the component
 interface Wrapper {
-  type: ComponentType<any>;  // e.g. ThemeProvider, MemoryRouter, MockRulesProvider
-  props?: Record<string, any>;  // optional props for the provider
+  type: ComponentType<any>; // e.g. ThemeProvider, MemoryRouter, MockRulesProvider
+  props?: Record<string, any>; // optional props for the provider
 }
 
 // Options — passed to RenderFactory constructor
 interface Options {
-  getReactOptions?: () => ReactOptions;  // called at render time — returns { type, props, children }
-  wrappers?: Wrapper[] | (() => Wrapper[]);  // static array or function for dynamic props
+  getReactOptions?: () => ReactOptions; // called at render time — returns { type, props, children }
+  wrappers?: Wrapper[] | (() => Wrapper[]); // static array or function for dynamic props
 }
 ```
 
@@ -93,10 +94,7 @@ const renderFactory = new RenderFactory({
     props: get.props() as any,
     children: get.children(),
   }),
-  wrappers: [
-    { type: MemoryRouter },
-    { type: ThemeProvider },
-  ],
+  wrappers: [{ type: MemoryRouter }, { type: ThemeProvider }],
 });
 ```
 
@@ -139,7 +137,7 @@ Every driver has three sections — each spreads from the base:
 ### Component Driver Template
 
 ```typescript
-import { BaseTestDriver } from './__test-utils__/BaseTestDriver';
+import { BaseTestDriver } from "./__test-utils__/BaseTestDriver";
 
 // All fields MUST be optional (Partial<T> is used internally)
 interface MyComponentDriverProps {
@@ -174,7 +172,7 @@ export class MyComponentDriver extends BaseTestDriver<MyComponentDriverProps> {
     },
     // Spy pattern for callbacks
     onClickSpy: () => {
-      this.props.onClick = this.helper.given.spy('onClick');
+      this.props.onClick = this.helper.given.spy("onClick");
     },
   };
 
@@ -182,16 +180,16 @@ export class MyComponentDriver extends BaseTestDriver<MyComponentDriverProps> {
     ...this._when,
     // No render override — base class _when.render() delegates to this.renderer.render()
     // which is set up by the test file via given.renderer(renderFactory.createRenderer())
-    clickButton: () => this.helper.when.click('my-button'),
+    clickButton: () => this.helper.when.click("my-button"),
     waitUntil: (checkFunction: () => any) => this.helper.when.waitUntil(checkFunction),
   };
 
   get = {
     ...this._get,
-    container: () => this.helper.get.elementByTestId('my-component'),
-    titleText: () => this.helper.get.elementsText('my-title'),
-    buttonElement: () => this.helper.get.elementByTestId('my-button'),
-    onClickSpy: () => this.helper.get.spy('onClick'),
+    container: () => this.helper.get.elementByTestId("my-component"),
+    titleText: () => this.helper.get.elementsText("my-title"),
+    buttonElement: () => this.helper.get.elementByTestId("my-button"),
+    onClickSpy: () => this.helper.get.spy("onClick"),
   };
 }
 ```
@@ -204,10 +202,10 @@ when = {
   render: () => {
     if (!this.toolConfigConfigured) {
       this.helper.given
-        .stubObjectMethod(GithubService.prototype, 'getRawFileContent')
+        .stubObjectMethod(GithubService.prototype, "getRawFileContent")
         .resolves(JSON.stringify({}));
     }
-    this._when.render();  // delegate to base class → renderer.render()
+    this._when.render(); // delegate to base class → renderer.render()
   },
 };
 ```
@@ -215,9 +213,9 @@ when = {
 ### Service Driver Template
 
 ```typescript
-import { CypressHelper } from '@shellygo/cypress-test-utils';
-import { BaseTestDriver } from '../components/__test-utils__/BaseTestDriver';
-import { MyService } from './my.service';
+import { CypressHelper } from "@shellygo/cypress-test-utils";
+import { BaseTestDriver } from "../components/__test-utils__/BaseTestDriver";
+import { MyService } from "./my.service";
 
 export class MyServiceDriver extends BaseTestDriver<any> {
   private helper = new CypressHelper();
@@ -235,9 +233,7 @@ export class MyServiceDriver extends BaseTestDriver<any> {
   given = {
     ...this._given,
     apiReturns: (data: any) => {
-      this.helper.given
-        .stubObjectMethod(this.service, 'fetchData')
-        .resolves(data);
+      this.helper.given.stubObjectMethod(this.service, "fetchData").resolves(data);
     },
   };
 
@@ -264,8 +260,8 @@ Pure functions don't need `BaseTestDriver`, props, or rendering. The driver is m
 If the function depends on the system clock, use `cy.clock()` in a `given` method to freeze time to a known date.
 
 ```typescript
-import { CypressHelper } from '@shellygo/cypress-test-utils';
-import { myUtilFunction } from './myUtil';
+import { CypressHelper } from "@shellygo/cypress-test-utils";
+import { myUtilFunction } from "./myUtil";
 
 export class MyUtilDriver {
   private helper = new CypressHelper();
@@ -292,33 +288,34 @@ export class MyUtilDriver {
 **Test file** — uses `then(when.action()).shouldEqual(expected)` for every assertion:
 
 ```typescript
-import { then } from '@shellygo/cypress-test-utils';
-import { MyUtilDriver } from './myUtil.driver';
+import { then } from "@shellygo/cypress-test-utils";
+import { MyUtilDriver } from "./myUtil.driver";
 
-describe('myUtilFunction', () => {
+describe("myUtilFunction", () => {
   const driver = new MyUtilDriver();
   const { given, when } = driver;
   driver.beforeAndAfter();
 
-  describe('Given a frozen clock at 1st January 2024', () => {
+  describe("Given a frozen clock at 1st January 2024", () => {
     beforeEach(() => {
       given.clockAt(new Date(2024, 0, 1));
     });
 
-    it('Then it should return 01-01-2024', () => {
-      then(when.formatDate()).shouldEqual('01-01-2024');
+    it("Then it should return 01-01-2024", () => {
+      then(when.formatDate()).shouldEqual("01-01-2024");
     });
   });
 
-  describe('Given a hyphenated input', () => {
-    it('Then it should return the converted value', () => {
-      then(when.convert('my-input')).shouldEqual('My Input');
+  describe("Given a hyphenated input", () => {
+    it("Then it should return the converted value", () => {
+      then(when.convert("my-input")).shouldEqual("My Input");
     });
   });
 });
 ```
 
 **Key rules for pure function tests:**
+
 - **No `get` section** — `when` returns the value, `then()` wraps it
 - **One assertion per `it` block** via `then(when.action()).shouldEqual(expected)`
 
@@ -361,13 +358,13 @@ export class PageDriver extends BaseTestDriver<PageDriverProps> {
     tabNavigation: this.tabNavigationDriver.when,
     sidebar: this.sidebarDriver.when,
     // Only use this.helper directly for data-cy owned by THIS component
-    clickClearFilters: () => this.helper.when.click('clear-all-filters'),
+    clickClearFilters: () => this.helper.when.click("clear-all-filters"),
   };
 
   get = {
     ...this._get,
     // Owned by this component — direct access OK
-    homePage: () => this.helper.get.elementByTestId('home-page'),
+    homePage: () => this.helper.get.elementByTestId("home-page"),
     // Expose full child driver get objects
     header: this.headerDriver.get,
     tabNavigation: this.tabNavigationDriver.get,
@@ -378,10 +375,10 @@ export class PageDriver extends BaseTestDriver<PageDriverProps> {
 
 // Usage in tests:
 when.header.clickAbout();
-when.tabNavigation.clickTab('videos');
-get.header.header();                   // HeaderDriver.get.header()
-get.rulesGrid.numberOfRuleCards();     // RulesGridDriver.get.numberOfRuleCards()
-get.sidebar.container();               // SidebarDriver.get.container()
+when.tabNavigation.clickTab("videos");
+get.header.header(); // HeaderDriver.get.header()
+get.rulesGrid.numberOfRuleCards(); // RulesGridDriver.get.numberOfRuleCards()
+get.sidebar.container(); // SidebarDriver.get.container()
 ```
 
 **Leaf drivers** — same pattern, expose the full sub-driver:
@@ -447,9 +444,7 @@ Use `CypressHelper` methods to mock service dependencies — never raw `cy.stub(
 given = {
   ...this._given,
   serviceReturns: (value: number) => {
-    this.helper.given
-      .stubObjectMethod(this.service, 'calculate')
-      .returns(value);
+    this.helper.given.stubObjectMethod(this.service, "calculate").returns(value);
   },
 };
 ```
@@ -460,14 +455,10 @@ given = {
 given = {
   ...this._given,
   fetchResolves: (data: any) => {
-    this.helper.given
-      .stubObjectMethod(this.service, 'fetchData')
-      .resolves(data);
+    this.helper.given.stubObjectMethod(this.service, "fetchData").resolves(data);
   },
   fetchRejects: (error: Error) => {
-    this.helper.given
-      .stubObjectMethod(this.service, 'fetchData')
-      .rejects(error);
+    this.helper.given.stubObjectMethod(this.service, "fetchData").rejects(error);
   },
 };
 ```
@@ -481,7 +472,7 @@ given = {
   ...this._given,
   getRawFileContentResolves: (content: string) => {
     this.helper.given
-      .stubObjectMethod(GithubService.prototype, 'getRawFileContent')
+      .stubObjectMethod(GithubService.prototype, "getRawFileContent")
       .resolves(content);
   },
 };
@@ -492,7 +483,7 @@ given = {
 ```typescript
 // All methods are stubs, optionally override specific properties
 const serviceMock = this.helper.given.stubbedInstance(MyService);
-const serviceMock = this.helper.given.stubbedInstance(MyService, { baseUrl: '/api' });
+const serviceMock = this.helper.given.stubbedInstance(MyService, { baseUrl: "/api" });
 ```
 
 #### Stubbing window globals (e.g. fetch)
@@ -501,12 +492,12 @@ const serviceMock = this.helper.given.stubbedInstance(MyService, { baseUrl: '/ap
 given = {
   ...this._given,
   fetchReturnsJson: (jsonResponse: Record<string, any>) => {
-    this.helper.given
-      .stubObjectMethod(window, 'fetch')
-      .resolves(new Response(JSON.stringify(jsonResponse), {
+    this.helper.given.stubObjectMethod(window, "fetch").resolves(
+      new Response(JSON.stringify(jsonResponse), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }));
+        headers: { "Content-Type": "application/json" },
+      })
+    );
   },
 };
 ```
@@ -517,12 +508,14 @@ given = {
 given = {
   ...this._given,
   fetchReturnsSequence: (responses: Record<string, any>[]) => {
-    const stub = this.helper.given.stubObjectMethod(window, 'fetch');
+    const stub = this.helper.given.stubObjectMethod(window, "fetch");
     responses.forEach((json, index) => {
-      stub.onCall(index).resolves(new Response(JSON.stringify(json), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }));
+      stub.onCall(index).resolves(
+        new Response(JSON.stringify(json), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
     });
   },
 };
@@ -533,14 +526,14 @@ given = {
 ```typescript
 get = {
   ...this._get,
-  fetchDataStub: () => this.helper.get.stub('fetchData'),
+  fetchDataStub: () => this.helper.get.stub("fetchData"),
 };
 
 // In test:
 then(get.fetchDataStub()).shouldHaveBeenCalled();
 then(get.fetchDataStub()).shouldHaveBeenCalledOnce();
 then(get.fetchDataStub()).shouldHaveBeenCalledTimes(2);
-then(get.fetchDataStub()).shouldHaveBeenCalledWith('expected-arg');
+then(get.fetchDataStub()).shouldHaveBeenCalledWith("expected-arg");
 ```
 
 ---
@@ -555,10 +548,10 @@ Use `CypressHelper` to intercept real HTTP requests (e.g. from `fetch` or `XMLHt
 given = {
   ...this._given,
   interceptApiCall: () => {
-    this.helper.given.intercept('**/api/rules/**', 'fetchRules');
+    this.helper.given.intercept("**/api/rules/**", "fetchRules");
   },
   interceptPost: () => {
-    this.helper.given.intercept('**/api/rules', 'createRule', 'POST');
+    this.helper.given.intercept("**/api/rules", "createRule", "POST");
   },
 };
 ```
@@ -570,38 +563,38 @@ given = {
   ...this._given,
   rulesResponse: (rules: any[]) => {
     this.helper.given.interceptAndMockResponse({
-      url: '**/api/rules**',
-      alias: 'fetchRules',
+      url: "**/api/rules**",
+      alias: "fetchRules",
       response: { body: rules },
     });
   },
   loginResponse: (token: string) => {
     this.helper.given.interceptAndMockResponse({
-      method: 'POST',
-      url: '**/login',
-      alias: 'login',
+      method: "POST",
+      url: "**/login",
+      alias: "login",
       response: { token },
     });
   },
   networkError: () => {
     this.helper.given.interceptAndMockResponse({
-      url: '**/api/data**',
-      alias: 'dataRequest',
+      url: "**/api/data**",
+      alias: "dataRequest",
       response: { forceNetworkError: true },
     });
   },
   notFound: () => {
     this.helper.given.interceptAndMockResponse({
-      url: '**/api/missing**',
-      alias: 'missingResource',
+      url: "**/api/missing**",
+      alias: "missingResource",
       response: { statusCode: 404 },
     });
   },
   withHeaders: () => {
     this.helper.given.interceptAndMockResponse({
-      url: '**/api/session',
-      alias: 'session',
-      response: { headers: { 'XSRF-Token': 'token' } },
+      url: "**/api/session",
+      alias: "session",
+      response: { headers: { "XSRF-Token": "token" } },
     });
   },
 };
@@ -612,9 +605,9 @@ given = {
 ```typescript
 when = {
   ...this._when,
-  waitForRulesFetch: () => this.helper.when.waitForResponse('fetchRules'),
-  waitForMultipleFetches: () => this.helper.when.waitForResponses('fetchRules', 3),
-  waitForLastFetch: () => this.helper.when.waitForLastCall('fetchRules', 10000),
+  waitForRulesFetch: () => this.helper.when.waitForResponse("fetchRules"),
+  waitForMultipleFetches: () => this.helper.when.waitForResponses("fetchRules", 3),
+  waitForLastFetch: () => this.helper.when.waitForLastCall("fetchRules", 10000),
 };
 ```
 
@@ -626,15 +619,15 @@ After intercepting a request, use `CypressHelper` `get` methods to verify its pa
 
 #### Available getters for intercepted requests
 
-| Method | Returns | Description |
-|:-------|:--------|:------------|
-| `helper.get.requestBody(alias)` | `Chainable<any>` | Request body (parsed JSON object or buffer) |
-| `helper.get.requestQueryParams(alias)` | `Chainable<{[k: string]: string}>` | Query parameters as key-value pairs |
-| `helper.get.requestHeader(alias)` | `Chainable<{[key: string]: string \| string[]}>` | Request headers |
-| `helper.get.requestUrl(alias)` | `Chainable<string>` | Full request URL |
-| `helper.get.responseBody(alias)` | `Chainable<any>` | Response body |
-| `helper.get.responseHeader(alias)` | `Chainable<{[key: string]: string \| string[]}>` | Response headers |
-| `helper.get.numberOfRequests(alias)` | `Chainable<number>` | Number of requests intercepted with this alias |
+| Method                                 | Returns                                          | Description                                    |
+| :------------------------------------- | :----------------------------------------------- | :--------------------------------------------- |
+| `helper.get.requestBody(alias)`        | `Chainable<any>`                                 | Request body (parsed JSON object or buffer)    |
+| `helper.get.requestQueryParams(alias)` | `Chainable<{[k: string]: string}>`               | Query parameters as key-value pairs            |
+| `helper.get.requestHeader(alias)`      | `Chainable<{[key: string]: string \| string[]}>` | Request headers                                |
+| `helper.get.requestUrl(alias)`         | `Chainable<string>`                              | Full request URL                               |
+| `helper.get.responseBody(alias)`       | `Chainable<any>`                                 | Response body                                  |
+| `helper.get.responseHeader(alias)`     | `Chainable<{[key: string]: string \| string[]}>` | Response headers                               |
+| `helper.get.numberOfRequests(alias)`   | `Chainable<number>`                              | Number of requests intercepted with this alias |
 
 #### Driver pattern for exposing request data
 
@@ -642,36 +635,36 @@ After intercepting a request, use `CypressHelper` `get` methods to verify its pa
 // In driver's get:
 get = {
   ...this._get,
-  createRuleRequestBody: () => this.helper.get.requestBody('createRule'),
-  createRuleRequestUrl: () => this.helper.get.requestUrl('createRule'),
-  createRuleRequestHeader: () => this.helper.get.requestHeader('createRule'),
-  searchQueryParams: () => this.helper.get.requestQueryParams('searchRules'),
-  fetchRulesCallCount: () => this.helper.get.numberOfRequests('fetchRules'),
+  createRuleRequestBody: () => this.helper.get.requestBody("createRule"),
+  createRuleRequestUrl: () => this.helper.get.requestUrl("createRule"),
+  createRuleRequestHeader: () => this.helper.get.requestHeader("createRule"),
+  searchQueryParams: () => this.helper.get.requestQueryParams("searchRules"),
+  fetchRulesCallCount: () => this.helper.get.numberOfRequests("fetchRules"),
 };
 ```
 
 #### Test examples — verifying request payload
 
 ```typescript
-describe('Given a new rule is submitted', () => {
+describe("Given a new rule is submitted", () => {
   const title = chance.sentence({ words: 3 });
   const description = chance.paragraph();
 
   beforeEach(() => {
-    given.interceptCreateRule();   // sets up intercept with alias 'createRule'
+    given.interceptCreateRule(); // sets up intercept with alias 'createRule'
     given.createRuleResponse();
     when.render();
     when.fillTitle(title);
     when.fillDescription(description);
     when.submitForm();
-    when.waitForCreateRule();      // waits for the intercepted response
+    when.waitForCreateRule(); // waits for the intercepted response
   });
 
-  it('Then the request body should contain the title', () => {
+  it("Then the request body should contain the title", () => {
     then(get.createRuleRequestBody()).shouldDeepNestedInclude({ title });
   });
 
-  it('Then the request body should contain the description', () => {
+  it("Then the request body should contain the description", () => {
     then(get.createRuleRequestBody()).shouldDeepNestedInclude({ description });
   });
 });
@@ -680,17 +673,17 @@ describe('Given a new rule is submitted', () => {
 #### Test examples — verifying query params
 
 ```typescript
-describe('Given a search is performed', () => {
+describe("Given a search is performed", () => {
   const searchTerm = chance.word();
 
   beforeEach(() => {
-    given.interceptSearch();  // alias: 'searchRules'
+    given.interceptSearch(); // alias: 'searchRules'
     when.render();
     when.search(searchTerm);
     when.waitForSearch();
   });
 
-  it('Then the query params should include the search term', () => {
+  it("Then the query params should include the search term", () => {
     then(get.searchQueryParams()).shouldDeepNestedInclude({ q: searchTerm });
   });
 });
@@ -699,7 +692,7 @@ describe('Given a search is performed', () => {
 #### Test examples — verifying request headers
 
 ```typescript
-it('Then the request should include the auth header', () => {
+it("Then the request should include the auth header", () => {
   then(get.createRuleRequestHeader()).shouldDeepNestedInclude({
     authorization: `token ${expectedToken}`,
   });
@@ -709,15 +702,15 @@ it('Then the request should include the auth header', () => {
 #### Test examples — verifying request URL
 
 ```typescript
-it('Then the request URL should target the correct endpoint', () => {
-  then(get.createRuleRequestUrl()).shouldInclude('/api/rules');
+it("Then the request URL should target the correct endpoint", () => {
+  then(get.createRuleRequestUrl()).shouldInclude("/api/rules");
 });
 ```
 
 #### Test examples — verifying number of requests
 
 ```typescript
-it('Then it should have made exactly one API call', () => {
+it("Then it should have made exactly one API call", () => {
   then(get.fetchRulesCallCount()).shouldEqual(1);
 });
 ```
@@ -737,16 +730,16 @@ export class MyFeatureDriver extends BaseTestDriver<MyFeatureDriverProps> {
     ...this._given,
     interceptSaveRule: () => {
       this.helper.given.interceptAndMockResponse({
-        method: 'POST',
-        url: '**/api/rules',
-        alias: 'saveRule',
-        response: { id: 'new-rule-id', status: 'created' },
+        method: "POST",
+        url: "**/api/rules",
+        alias: "saveRule",
+        response: { id: "new-rule-id", status: "created" },
       });
     },
     interceptFetchRules: (rules: any[]) => {
       this.helper.given.interceptAndMockResponse({
-        url: '**/api/rules**',
-        alias: 'fetchRules',
+        url: "**/api/rules**",
+        alias: "fetchRules",
         response: { body: rules },
       });
     },
@@ -755,17 +748,17 @@ export class MyFeatureDriver extends BaseTestDriver<MyFeatureDriverProps> {
   when = {
     ...this._when,
     // No render override — base class handles it via RenderFactory
-    waitForSave: () => this.helper.when.waitForResponse('saveRule'),
-    waitForFetch: () => this.helper.when.waitForResponse('fetchRules'),
+    waitForSave: () => this.helper.when.waitForResponse("saveRule"),
+    waitForFetch: () => this.helper.when.waitForResponse("fetchRules"),
   };
 
   get = {
     ...this._get,
-    saveRuleRequestBody: () => this.helper.get.requestBody('saveRule'),
-    saveRuleRequestHeader: () => this.helper.get.requestHeader('saveRule'),
-    saveRuleRequestUrl: () => this.helper.get.requestUrl('saveRule'),
-    fetchRulesQueryParams: () => this.helper.get.requestQueryParams('fetchRules'),
-    fetchRulesCallCount: () => this.helper.get.numberOfRequests('fetchRules'),
+    saveRuleRequestBody: () => this.helper.get.requestBody("saveRule"),
+    saveRuleRequestHeader: () => this.helper.get.requestHeader("saveRule"),
+    saveRuleRequestUrl: () => this.helper.get.requestUrl("saveRule"),
+    fetchRulesQueryParams: () => this.helper.get.requestQueryParams("fetchRules"),
+    fetchRulesCallCount: () => this.helper.get.numberOfRequests("fetchRules"),
   };
 }
 ```
@@ -779,17 +772,17 @@ export class MyFeatureDriver extends BaseTestDriver<MyFeatureDriverProps> {
 The test file is a `.cy.ts` file (no JSX). It imports the component, context providers, and `RenderFactory`, then configures rendering in `beforeEach`:
 
 ```typescript
-import { then } from '@shellygo/cypress-test-utils';
-import Chance from 'chance';
-import { MemoryRouter } from 'react-router-dom';
-import { ThemeProvider } from '../../contexts/ThemeContext';
-import { MyComponentDriver } from './MyComponent.driver';
-import { RenderFactory } from '../../__test-utils__/renderer';
-import { MyComponent } from './MyComponent';
+import { then } from "@shellygo/cypress-test-utils";
+import Chance from "chance";
+import { MemoryRouter } from "react-router-dom";
+import { ThemeProvider } from "../../contexts/ThemeContext";
+import { MyComponentDriver } from "./MyComponent.driver";
+import { RenderFactory } from "../../__test-utils__/renderer";
+import { MyComponent } from "./MyComponent";
 
 const chance = new Chance();
 
-describe('MyComponent', () => {
+describe("MyComponent", () => {
   const driver = new MyComponentDriver();
   const { given, when, get } = driver;
   driver.beforeAndAfter();
@@ -801,45 +794,42 @@ describe('MyComponent', () => {
         props: get.props() as any,
         children: get.children(),
       }),
-      wrappers: [
-        { type: MemoryRouter },
-        { type: ThemeProvider },
-      ],
+      wrappers: [{ type: MemoryRouter }, { type: ThemeProvider }],
     });
     given.renderer(renderFactory.createRenderer());
   });
 
-  describe('Given a title is provided', () => {
+  describe("Given a title is provided", () => {
     const title = chance.sentence({ words: 3 });
 
     beforeEach(() => {
       given.title(title);
     });
 
-    describe('When the component is rendered', () => {
+    describe("When the component is rendered", () => {
       beforeEach(() => {
         when.render();
       });
 
-      it('Then the title should be displayed', () => {
+      it("Then the title should be displayed", () => {
         then(get.titleText()).shouldEqual(title);
       });
     });
   });
 
-  describe('Given the component is active', () => {
+  describe("Given the component is active", () => {
     beforeEach(() => {
-      given.isActive();  // defaults to true
+      given.isActive(); // defaults to true
       given.onClickSpy();
     });
 
-    describe('When the button is clicked', () => {
+    describe("When the button is clicked", () => {
       beforeEach(() => {
         when.render();
         when.clickButton();
       });
 
-      it('Then onClick should have been called', () => {
+      it("Then onClick should have been called", () => {
         then(get.onClickSpy()).shouldHaveBeenCalledOnce();
       });
     });
@@ -867,18 +857,24 @@ describe('MyComponent', () => {
 
 ```tsx
 // ✅ Correct — assert on what the user actually sees (computed styles)
-then(get.dropzone()).shouldHaveCss('cursor', 'not-allowed');
-then(get.dropzone()).shouldHaveCss('border-color', 'rgb(59, 130, 246)');
-then(get.dropzone()).shouldHaveCss('background-color', 'rgb(239, 246, 255)');
-then(get.celestial()).shouldHaveCss('color', 'rgb(245, 158, 11)');
-then(get.orb()).shouldHaveCss('background-image', 'radial-gradient(circle at 30% 30%, ...)');
-then(get.selectedItem()).shouldHaveCss('box-shadow', 'rgb(255, 255, 255) 0px 0px 0px 2px, ...');
+then(get.dropzone()).shouldHaveCss("cursor", "not-allowed");
+then(get.dropzone()).shouldHaveCss("border-color", "rgb(59, 130, 246)");
+then(get.dropzone()).shouldHaveCss("background-color", "rgb(239, 246, 255)");
+then(get.celestial()).shouldHaveCss("color", "rgb(245, 158, 11)");
+then(get.orb()).shouldHaveCss(
+  "background-image",
+  "radial-gradient(circle at 30% 30%, ...)"
+);
+then(get.selectedItem()).shouldHaveCss(
+  "box-shadow",
+  "rgb(255, 255, 255) 0px 0px 0px 2px, ..."
+);
 
 // ❌ Wrong — asserting on implementation details (class names)
-then(get.orbClass()).shouldInclude('orb-light');
-then(get.element()).shouldHaveClass('border-blue-500');
-then(get.celestialClass()).shouldInclude('sun');
-then(get.dropzoneClass()).shouldNotInclude('bg-blue-50');
+then(get.orbClass()).shouldInclude("orb-light");
+then(get.element()).shouldHaveClass("border-blue-500");
+then(get.celestialClass()).shouldInclude("sun");
+then(get.dropzoneClass()).shouldNotInclude("bg-blue-50");
 ```
 
 ### Mock Data Builders
@@ -886,8 +882,8 @@ then(get.dropzoneClass()).shouldNotInclude('bg-blue-50');
 Use the `builder-pattern` package to create randomized mock data factories:
 
 ```typescript
-import { Builder } from 'builder-pattern';
-import Chance from 'chance';
+import { Builder } from "builder-pattern";
+import Chance from "chance";
 
 const chance = new Chance();
 
@@ -908,13 +904,14 @@ export function aMyType(overrides?: Partial<MyType>): MyType {
 Usage:
 
 ```typescript
-const item = aMyType();                                    // fully random
+const item = aMyType(); // fully random
 const item2 = aMyType({ title: chance.sentence(), active: true }); // with overrides
 ```
 
 #### Builders for structured mock data in `given` calls
 
 When mock data is passed to `given` methods (e.g. file content, API responses), it must be:
+
 1. **Built using a builder** — never hard-code JSON structures inline
 2. **Stored in a variable** at `describe` scope — so `it` blocks can reference the same data for assertions
 
@@ -925,11 +922,11 @@ const labelsConfig = aLabelsConfig();
 const rules: MockRuleData[] = chance.n(aMockRuleData, 2);
 
 beforeEach(() => {
-  given.fileContent('meta-data.json', JSON.stringify(metaData));
-  given.fileContent('labels-config.json', JSON.stringify(labelsConfig));
+  given.fileContent("meta-data.json", JSON.stringify(metaData));
+  given.fileContent("labels-config.json", JSON.stringify(labelsConfig));
 });
 
-it('Then the visitors count should match', () => {
+it("Then the visitors count should match", () => {
   then(get.visitorsCount()).shouldEqual(metaData.visitorsCount);
 });
 ```
@@ -937,10 +934,13 @@ it('Then the visitors count should match', () => {
 ```typescript
 // ❌ Wrong — hard-coded inline, inaccessible from test body
 beforeEach(() => {
-  given.fileContent('meta-data.json', JSON.stringify({ visitorsCount: '42' }));
-  given.fileContent('labels-config.json', JSON.stringify({
-    categories: [{ id: 'languages', title: 'Languages', items: ['react'] }],
-  }));
+  given.fileContent("meta-data.json", JSON.stringify({ visitorsCount: "42" }));
+  given.fileContent(
+    "labels-config.json",
+    JSON.stringify({
+      categories: [{ id: "languages", title: "Languages", items: ["react"] }],
+    })
+  );
 });
 
 // Cannot reference '42' or the category items in it() blocks!
@@ -955,7 +955,9 @@ Every testable element in the component must have a `data-cy` attribute:
 ```tsx
 <div data-cy="my-component">
   <h2 data-cy="my-title">{title}</h2>
-  <button data-cy="my-button" onClick={onClick}>Click</button>
+  <button data-cy="my-button" onClick={onClick}>
+    Click
+  </button>
 </div>
 ```
 
@@ -998,7 +1000,10 @@ const renderFactory = new RenderFactory({
   }),
   wrappers: () => [
     { type: ThemeProvider },
-    { type: MockRulesProvider, props: { authors: driver.mockAuthors, authorImages: driver.mockAuthorImages } },
+    {
+      type: MockRulesProvider,
+      props: { authors: driver.mockAuthors, authorImages: driver.mockAuthorImages },
+    },
   ],
 });
 given.renderer(renderFactory.createRenderer());
@@ -1008,11 +1013,11 @@ The function is called at render time, so `driver.mockAuthors` reflects whatever
 
 ### Common wrappers reference
 
-| Provider | When needed | Import |
-|:---------|:-----------|:-------|
-| `MemoryRouter` | Component uses `<Link>`, `useNavigate`, `useLocation`, or any react-router API | `from 'react-router-dom'` |
-| `ThemeProvider` | Component uses `useTheme()` or reads theme context | `from '../../contexts/ThemeContext'` |
-| `MockRulesProvider` | Component uses `useRules()` or reads rules context | `from '../../__test-utils__/MockRulesProvider'` |
+| Provider            | When needed                                                                    | Import                                          |
+| :------------------ | :----------------------------------------------------------------------------- | :---------------------------------------------- |
+| `MemoryRouter`      | Component uses `<Link>`, `useNavigate`, `useLocation`, or any react-router API | `from 'react-router-dom'`                       |
+| `ThemeProvider`     | Component uses `useTheme()` or reads theme context                             | `from '../../contexts/ThemeContext'`            |
+| `MockRulesProvider` | Component uses `useRules()` or reads rules context                             | `from '../../__test-utils__/MockRulesProvider'` |
 
 ## Step 6: Run Tests
 
@@ -1027,6 +1032,7 @@ npx cypress run --component --spec "src/components/MyComponent/MyComponent.cy.ts
 ## Step 7: Update Documentation
 
 After creating new tests, update the relevant project documentation (e.g. `AGENTS.md`) with:
+
 - The new component/service in the **Tested Components/Services** table
 - The `data-cy` attributes used
 - Any driver composition relationships

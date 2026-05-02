@@ -1,22 +1,20 @@
 import {
-    isDellEmail,
-    normalizeHashtag,
-    parseHashtags,
-    REPORT_REASONS,
-    timeAgo,
+  isDellEmail,
+  normalizeHashtag,
+  parseHashtags,
+  REPORT_REASONS,
+  timeAgo,
 } from "@/lib/utils";
 import { describe, expect, it } from "vitest";
 
 describe("isDellEmail", () => {
   describe("given a valid @dell.com email", () => {
-    it.each([
-      "john@dell.com",
-      "jane.doe@dell.com",
-      "UPPER@DELL.COM",
-      "mixed@Dell.Com",
-    ])("then '%s' should be accepted", (email) => {
-      expect(isDellEmail(email)).toBe(true);
-    });
+    it.each(["john@dell.com", "jane.doe@dell.com", "UPPER@DELL.COM", "mixed@Dell.Com"])(
+      "then '%s' should be accepted",
+      (email) => {
+        expect(isDellEmail(email)).toBe(true);
+      }
+    );
   });
 
   describe("given a non-dell email", () => {
@@ -61,10 +59,7 @@ describe("parseHashtags", () => {
 
   describe("given hashtags with numbers and underscores", () => {
     it("then it should include them", () => {
-      expect(parseHashtags("#Q4_2025 #sales123")).toEqual([
-        "q4_2025",
-        "sales123",
-      ]);
+      expect(parseHashtags("#Q4_2025 #sales123")).toEqual(["q4_2025", "sales123"]);
     });
   });
 });

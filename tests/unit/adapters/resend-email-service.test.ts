@@ -6,13 +6,13 @@ vi.stubEnv("AUTH_RESEND_KEY", "test-resend-api-key");
 
 // Mock the Resend SDK
 const mockSend = vi.fn();
-vi.mock("resend", () => ({
-  Resend: vi.fn().mockImplementation(() => ({
-    emails: {
-      send: mockSend,
+vi.mock("resend", () => {
+  return {
+    Resend: class {
+      emails = { send: mockSend };
     },
-  })),
-}));
+  };
+});
 
 describe("ResendEmailService", () => {
   let service: ResendEmailService;

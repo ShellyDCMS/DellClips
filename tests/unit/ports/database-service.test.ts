@@ -7,8 +7,8 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
   let service: DatabaseService;
 
   beforeEach(() => {
-    service = StubbedInstanceCreator<DatabaseService, sinon.SinonStub>(
-      () => sinon.stub()
+    service = StubbedInstanceCreator<DatabaseService, sinon.SinonStub>(() =>
+      sinon.stub()
     ).createStubbedInstance();
   });
 
@@ -107,9 +107,7 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
         (service.deleteVideo as sinon.SinonStub).resolves(undefined);
 
         // when / then
-        await expect(
-          service.deleteVideo("video-123")
-        ).resolves.toBeUndefined();
+        await expect(service.deleteVideo("video-123")).resolves.toBeUndefined();
       });
     });
 
@@ -123,9 +121,7 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
         (service.likeVideo as sinon.SinonStub).resolves(undefined);
 
         // when / then
-        await expect(
-          service.likeVideo("user-1", "video-1")
-        ).resolves.toBeUndefined();
+        await expect(service.likeVideo("user-1", "video-1")).resolves.toBeUndefined();
       });
     });
 
@@ -135,9 +131,7 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
         (service.unlikeVideo as sinon.SinonStub).resolves(undefined);
 
         // when / then
-        await expect(
-          service.unlikeVideo("user-1", "video-1")
-        ).resolves.toBeUndefined();
+        await expect(service.unlikeVideo("user-1", "video-1")).resolves.toBeUndefined();
       });
     });
 
@@ -170,9 +164,7 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
             author: { id: "user-2", name: "Jane", avatarUrl: null },
           },
         ];
-        (service.getCommentsByVideoId as sinon.SinonStub).resolves(
-          mockComments
-        );
+        (service.getCommentsByVideoId as sinon.SinonStub).resolves(mockComments);
 
         // when
         const result = await service.getCommentsByVideoId("video-1");
@@ -192,11 +184,7 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
         });
 
         // when
-        const result = await service.createComment(
-          "user-1",
-          "video-1",
-          "Nice work!"
-        );
+        const result = await service.createComment("user-1", "video-1", "Nice work!");
 
         // then
         expect(result).toHaveProperty("id");
@@ -390,10 +378,7 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
     describe("when calling getFollowingIds", () => {
       it("then it should return an array of user IDs", async () => {
         // given
-        (service.getFollowingIds as sinon.SinonStub).resolves([
-          "user-2",
-          "user-3",
-        ]);
+        (service.getFollowingIds as sinon.SinonStub).resolves(["user-2", "user-3"]);
 
         // when
         const result = await service.getFollowingIds("user-1");
@@ -441,9 +426,7 @@ describe("DatabaseService Port (interface contract via ts-stubber)", () => {
           { name: "delltech", count: 15 },
           { name: "engineering", count: 10 },
         ];
-        (service.getTrendingHashtags as sinon.SinonStub).resolves(
-          mockTrending
-        );
+        (service.getTrendingHashtags as sinon.SinonStub).resolves(mockTrending);
 
         // when
         const result = await service.getTrendingHashtags(10);

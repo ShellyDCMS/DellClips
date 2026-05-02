@@ -23,9 +23,7 @@ export default async function LoginPage({
         <h1 className="text-4xl font-bold text-white mb-2">
           Dell<span className="text-blue-500">Clips</span>
         </h1>
-        <p className="text-gray-400 text-sm">
-          Short-form video for Dell employees
-        </p>
+        <p className="text-gray-400 text-sm">Short-form video for Dell employees</p>
       </div>
 
       {/* Error message */}
@@ -42,8 +40,8 @@ export default async function LoginPage({
 
       {/* Footer */}
       <p className="mt-8 text-gray-600 text-xs text-center max-w-xs">
-        Sign in with your Dell email address. A magic link will be sent to
-        verify your identity.
+        Sign in with your Dell email address. A magic link will be sent to verify your
+        identity.
       </p>
     </div>
   );

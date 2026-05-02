@@ -8,8 +8,8 @@ describe("VideoService Port (interface contract via ts-stubber)", () => {
 
   beforeEach(() => {
     // given — lazy-stub the interface (no real implementation needed)
-    service = new StubbedInstanceCreator<VideoService>(
-      () => sinon.stub()
+    service = StubbedInstanceCreator<VideoService, sinon.SinonStub>(
+      () => sinon.stub(),
     ).createStubbedInstance();
   });
 
@@ -56,9 +56,7 @@ describe("VideoService Port (interface contract via ts-stubber)", () => {
         (service.deleteVideo as sinon.SinonStub).resolves(undefined);
 
         // when / then
-        await expect(
-          service.deleteVideo("asset-abc123")
-        ).resolves.toBeUndefined();
+        await expect(service.deleteVideo("asset-abc123")).resolves.toBeUndefined();
       });
     });
   });
