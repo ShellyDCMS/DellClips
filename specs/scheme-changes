@@ -1,0 +1,55 @@
+Full Impact Analysis: What Changes When the Schema Changes
+1. Files That MUST Change
+| # | File | What Changes | Why |
+|:--|:-----|:-------------|:----|
+| 1 | **`drizzle/schema.ts`** | Add `reports`, `follows`, `hashtags`, `videoHashtags` tables. Add `searchVector` column to `videos` table. | This is the source of truth for the database structure. |
+| 2 | **`drizzle/migrations/*.sql`** (auto-generated) | New SQL migration files created by running `drizzle-kit generate` | These contain the raw `CREATE TABLE` / `ALTER TABLE` SQL that modifies the actual database. |
+| 3 | **`drizzle/migrations/meta/*.json`** (auto-generated) | Snapshot files updated by `drizzle-kit generate` | Drizzle tracks schema state via these snapshots. **Must be committed to Git** alongside the `.sql` files to avoid migration conflicts. |
+
+2. Files That MUST Be Created (New Features)
+| # | File | What to Create | Why |
+|:--|:-----|:---------------|:----|
+| 4 | **`app/api/videos/[id]/report/route.ts`** | POST handler: validate session, insert into `reports` table | New `reports` table needs an API endpoint |
+| 5 | **`app/api/users/[id]/follow/route.ts`** | POST/DELETE handler: insert/delete from `follows` table | New `follows` table needs an API endpoint |
+| 6 | **`app/api/videos/search/route.ts`** | GET handler: query `videos` with `tsvector` search + join `videoHashtags` / `hashtags` | New search functionality |
+| 7 | **`app/api/hashtags/route.ts`** | GET handler: query `hashtags` table for trending/autocomplete | New `hashtags` table needs an API endpoint |
+| 8 | **`components/report-dialog.tsx`** | Report video modal UI (reason selector + optional description) | UI for the report feature |
+| 9 | **`components/follow-button.tsx`** | Follow/unfollow toggle button | UI for the follow feature |
+| 10 | **`components/search-bar.tsx`** | Search input with hashtag detection | UI for search |
+| 11 | **`components/hashtag-input.tsx`** | Hashtag picker/creator for the upload form | UI for tagging videos on upload |
+
+3. Existing Files That MUST Be Updated
+| # | File | What Changes | Why |
+|:--|:-----|:-------------|:----|
+| 12 | **`components/upload-form.tsx`** | Add hashtag input field; on submit, create hashtag records + `video_hashtags` junction entries | Videos now support hashtags at upload time |
+| 13 | **`components/video-card.tsx`** | Add "⋮" menu with "Report" option; display hashtags; show follow button for video author | New interactions per video |
+| 14 | **`components/video-feed.tsx`** | Update feed query to prioritize followed users' videos; add search bar to feed layout | Feed personalization + search |
+| 15 | **`app/api/videos/route.ts`** | Update GET handler: join `follows` table to prioritize followed users; include hashtags in response | Feed personalization logic |
+| 16 | **`app/(app)/profile/[id]/page.tsx`** | Add follow button; show follower/following counts | Profile now supports follow relationship |
+| 17 | **`app/(app)/feed/page.tsx`** | Add search bar component to feed layout | Search entry point |
+
+4. Files That SHOULD Be Updated (Best Practice)
+| # | File | What Changes | Why |
+|:--|:-----|:-------------|:----|
+| 18 | **`lib/ports/database-service.ts`** | Add methods to the `DatabasePort` interface: `createReport()`, `createFollow()`, `deleteFollow()`, `searchVideos()`, `getHashtags()` | Hexagonal Architecture: new DB operations need interface definitions |
+| 19 | **`lib/adapters/neon-database-service.ts`** | Implement the new `DatabasePort` methods using Drizzle queries | Adapter implements the new interface methods |
+| 20 | **`lib/services.ts`** | No changes needed (composition root unchanged) | ✅ Already wired — this is the beauty of the Hexagonal Architecture |
+
+Schema change checklist:
+
+✅ drizzle/schema.ts                          (update manually)
+✅ drizzle/migrations/*.sql                   (auto-generated — run drizzle-kit generate)
+✅ drizzle/migrations/meta/*.json             (auto-generated — commit to Git!)
+✅ lib/ports/database-service.ts              (add new interface methods)
+✅ lib/adapters/neon-database-service.ts      (implement new methods)
+✅ New API routes (report, follow, search, hashtags)
+✅ New UI components (report dialog, follow button, search bar, hashtag input)
+✅ Updated existing components (upload form, video card, feed, profile)
+✅ Updated existing API routes (feed query with follow prioritization)
+⬜ lib/services.ts                            (NO changes needed ✅)
+⬜ lib/ports/video-service.ts                 (NO changes needed ✅)
+⬜ lib/ports/email-service.ts                 (NO changes needed ✅)
+⬜ lib/adapters/cloudflare-video-service.ts   (NO changes needed ✅)
+⬜ lib/adapters/resend-email-service.ts       (NO changes needed ✅)
+⬜ Auth configuration                         (NO changes needed ✅)
+⬜ PWA configuration                          (NO changes needed ✅)

@@ -1,4 +1,5 @@
 import { CloudflareVideoService } from "@/lib/adapters/cloudflare-video-service";
+import { NeonDatabaseService } from "@/lib/adapters/neon-database-service";
 import { ResendEmailService } from "@/lib/adapters/resend-email-service";
 
 // ============================================
@@ -11,7 +12,14 @@ import { ResendEmailService } from "@/lib/adapters/resend-email-service";
 
 export const videoService = new CloudflareVideoService();
 export const emailService = new ResendEmailService();
+export const databaseService = new NeonDatabaseService();
 
-// Future swaps (example):
+// Future swaps (examples):
 // import { MuxVideoService } from "@/lib/adapters/mux-video-service";
 // export const videoService = new MuxVideoService();
+//
+// import { SendGridEmailService } from "@/lib/adapters/sendgrid-email-service";
+// export const emailService = new SendGridEmailService();
+//
+// import { SupabaseDatabaseService } from "@/lib/adapters/supabase-database-service";
+// export const databaseService = new SupabaseDatabaseService();
