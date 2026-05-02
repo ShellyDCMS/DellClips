@@ -242,23 +242,6 @@ Bottom line: YouTube is designed for public video sharing, not as infrastructure
 Claude Opus 4.6
 Great questions — and worth answering clearly before we commit to a stack. Let me break down both.
 
-1. Why Can't We Use YouTube for Storing Videos?
-YouTube is free, so the instinct to use it makes sense. But YouTube is a consumer video-sharing platform, not a backend storage or CDN service. Using it as a headless video backend for DellClips would break down in several critical ways:
-
-Problem
-Why It Kills DellClips
-No Raw File Access
-YouTube does not give you access to the raw video files (.mp4, .m3u8) via API. You are forced to use their proprietary embedded iFrame player. You cannot build a custom TikTok-style vertical scrolling UI — you'd get a YouTube rectangle with YouTube's controls.
-Ads & Competitor Content
-YouTube's player displays YouTube branding, watermarks, and potentially ads. Worse — when a video finishes, YouTube's algorithm recommends other videos, which could include content from Dell's competitors. Imagine an internal Dell video ending with a recommendation for an HP ad.
-Terms of Service Violation
-YouTube's Terms of Service explicitly prohibit using the platform as a "headless" hosting backend to serve your own application. Doing so can result in your API access being revoked or your channel being banned entirely.
-Privacy & Security
-You can set videos to "Unlisted" or "Private," but this is not secure access control. Anyone with an unlisted link can share it freely. Private videos require every viewer to have a Google account that you manually authorize — completely impractical for hundreds or thousands of Dell employees.
-Content Moderation Risk
-Your content is subject to YouTube's automated copyright and community guideline algorithms. False flags can result in your videos being taken down instantly with little recourse. Imagine Dell's CEO posting a strategy update and YouTube's bot flagging it.
-Bottom line: YouTube is designed for public video sharing, not as infrastructure for private enterprise apps. Using it would violate their ToS, give you no control over the player UI, and expose Dell content to ads and competitor recommendations.
-
 ## 2. What Would It Cost If We Used AWS Instead?
 AWS gives you 100% control over your files, security, and video player, but uses a pay-as-you-go model. Your bill breaks into three pillars:
 
@@ -302,7 +285,7 @@ IAM roles) yourself.
 Cloudflare Stream gives you the same end result — transcoding, HLS,
 global CDN — in a single API at a fraction of the cost.
 
-###So Why Are We Using Cloudflare Stream?
+### So Why Are We Using Cloudflare Stream?
 | Reason | Detail |
 |:---|:---|
 | **Lowest MVP cost** | ~$5-10/mo vs ~$85-90/mo (AWS) vs $0 but unusable (YouTube) |
