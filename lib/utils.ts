@@ -17,7 +17,7 @@ export function parseHashtags(text: string): string[] {
 }
 
 export function normalizeHashtag(tag: string): string {
-  return tag.toLowerCase().replace(/^#/, "").trim();
+  return tag.trim().toLowerCase().replace(/^#/, "");
 }
 
 // Time formatting

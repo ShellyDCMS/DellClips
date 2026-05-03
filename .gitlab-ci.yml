@@ -1,0 +1,166 @@
+# ============================================
+# DellClips GitLab CI/CD Pipeline
+# ============================================
+
+# ============================================
+# STAGES
+# ============================================
+stages:
+  - quality
+  - test
+  - build
+
+# ============================================
+# VARIABLES
+# ============================================
+variables:
+  # Dummy env vars for build compilation
+  AUTH_SECRET: "ci-dummy-secret-not-real"
+  AUTH_RESEND_KEY: "re_dummy_not_real"
+  DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
+  CF_ACCOUNT_ID: "dummy-account-id"
+  CF_STREAM_TOKEN: "dummy-stream-token"
+  NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+  AUTH_URL: "http://localhost:3000"
+
+# ============================================
+# QUALITY: Lint + Format + Type Check
+# ============================================
+lint:
+  image: node:20-alpine
+  stage: quality
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - echo "Running ESLint..."
+    - npm run lint
+    - echo "Checking Prettier formatting..."
+    - npm run format:check
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+type-check:
+  image: node:20-alpine
+  stage: quality
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - echo "Running TypeScript type checker..."
+    - npm run type-check
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+# ============================================
+# TEST: Unit (Vitest) + E2E (Cypress)
+# ============================================
+test-unit:
+  image: node:20-alpine
+  stage: test
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - echo "Running Vitest unit tests..."
+    - npm run test -- --reporter=verbose
+  coverage: '/All files\s+\|\s+([\d.]+)/'
+  artifacts:
+    when: always
+    reports:
+      junit: junit-report.xml
+    paths:
+      - coverage/
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+test-e2e:
+  image: cypress/browsers:node-20.17.0-chrome-128.0.6613.137-1-ff-130.0.1-edge-128.0.2739.67-1
+  stage: test
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+      - ~/.cache/Cypress/
+  script:
+    - npm ci
+    - echo "Building Next.js for E2E tests..."
+    - npm run build
+    - echo "Starting server and running Cypress E2E tests..."
+    - npm start &
+    - npx wait-on http://localhost:3000 --timeout 60000
+    - npx cypress run --browser chrome
+  artifacts:
+    when: always
+    paths:
+      - cypress/screenshots/
+      - cypress/videos/
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+test-component:
+  image: cypress/browsers:node-20.17.0-chrome-128.0.6613.137-1-ff-130.0.1-edge-128.0.2739.67-1
+  stage: test
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+      - ~/.cache/Cypress/
+  script:
+    - npm ci
+    - echo "Running Cypress component tests..."
+    - npx cypress run --component --browser chrome
+  artifacts:
+    when: always
+    paths:
+      - cypress/screenshots/
+    expire_in: 7 days
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+# ============================================
+# BUILD: Verify compilation
+# ============================================
+build:
+  image: node:20-alpine
+  stage: build
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - echo "Building Next.js application..."
+    - npm run build
+  artifacts:
+    paths:
+      - .next/
+    expire_in: 1 day
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'

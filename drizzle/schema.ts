@@ -17,12 +17,13 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: varchar("email", { length: 255 }).unique().notNull(),
   name: varchar("name", { length: 255 }),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  image: text("image"),
   avatarUrl: text("avatar_url"),
   role: varchar("role", { length: 20 }).default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-
 // ============================================
 // VIDEOS (vendor-neutral column names)
 // ============================================
@@ -36,9 +37,7 @@ export const videos = pgTable(
     title: varchar("title", { length: 500 }),
     description: text("description"),
     videoAssetId: varchar("video_asset_id", { length: 255 }).unique().notNull(),
-    videoPlaybackId: varchar("video_playback_id", { length: 255 })
-      .unique()
-      .notNull(),
+    videoPlaybackId: varchar("video_playback_id", { length: 255 }).unique().notNull(),
     videoUploadId: varchar("video_upload_id", { length: 255 }),
     status: varchar("status", { length: 20 }).default("processing").notNull(),
     duration: real("duration"),
@@ -177,5 +176,51 @@ export const videoHashtags = pgTable(
     uniqueVideoHashtag: unique().on(table.videoId, table.hashtagId),
     videoIdIdx: index("idx_video_hashtags_video").on(table.videoId),
     hashtagIdIdx: index("idx_video_hashtags_hashtag").on(table.hashtagId),
+  })
+);
+
+// ============================================
+// AUTH.JS REQUIRED TABLES
+// ============================================
+
+export const accounts = pgTable(
+  "accounts",
+  {
+    userId: uuid("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 255 }).notNull(),
+    provider: varchar("provider", { length: 255 }).notNull(),
+    providerAccountId: varchar("providerAccountId", { length: 255 }).notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: varchar("token_type", { length: 255 }),
+    scope: varchar("scope", { length: 255 }),
+    id_token: text("id_token"),
+    session_state: varchar("session_state", { length: 255 }),
+  },
+  (table) => ({
+    compoundKey: unique().on(table.provider, table.providerAccountId),
+  })
+);
+
+export const sessions = pgTable("sessions", {
+  sessionToken: varchar("sessionToken", { length: 255 }).primaryKey(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    identifier: varchar("identifier", { length: 255 }).notNull(),
+    token: varchar("token", { length: 255 }).notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (table) => ({
+    compoundKey: unique().on(table.identifier, table.token),
   })
 );

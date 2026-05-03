@@ -1,21 +1,21 @@
 import {
-    comments,
-    follows,
-    hashtags,
-    likes,
-    reports,
-    users,
-    videoHashtags,
-    videos,
+  comments,
+  follows,
+  hashtags,
+  likes,
+  reports,
+  users,
+  videoHashtags,
+  videos,
 } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import type {
-    CreateFollowInput,
-    CreateReportInput,
-    DatabaseService,
-    FeedOptions,
-    SearchVideosInput,
-    VideoWithAuthor,
+  CreateFollowInput,
+  CreateReportInput,
+  DatabaseService,
+  FeedOptions,
+  SearchVideosInput,
+  VideoWithAuthor,
 } from "@/lib/ports/database-service";
 import { and, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
@@ -391,18 +391,12 @@ export class NeonDatabaseService implements DatabaseService {
       );
   }
 
-  async isFollowing(
-    followerId: string,
-    followingId: string
-  ): Promise<boolean> {
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
     const result = await db
       .select({ id: follows.id })
       .from(follows)
       .where(
-        and(
-          eq(follows.followerId, followerId),
-          eq(follows.followingId, followingId)
-        )
+        and(eq(follows.followerId, followerId), eq(follows.followingId, followingId))
       )
       .limit(1);
 
@@ -465,10 +459,7 @@ export class NeonDatabaseService implements DatabaseService {
       .where(
         and(
           eq(videos.status, "ready"),
-          or(
-            ilike(videos.title, searchTerm),
-            ilike(videos.description, searchTerm)
-          )
+          or(ilike(videos.title, searchTerm), ilike(videos.description, searchTerm))
         )
       )
       .orderBy(desc(videos.createdAt))
@@ -513,9 +504,7 @@ export class NeonDatabaseService implements DatabaseService {
     return this.enrichWithHashtags(result);
   }
 
-  async getTrendingHashtags(
-    limit = 10
-  ): Promise<{ name: string; count: number }[]> {
+  async getTrendingHashtags(limit = 10): Promise<{ name: string; count: number }[]> {
     const result = await db
       .select({
         name: hashtags.name,
@@ -537,11 +526,7 @@ export class NeonDatabaseService implements DatabaseService {
   // ============================================
 
   async getUserById(userId: string) {
-    const result = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
     return result[0] || null;
   }
@@ -564,10 +549,7 @@ export class NeonDatabaseService implements DatabaseService {
   // PRIVATE HELPERS
   // ============================================
 
-  private async attachHashtags(
-    videoId: string,
-    hashtagNames: string[]
-  ): Promise<void> {
+  private async attachHashtags(videoId: string, hashtagNames: string[]): Promise<void> {
     for (const rawName of hashtagNames) {
       const name = rawName.toLowerCase().replace(/^#/, "").trim();
       if (!name) continue;
