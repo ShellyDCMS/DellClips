@@ -23,10 +23,11 @@ export class SearchBarDriver extends BaseTestDriver<SearchBarDriverProps> {
     ...this._when,
     typeQuery: (query: string) => this.helper.when.type("search-input", query),
     submitForm: () => {
-      this.helper.when.type("search-input", "{enter}");
+      this.helper.when.typeSpecialCharacter("search-input", "{enter}");
     },
     typeAndSubmit: (query: string) => {
-      this.helper.when.type("search-input", `${query}{enter}`);
+      this.helper.when.type("search-input", query);
+      this.helper.when.typeSpecialCharacter("search-input", "{enter}");
     },
   };
 
