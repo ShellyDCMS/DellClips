@@ -748,18 +748,18 @@ dellclips/
 
 ### 12. Infrastructure & Cost Estimates (MVP)
 
-| Service               | Free Tier Available?     | MVP Monthly Cost           |
-| :-------------------- | :----------------------- | :------------------------- |
-| **Vercel**            | ✅ Yes (100 GB BW)       | **$0**                     |
-| **Neon PostgreSQL**   | ✅ Yes (0.5 GB, 190 hrs) | **$0**                     |
-| **Auth.js**           | ✅ Yes (OSS)             | **$0**                     |
-| **Resend**            | ✅ Yes (3,000 emails/mo) | **$0**                     |
-| **Serwist (PWA)**     | ✅ Yes (OSS)             | **$0**                     |
-| **Drizzle ORM**       | ✅ Yes (OSS)             | **$0**                     |
-| **hls.js**            | ✅ Yes (OSS)             | **$0**                     |
-| **Cloudflare Stream** | ❌ No (pay-as-you-go)    | **~$5-10**                 |
-| **Domain**            | is-a.dev (free subdomain)| **$0**                    |
-| **TOTAL**             |                          | **~$5-10/month**           |
+| Service               | Free Tier Available?      | MVP Monthly Cost |
+| :-------------------- | :------------------------ | :--------------- |
+| **Vercel**            | ✅ Yes (100 GB BW)        | **$0**           |
+| **Neon PostgreSQL**   | ✅ Yes (0.5 GB, 190 hrs)  | **$0**           |
+| **Auth.js**           | ✅ Yes (OSS)              | **$0**           |
+| **Resend**            | ✅ Yes (3,000 emails/mo)  | **$0**           |
+| **Serwist (PWA)**     | ✅ Yes (OSS)              | **$0**           |
+| **Drizzle ORM**       | ✅ Yes (OSS)              | **$0**           |
+| **hls.js**            | ✅ Yes (OSS)              | **$0**           |
+| **Cloudflare Stream** | ❌ No (pay-as-you-go)     | **~$5-10**       |
+| **Domain**            | is-a.dev (free subdomain) | **$0**           |
+| **TOTAL**             |                           | **~$5-10/month** |
 
 #### Cost Scaling Projections
 

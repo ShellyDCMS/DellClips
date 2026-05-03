@@ -143,18 +143,18 @@ choices are made. Swapping any vendor requires:
 
 #### MVP Launch Phase (Month 1-3)
 
-| Service                    | Free Tier?                       | Monthly Cost     |
-| :------------------------- | :------------------------------- | :--------------- |
-| Vercel (hosting)           | ✅ Yes — 100 GB bandwidth        | **$0**           |
-| Neon PostgreSQL (database) | ✅ Yes — 0.5 GB, 190 compute hrs | **$0**           |
-| Auth.js (authentication)   | ✅ Yes — open source             | **$0**           |
-| Resend (email)             | ✅ Yes — 3,000 emails/month      | **$0**           |
-| hls.js (video player)      | ✅ Yes — open source             | **$0**           |
-| Serwist (PWA)              | ✅ Yes — open source             | **$0**           |
-| Drizzle ORM                | ✅ Yes — open source             | **$0**           |
-| Cloudflare Stream (video)  | ❌ Pay-as-you-go                 | **~$5-10**       |
-| Domain (for email + hosting) | is-a.dev free subdomain | **$0** |
-| **Total MVP monthly cost** |                                  | **~$5-10/month** |
+| Service                      | Free Tier?                       | Monthly Cost     |
+| :--------------------------- | :------------------------------- | :--------------- |
+| Vercel (hosting)             | ✅ Yes — 100 GB bandwidth        | **$0**           |
+| Neon PostgreSQL (database)   | ✅ Yes — 0.5 GB, 190 compute hrs | **$0**           |
+| Auth.js (authentication)     | ✅ Yes — open source             | **$0**           |
+| Resend (email)               | ✅ Yes — 3,000 emails/month      | **$0**           |
+| hls.js (video player)        | ✅ Yes — open source             | **$0**           |
+| Serwist (PWA)                | ✅ Yes — open source             | **$0**           |
+| Drizzle ORM                  | ✅ Yes — open source             | **$0**           |
+| Cloudflare Stream (video)    | ❌ Pay-as-you-go                 | **~$5-10**       |
+| Domain (for email + hosting) | is-a.dev free subdomain          | **$0**           |
+| **Total MVP monthly cost**   |                                  | **~$5-10/month** |
 
 #### Scale Phase — Departmental (500 users, 500 videos)
 
