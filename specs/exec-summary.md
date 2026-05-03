@@ -153,7 +153,7 @@ choices are made. Swapping any vendor requires:
 | Serwist (PWA)              | ✅ Yes — open source             | **$0**           |
 | Drizzle ORM                | ✅ Yes — open source             | **$0**           |
 | Cloudflare Stream (video)  | ❌ Pay-as-you-go                 | **~$5-10**       |
-| Domain name                | Not needed (use \*.vercel.app)   | **$0**           |
+| Domain (for email + hosting) | is-a.dev free subdomain | **$0** |
 | **Total MVP monthly cost** |                                  | **~$5-10/month** |
 
 #### Scale Phase — Departmental (500 users, 500 videos)

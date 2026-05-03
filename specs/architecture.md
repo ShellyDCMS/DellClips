@@ -758,7 +758,7 @@ dellclips/
 | **Drizzle ORM**       | ✅ Yes (OSS)             | **$0**                     |
 | **hls.js**            | ✅ Yes (OSS)             | **$0**                     |
 | **Cloudflare Stream** | ❌ No (pay-as-you-go)    | **~$5-10**                 |
-| **Domain**            | Not needed for MVP       | **$0** (use \*.vercel.app) |
+| **Domain**            | is-a.dev (free subdomain)| **$0**                    |
 | **TOTAL**             |                          | **~$5-10/month**           |
 
 #### Cost Scaling Projections

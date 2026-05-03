@@ -62,6 +62,10 @@ Store or Play Store deployment.
 | F15 | **In-App Video Editing**         | Basic trim, crop, and text-overlay tools before publishing.                                          |
 | F16 | **Analytics Dashboard**          | View counts, engagement rates, and trending content metrics for leadership.                          |
 | F17 | **Video Captions (AI)**          | Auto-generated captions/subtitles for accessibility compliance.                                      |
+| F18 | **Passkey Authentication (WebAuthn)** | After initial magic link login,
+prompt users to set up FaceID/TouchID/Fingerprint for instant future logins.
+Eliminates the email context switch for repeat users while maintaining
+passwordless security. |
 
 ---
 
@@ -102,6 +106,8 @@ business value relative to implementation effort.
 | F15 — In-App Video Editing    | 🔴 High   | 3-4 weeks      | 🟢 Medium      | ⭐⭐       | Users can edit in their phone's native camera app for now.                                                                 |
 | F16 — Analytics Dashboard     | 🟡 Medium | 1 week         | 🟢 Medium      | ⭐⭐⭐     | Useful for proving engagement metrics to leadership.                                                                       |
 | F17 — AI Captions             | 🟢 Low    | 2-3 days       | 🟡 High        | ⭐⭐⭐⭐   | Can leverage video platform's built-in captioning features.                                                                |
+| F18 — Passkey Auth (V2)            | 🟡 Medium   | 1 week     | 🟡 High     | ⭐⭐⭐⭐   |
+Auth.js supports WebAuthn natively. Best-in-class UX for repeat logins.     |
 
 ---
 
@@ -129,6 +135,13 @@ business value relative to implementation effort.
    caches the app shell only.
 5. **Content Policy:** Dell HR/Legal must approve a content policy before
    company-wide rollout.
+6. **Email Sending Domain:** Magic link authentication requires a verified
+sending domain. The project uses `dellclips.is-a.dev` — a free
+subdomain from the is-a.dev open-source project. This provides full
+DNS control (TXT/MX records) needed for Resend email verification.
+Local development uses console-logged magic link URLs and does not
+require the domain. For production at Dell scale, a Dell-owned
+subdomain (e.g., `dellclips.dell.com`) should replace this.
 
    ***
 
