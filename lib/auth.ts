@@ -17,12 +17,14 @@ export const authConfig: NextAuthConfig = {
   }),
   providers: [
     EmailProvider({
+      // Dummy server config required by Nodemailer validation at build time.
+      // Not actually used — sendVerificationRequest below handles all email delivery.
       server: {
         host: "localhost",
         port: 25,
         auth: { user: "", pass: "" },
       },
-      from: process.env.GMAIL_USER || "noreply@dellclips.com",
+      from: "DellClips <noreply@dellclips.is-a.dev>",
       sendVerificationRequest: async ({ identifier: email, url }) => {
         if (process.env.NODE_ENV === "development") {
           console.log("\n========================================");
@@ -32,21 +34,11 @@ export const authConfig: NextAuthConfig = {
           console.log("========================================\n");
           return;
         }
-        // Rewrite the callback URL to go through our interstitial page
-        // Original: /api/auth/callback/email?callbackUrl=...&token=...&email=...
-        // New:      /confirm?callbackUrl=...&token=...&email=...
-        const confirmUrl = url.replace("/api/auth/callback/email", "/confirm");
         // Delegates to whatever adapter is configured in lib/services.ts
         try {
-          console.log("[auth] === SENDING MAGIC LINK ===");
-          console.log("[auth] To:", email);
-          console.log("[auth] Original URL:", url);
-          console.log("[auth] Confirm URL:", confirmUrl);
-          await emailService.sendMagicLink(email, confirmUrl);
-          console.log("[auth] === MAGIC LINK SENT SUCCESSFULLY ===");
+          await emailService.sendMagicLink(email, url);
         } catch (err) {
-          console.error("[auth] === FAILED TO SEND MAGIC LINK ===");
-          console.error("[auth] Error:", err);
+          console.error("Failed to send magic link:", err);
           throw err;
         }
       },
