@@ -36,3 +36,28 @@ Tests live in `tests/unit/` and run via `npx vitest run`. All mocking uses `vi.m
 ### Mocking Pattern for Route Tests
 
 All route tests mock `@/lib/auth` and `@/lib/services` at the module level using `vi.mock()`. Each test verifies: auth guard (401), input validation (400), not found (404), forbidden (403 where applicable), success response, and DB error handling (500).
+
+## Cypress Component Tests
+
+Tests live co-located with components as `<name>.cy.ts` + `<name>.driver.ts`. Run via `npx cypress run --component`.
+
+### Tested Components
+
+| Component        | Driver                                      | Test                                    | Key scenarios                                                                                  |
+| ---------------- | ------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `VideoPlayer`    | `video-player/video-player.driver.ts`       | `video-player/video-player.cy.ts`       | Visible when active/inactive, mute button, play overlay                                        |
+| `VideoCard`      | `video-card/video-card.driver.ts`           | `video-card/video-card.cy.ts`           | Title/desc/hashtags display, null handling, like/comment/report/profile callbacks, menu toggle |
+| `VideoFeed`      | `video-feed/video-feed.driver.ts`           | `video-feed/video-feed.cy.ts`           | Empty feed message, video card count, feed container visibility                                |
+| `CommentSection` | `comment-section/comment-section.driver.ts` | `comment-section/comment-section.cy.ts` | Open/close, comment list, empty state, close callback, submit disabled                         |
+| `NavBar`         | `nav-bar/nav-bar.driver.ts`                 | `nav-bar/nav-bar.cy.ts`                 | Visible on all pages, link labels, requires Next.js context wrappers                           |
+| `FollowButton`   | `follow-button/follow-button.driver.ts`     | `follow-button/follow-button.cy.ts`     | Follow/unfollow toggle text                                                                    |
+| `ReportDialog`   | `report-dialog/report-dialog.driver.ts`     | `report-dialog/report-dialog.cy.ts`     | Open/close, reason selection, submit with description, cancel callback                         |
+
+### Driver Composition
+
+- `VideoCardDriver` composes `VideoPlayerDriver` (delegates `get.videoPlayer`)
+- `VideoFeedDriver` composes `VideoCardDriver` (delegates `when.videoCard`, `get.videoCard`)
+
+### Next.js Context Wrappers
+
+NavBar requires `AppRouterContext.Provider` and `PathnameContext.Provider` as dynamic wrappers (from `next/dist/shared/lib/`) because `usePathname` and `Link` depend on Next.js router context. The driver exposes `pathnameValue` which the test file reads at render time via `wrappers: () => [...]`.
