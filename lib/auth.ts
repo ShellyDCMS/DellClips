@@ -16,8 +16,14 @@ export const authConfig: NextAuthConfig = {
   }),
   providers: [
     EmailProvider({
-      // No vendor-specific configuration here.
-      // Auth.js delegates to our EmailPort adapter via sendVerificationRequest.
+      // Dummy server config required by Nodemailer validation at build time.
+      // Not actually used — sendVerificationRequest below handles all email delivery.
+      server: {
+        host: "localhost",
+        port: 25,
+        auth: { user: "", pass: "" },
+      },
+      from: "DellClips <noreply@dellclips.is-a.dev>",
       sendVerificationRequest: async ({ identifier: email, url }) => {
         if (process.env.NODE_ENV === "development") {
           console.log("\n========================================");
