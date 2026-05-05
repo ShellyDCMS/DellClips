@@ -8,6 +8,7 @@ import NextAuth from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 
 export const authConfig: NextAuthConfig = {
+  debug: true,  // ← ADD THIS LINE (temporarily)
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,
