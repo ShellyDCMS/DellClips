@@ -280,9 +280,7 @@ describe("POST /api/videos", () => {
 
       it("then it should return 400 when videoPlaybackId is missing", async () => {
         // when
-        const response = await POST(
-          createPostRequest({ videoAssetId: "asset-123" })
-        );
+        const response = await POST(createPostRequest({ videoAssetId: "asset-123" }));
 
         // then
         expect(response.status).toBe(400);

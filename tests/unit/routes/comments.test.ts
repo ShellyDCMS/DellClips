@@ -169,10 +169,7 @@ describe("POST /api/videos/[id]/comments", () => {
         mockCreateComment.mockResolvedValue({ id: "comment-new" });
 
         // when
-        await POST(
-          createPostRequest({ text: "Nice work!" }),
-          createParams("video-1")
-        );
+        await POST(createPostRequest({ text: "Nice work!" }), createParams("video-1"));
 
         // then
         expect(mockCreateComment).toHaveBeenCalledWith("user-1", "video-1", "Nice work!");

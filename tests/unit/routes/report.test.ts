@@ -27,14 +27,11 @@ import { POST } from "@/app/api/videos/[id]/report/route";
 import { NextRequest } from "next/server";
 
 function createPostRequest(body: Record<string, unknown>): NextRequest {
-  return new NextRequest(
-    new URL("/api/videos/video-1/report", "http://localhost:3000"),
-    {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    }
-  );
+  return new NextRequest(new URL("/api/videos/video-1/report", "http://localhost:3000"), {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 function createParams(id: string): { params: Promise<{ id: string }> } {
@@ -142,10 +139,7 @@ describe("POST /api/videos/[id]/report", () => {
     describe("when sending a request without a reason", () => {
       it("then it should return 400", async () => {
         // when
-        const response = await POST(
-          createPostRequest({}),
-          createParams("video-1")
-        );
+        const response = await POST(createPostRequest({}), createParams("video-1"));
 
         // then
         expect(response.status).toBe(400);

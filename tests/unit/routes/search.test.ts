@@ -107,15 +107,11 @@ describe("GET /api/videos/search", () => {
         mockGetPlaybackUrl.mockReturnValue("https://stream.example.com/playback-1");
 
         // when
-        const response = await GET(
-          createRequest("/api/videos/search?hashtag=delltech")
-        );
+        const response = await GET(createRequest("/api/videos/search?hashtag=delltech"));
 
         // then
         const body = await response.json();
-        expect(body.videos[0].playbackUrl).toBe(
-          "https://stream.example.com/playback-1"
-        );
+        expect(body.videos[0].playbackUrl).toBe("https://stream.example.com/playback-1");
       });
     });
 
@@ -157,9 +153,7 @@ describe("GET /api/videos/search", () => {
         mockGetVideosByHashtag.mockResolvedValue([]);
 
         // when
-        await GET(
-          createRequest("/api/videos/search?hashtag=demo&q=engineering")
-        );
+        await GET(createRequest("/api/videos/search?hashtag=demo&q=engineering"));
 
         // then
         expect(mockGetVideosByHashtag).toHaveBeenCalled();

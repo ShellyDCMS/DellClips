@@ -23,10 +23,9 @@ import { POST, DELETE } from "@/app/api/videos/[id]/follow/route";
 import { NextRequest } from "next/server";
 
 function createRequest(method: string): NextRequest {
-  return new NextRequest(
-    new URL("/api/videos/user-2/follow", "http://localhost:3000"),
-    { method }
-  );
+  return new NextRequest(new URL("/api/videos/user-2/follow", "http://localhost:3000"), {
+    method,
+  });
 }
 
 function createParams(id: string): { params: Promise<{ id: string }> } {
