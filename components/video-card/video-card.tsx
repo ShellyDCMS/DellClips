@@ -74,9 +74,30 @@ export default function VideoCard({
       data-testid="video-card"
       className="relative w-full h-full snap-start snap-always"
     >
-      {/* Video Player */}
-      <VideoPlayer playbackUrl={video.playbackUrl} isActive={isActive} />
-
+      {/* Video Player — only mount when active */}
+      {isActive ? (
+        <VideoPlayer playbackUrl={video.playbackUrl} isActive={isActive} />
+      ) : (
+        <div
+          data-testid="video-placeholder"
+          className="w-full h-full bg-gray-900 flex items-center justify-center"
+        >
+          <div className="text-center">
+            <svg
+              className="w-16 h-16 text-gray-700 mx-auto"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            {video.title && (
+              <p className="text-gray-600 text-sm mt-2 px-8 line-clamp-1">
+                {video.title}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
       {/* Right Side Actions */}
       <div className="absolute right-3 bottom-32 flex flex-col items-center gap-5 z-10">
         {/* Profile */}
