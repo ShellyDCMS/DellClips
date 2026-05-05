@@ -1,4 +1,5 @@
 import { neon } from "@neondatabase/serverless";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "../drizzle/schema";
 
@@ -83,7 +84,7 @@ async function seed() {
       const existing = await db
         .select()
         .from(schema.videos)
-        .where(require("drizzle-orm").eq(schema.videos.videoAssetId, video.assetId))
+        .where(eq(schema.videos.videoAssetId, video.assetId))
         .limit(1);
 
       if (existing.length > 0) {
@@ -112,7 +113,7 @@ async function seed() {
         const [existing] = await db
           .select()
           .from(schema.hashtags)
-          .where(require("drizzle-orm").eq(schema.hashtags.name, tag))
+          .where(eq(schema.hashtags.name, tag))
           .limit(1);
 
         if (existing) {
