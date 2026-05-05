@@ -12,14 +12,15 @@ export default function PWAInstallPrompt() {
     null
   );
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(display-mode: standalone)").matches
+      : false
+  );
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-      return;
-    }
+    // Skip if already installed
+    if (isInstalled) return;
 
     // Check if user previously dismissed
     const dismissed = localStorage.getItem("pwa-install-dismissed");
@@ -43,7 +44,7 @@ export default function PWAInstallPrompt() {
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
     };
-  }, []);
+  }, [isInstalled]);
 
   const handleInstall = async () => {
     if (!installPrompt) return;
