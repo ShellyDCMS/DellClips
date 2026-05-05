@@ -51,6 +51,7 @@
     "html-react-parser": "^6.0.1",
     "prettier": "^3.8.3",
     "serwist": "^9.5.7",
+    "sharp": "^0.34.5",
     "sinon": "^21.1.2",
     "tailwindcss": "^4",
     "ts-stubber": "^1.0.19",
