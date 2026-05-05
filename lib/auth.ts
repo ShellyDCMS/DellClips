@@ -34,9 +34,13 @@ export const authConfig: NextAuthConfig = {
           console.log("========================================\n");
           return;
         }
+        // Rewrite the callback URL to go through our interstitial page
+        // Original: /api/auth/callback/email?callbackUrl=...&token=...&email=...
+        // New:      /confirm?callbackUrl=...&token=...&email=...
+        const confirmUrl = url.replace("/api/auth/callback/email", "/confirm");
         // Delegates to whatever adapter is configured in lib/services.ts
         try {
-          await emailService.sendMagicLink(email, url);
+          await emailService.sendMagicLink(email, confirmUrl);
         } catch (err) {
           console.error("Failed to send magic link:", err);
           throw err;
