@@ -1,4 +1,5 @@
 import PWAInstallPrompt from "@/components/pwa-install-prompt";
+import PWAiOSPrompt from "@/components/pwa-ios-prompt";
 import PWARegister from "@/components/pwa-register";
 import AuthSessionProvider from "@/components/session-provider";
 import type { Metadata, Viewport } from "next";
@@ -37,7 +38,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* PWA meta tags */}
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -48,6 +48,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           <PWARegister />
           <PWAInstallPrompt />
+          <PWAiOSPrompt />
           {children}
         </AuthSessionProvider>
       </body>
