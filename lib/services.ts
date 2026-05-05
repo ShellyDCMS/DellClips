@@ -1,4 +1,4 @@
-import { CloudflareVideoService } from "@/lib/adapters/cloudflare-video-service";
+import { DemoVideoService } from "@/lib/adapters/demo-video-service";
 import { NeonDatabaseService } from "@/lib/adapters/neon-database-service";
 import { GmailEmailService } from "./adapters/gmail-email-service";
 
@@ -10,7 +10,9 @@ import { GmailEmailService } from "./adapters/gmail-email-service";
 // Zero changes to business logic, API routes, or UI components.
 // ============================================
 
-export const videoService = new CloudflareVideoService();
+// export const videoService = new CloudflareVideoService();
+export const videoService = new DemoVideoService();
+
 export const emailService = new GmailEmailService();
 export const databaseService = new NeonDatabaseService();
 
