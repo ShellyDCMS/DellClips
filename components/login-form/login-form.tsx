@@ -20,7 +20,7 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const result = await signIn("resend", {
+      const result = await signIn("email", {
         email: email.toLowerCase().trim(),
         redirect: false,
         callbackUrl: "/feed",
