@@ -8,7 +8,7 @@ import NextAuth from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 
 export const authConfig: NextAuthConfig = {
-  debug: true, // ← ADD THIS LINE (temporarily)
+  debug: true,
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,
@@ -25,20 +25,27 @@ export const authConfig: NextAuthConfig = {
         auth: { user: "", pass: "" },
       },
       from: "DellClips <noreply@dellclips.is-a.dev>",
-      sendVerificationRequest: async ({ identifier: email, url }) => {
+      // Generate a 6-digit OTP code instead of a long token.
+      // This avoids corporate email scanners (Dell, Microsoft) pre-fetching
+      // magic links and exhausting the one-time-use token.
+      generateVerificationToken: () => {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        return code;
+      },
+      sendVerificationRequest: async ({ identifier: email, url, token }) => {
         if (process.env.NODE_ENV === "development") {
           console.log("\n========================================");
-          console.log("🔗 MAGIC LINK (dev only — click to sign in)");
+          console.log("� VERIFICATION CODE (dev only)");
           console.log(`📧 Email: ${email}`);
-          console.log(`🔑 URL: ${url}`);
+          console.log(`� Code: ${token}`);
+          console.log(`🔗 URL: ${url}`);
           console.log("========================================\n");
           return;
         }
-        // Delegates to whatever adapter is configured in lib/services.ts
         try {
-          await emailService.sendMagicLink(email, url);
+          await emailService.sendVerificationCode(email, token);
         } catch (err) {
-          console.error("Failed to send magic link:", err);
+          console.error("Failed to send verification code:", err);
           throw err;
         }
       },

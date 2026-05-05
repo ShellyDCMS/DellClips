@@ -40,8 +40,8 @@ export default async function LoginPage({
 
       {/* Footer */}
       <p className="mt-8 text-gray-600 text-xs text-center max-w-xs">
-        Sign in with your Dell email address. A magic link will be sent to verify your
-        identity.
+        Sign in with your Dell email address. A verification code will be sent to verify
+        your identity.
       </p>
     </div>
   );

@@ -1,20 +1,31 @@
-export default function VerifyPage() {
+import { VerifyForm } from "./verify-form";
+
+export default async function VerifyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string }>;
+}) {
+  const params = await searchParams;
+  const email = params.email || "";
+
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
       <div className="text-center max-w-sm">
-        {/* Email icon */}
-        <div className="mb-6 text-6xl">📧</div>
+        <div className="mb-6 text-6xl">�</div>
 
-        <h1 className="text-2xl font-bold text-white mb-3">Check your email</h1>
+        <h1 className="text-2xl font-bold text-white mb-3">Enter verification code</h1>
 
         <p className="text-gray-400 mb-6">
-          We sent a magic link to your Dell email address. Click the link in the email to
-          sign in.
+          We sent a 6-digit code to{" "}
+          <strong className="text-gray-200">{email || "your email"}</strong>. Enter it
+          below to sign in.
         </p>
+
+        <VerifyForm email={email} />
 
         <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
           <p className="text-gray-500 text-sm">
-            💡 The link expires in <strong className="text-gray-300">10 minutes</strong>.
+            💡 The code expires in <strong className="text-gray-300">10 minutes</strong>.
             Check your spam folder if you don&apos;t see it.
           </p>
         </div>
