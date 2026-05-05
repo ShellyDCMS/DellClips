@@ -6,7 +6,7 @@ import { Suspense, useState } from "react";
 function ConfirmContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error] = useState(false);
 
   const callbackUrl = searchParams.get("callbackUrl") || "/feed";
   const token = searchParams.get("token") || "";
