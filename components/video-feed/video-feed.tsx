@@ -92,14 +92,20 @@ export default function VideoFeed({
     setIsLoading(false);
   }, [videos.length, isLoading, hasMore]);
 
+  // Keep a stable ref to loadMore for the effect below
+  const loadMoreRef = useRef(loadMore);
+  useEffect(() => {
+    loadMoreRef.current = loadMore;
+  }, [loadMore]);
+
   // Trigger load more when approaching the last video
   useEffect(() => {
     if (activeIndex >= videos.length - 2 && hasMore) {
-      loadMore();
+      loadMoreRef.current();
     }
-  }, [activeIndex, videos.length, hasMore, loadMore]);
+  }, [activeIndex, videos.length, hasMore]);
 
-  const handleLike = (videoId: string, liked: boolean) => {
+  const handleLike = (_videoId: string, _liked: boolean) => {
     // Optimistic update already handled in VideoCard
   };
 

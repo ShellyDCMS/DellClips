@@ -1,5 +1,5 @@
 import { DemoVideoService } from "@/lib/adapters/demo-video-service";
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe("DemoVideoService", () => {
   let service: DemoVideoService;

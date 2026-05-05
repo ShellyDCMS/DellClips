@@ -31,22 +31,27 @@ export default function CommentSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isOpen && videoId) {
-      fetchComments();
-    }
-  }, [isOpen, videoId]);
+    if (!isOpen || !videoId) return;
 
-  const fetchComments = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch(`/api/videos/${videoId}/comments`);
-      const data = await res.json();
-      setComments(data.comments || []);
-    } catch (error) {
-      console.error("Failed to fetch comments:", error);
+    let cancelled = false;
+
+    async function load() {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`/api/videos/${videoId}/comments`);
+        const data = await res.json();
+        if (!cancelled) setComments(data.comments || []);
+      } catch (error) {
+        console.error("Failed to fetch comments:", error);
+      }
+      if (!cancelled) setIsLoading(false);
     }
-    setIsLoading(false);
-  };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, videoId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +67,9 @@ export default function CommentSection({
 
       if (res.ok) {
         setNewComment("");
-        fetchComments();
+        const refreshRes = await fetch(`/api/videos/${videoId}/comments`);
+        const refreshData = await refreshRes.json();
+        setComments(refreshData.comments || []);
       }
     } catch (error) {
       console.error("Failed to post comment:", error);
