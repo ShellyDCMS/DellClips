@@ -7,11 +7,12 @@ export default function PWAiOSPrompt() {
 
   useEffect(() => {
     const isIOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+      !(window as unknown as { MSStream?: unknown }).MSStream;
 
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (navigator as any).standalone === true;
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
 
     const dismissed = localStorage.getItem("pwa-ios-dismissed");
     if (dismissed) {
