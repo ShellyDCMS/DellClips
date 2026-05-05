@@ -1,26 +1,11 @@
 import { accounts, sessions, users, verificationTokens } from "@/drizzle/schema";
 import { db } from "@/lib/db";
+import { emailService } from "@/lib/services";
 import { isDellEmail } from "@/lib/utils";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import type { NextAuthConfig } from "next-auth";
 import NextAuth from "next-auth";
-import Resend from "next-auth/providers/resend";
-
-const resendProvider = Resend({
-  apiKey: process.env.AUTH_RESEND_KEY,
-  from: "DellClips <onboarding@resend.dev>",
-});
-
-// In development, log magic link to console instead of sending email
-if (process.env.NODE_ENV === "development") {
-  resendProvider.sendVerificationRequest = async ({ identifier: email, url }) => {
-    console.log("\n========================================");
-    console.log("🔗 MAGIC LINK (dev only — click to sign in)");
-    console.log(`📧 Email: ${email}`);
-    console.log(`🔑 URL: ${url}`);
-    console.log("========================================\n");
-  };
-}
+import EmailProvider from "next-auth/providers/email";
 
 export const authConfig: NextAuthConfig = {
   adapter: DrizzleAdapter(db, {
@@ -29,7 +14,35 @@ export const authConfig: NextAuthConfig = {
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  providers: [resendProvider],
+  providers: [
+    EmailProvider({
+      // Dummy server config required by Nodemailer validation at build time.
+      // Not actually used — sendVerificationRequest below handles all email delivery.
+      server: {
+        host: "localhost",
+        port: 25,
+        auth: { user: "", pass: "" },
+      },
+      from: "DellClips <noreply@dellclips.is-a.dev>",
+      sendVerificationRequest: async ({ identifier: email, url }) => {
+        if (process.env.NODE_ENV === "development") {
+          console.log("\n========================================");
+          console.log("🔗 MAGIC LINK (dev only — click to sign in)");
+          console.log(`📧 Email: ${email}`);
+          console.log(`🔑 URL: ${url}`);
+          console.log("========================================\n");
+          return;
+        }
+        // Delegates to whatever adapter is configured in lib/services.ts
+        try {
+          await emailService.sendMagicLink(email, url);
+        } catch (err) {
+          console.error("Failed to send magic link:", err);
+          throw err;
+        }
+      },
+    }),
+  ],
   pages: {
     signIn: "/login",
     verifyRequest: "/verify",

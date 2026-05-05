@@ -1,6 +1,6 @@
 import { CloudflareVideoService } from "@/lib/adapters/cloudflare-video-service";
 import { NeonDatabaseService } from "@/lib/adapters/neon-database-service";
-import { ResendEmailService } from "@/lib/adapters/resend-email-service";
+import { GmailEmailService } from "./adapters/gmail-email-service";
 
 // ============================================
 // COMPOSITION ROOT
@@ -11,7 +11,7 @@ import { ResendEmailService } from "@/lib/adapters/resend-email-service";
 // ============================================
 
 export const videoService = new CloudflareVideoService();
-export const emailService = new ResendEmailService();
+export const emailService = new GmailEmailService();
 export const databaseService = new NeonDatabaseService();
 
 // Future swaps (examples):
