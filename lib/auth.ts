@@ -1,9 +1,4 @@
-import {
-  accounts,
-  sessions,
-  users,
-  verificationTokens,
-} from "@/drizzle/schema";
+import { accounts, sessions, users, verificationTokens } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { emailService } from "@/lib/services";
 import { isDellEmail } from "@/lib/utils";
@@ -65,9 +60,4 @@ export const authConfig: NextAuthConfig = {
   },
 };
 
-export const {
-  handlers,
-  auth,
-  signIn,
-  signOut,
-} = NextAuth(authConfig);
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

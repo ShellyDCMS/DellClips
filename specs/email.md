@@ -25,15 +25,15 @@ Enterprise SSO, push notifications, moderation dashboard, in-app editing, analyt
 
 ## MVP Cost
 
-| Service           | Monthly Cost |
-| :---------------- | :----------- |
-| Hosting (Vercel)  | $0           |
-| Database (Neon)   | $0           |
-| Auth, ORM, PWA    | $0 (OSS)     |
-| Email (Resend)    | $0           |
-| Video (Cloudflare Stream) | ~$5-10 |
-| Domain (is-a.dev) | $0           |
-| **Total**         | **~$5-10/mo** |
+| Service                   | Monthly Cost  |
+| :------------------------ | :------------ |
+| Hosting (Vercel)          | $0            |
+| Database (Neon)           | $0            |
+| Auth, ORM, PWA            | $0 (OSS)      |
+| Email (Resend)            | $0            |
+| Video (Cloudflare Stream) | ~$5-10        |
+| Domain (is-a.dev)         | $0            |
+| **Total**                 | **~$5-10/mo** |
 
 Scales to ~$55-65/mo at 500 users, ~$190-260/mo company-wide. Compare: native apps ($50-200/mo + 3-6 months), enterprise platforms ($500-5,000/mo).
 
