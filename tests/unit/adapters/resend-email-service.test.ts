@@ -23,38 +23,33 @@ describe("ResendEmailService", () => {
   });
 
   describe("given a valid Resend configuration", () => {
-    describe("when sending a magic link", () => {
+    describe("when sending a verification code", () => {
       it("then it should call Resend API with correct parameters", async () => {
         // given
         mockSend.mockResolvedValueOnce({ id: "email-123" });
 
         // when
-        await service.sendMagicLink(
-          "john@dell.com",
-          "https://app.com/verify?token=abc123"
-        );
+        await service.sendVerificationCode("john@dell.com", "123456");
 
         // then
         expect(mockSend).toHaveBeenCalledOnce();
         expect(mockSend).toHaveBeenCalledWith(
           expect.objectContaining({
             to: "john@dell.com",
-            subject: "Sign in to DellClips",
           })
         );
       });
 
-      it("then the email should contain the magic link URL", async () => {
+      it("then the email should contain the verification code", async () => {
         // given
         mockSend.mockResolvedValueOnce({ id: "email-456" });
-        const magicLinkUrl = "https://app.com/verify?token=xyz789";
 
         // when
-        await service.sendMagicLink("jane@dell.com", magicLinkUrl);
+        await service.sendVerificationCode("jane@dell.com", "654321");
 
         // then
         const callArgs = mockSend.mock.calls[0][0];
-        expect(callArgs.html).toContain(magicLinkUrl);
+        expect(callArgs.html).toContain("654321");
       });
 
       it("then the email should be sent from DellClips", async () => {
@@ -62,7 +57,7 @@ describe("ResendEmailService", () => {
         mockSend.mockResolvedValueOnce({ id: "email-789" });
 
         // when
-        await service.sendMagicLink("user@dell.com", "https://link");
+        await service.sendVerificationCode("user@dell.com", "111222");
 
         // then
         const callArgs = mockSend.mock.calls[0][0];
@@ -77,7 +72,7 @@ describe("ResendEmailService", () => {
 
         // when / then
         await expect(
-          service.sendMagicLink("user@dell.com", "https://link")
+          service.sendVerificationCode("user@dell.com", "999999")
         ).rejects.toThrow("API rate limit exceeded");
       });
     });

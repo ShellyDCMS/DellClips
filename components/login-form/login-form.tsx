@@ -27,10 +27,10 @@ export default function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Failed to send magic link. Please try again.");
+        setError("Failed to send verification code. Please try again.");
         setIsLoading(false);
       } else {
-        window.location.href = "/verify";
+        window.location.href = `/verify?email=${encodeURIComponent(email.toLowerCase().trim())}`;
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -93,7 +93,7 @@ export default function LoginForm() {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
               />
             </svg>
-            Sending Magic Link...
+            Sending Code...
           </span>
         ) : (
           "Continue with Email"

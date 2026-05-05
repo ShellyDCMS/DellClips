@@ -14,30 +14,30 @@ describe("EmailService Port (interface contract via ts-stubber)", () => {
   });
 
   describe("given a stubbed EmailService", () => {
-    describe("when sending a magic link", () => {
-      it("then it should accept email and url parameters", async () => {
+    describe("when sending a verification code", () => {
+      it("then it should accept email and code parameters", async () => {
         // given
-        (service.sendMagicLink as sinon.SinonStub).resolves(undefined);
+        (service.sendVerificationCode as sinon.SinonStub).resolves(undefined);
 
         // when
-        await service.sendMagicLink("user@dell.com", "https://app.com/verify?token=abc");
+        await service.sendVerificationCode("user@dell.com", "123456");
 
         // then
         expect(
-          (service.sendMagicLink as sinon.SinonStub).calledOnceWith(
+          (service.sendVerificationCode as sinon.SinonStub).calledOnceWith(
             "user@dell.com",
-            "https://app.com/verify?token=abc"
+            "123456"
           )
         ).toBe(true);
       });
 
       it("then it should resolve without returning a value", async () => {
         // given
-        (service.sendMagicLink as sinon.SinonStub).resolves(undefined);
+        (service.sendVerificationCode as sinon.SinonStub).resolves(undefined);
 
         // when / then
         await expect(
-          service.sendMagicLink("user@dell.com", "https://link")
+          service.sendVerificationCode("user@dell.com", "654321")
         ).resolves.toBeUndefined();
       });
     });
