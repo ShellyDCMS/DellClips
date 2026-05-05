@@ -34,7 +34,12 @@ export const authConfig: NextAuthConfig = {
           return;
         }
         // Delegates to whatever adapter is configured in lib/services.ts
-        await emailService.sendMagicLink(email, url);
+        try {
+          await emailService.sendMagicLink(email, url);
+        } catch (err) {
+          console.error("Failed to send magic link:", err);
+          throw err;
+        }
       },
     }),
   ],
