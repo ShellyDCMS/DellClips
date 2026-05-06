@@ -2,6 +2,7 @@ import {
   comments,
   follows,
   hashtags,
+  hashtagSubscriptions,
   likes,
   reports,
   users,
@@ -28,8 +29,26 @@ export class NeonDatabaseService implements DatabaseService {
     const { userId, limit = 20, offset = 0 } = options;
 
     let followingIds: string[] = [];
+    let hashtagVideoIds: string[] = [];
+
     if (userId) {
       followingIds = await this.getFollowingIds(userId);
+
+      // Get subscribed hashtag IDs
+      const subscribedHashtags = await db
+        .select({ hashtagId: hashtagSubscriptions.hashtagId })
+        .from(hashtagSubscriptions)
+        .where(eq(hashtagSubscriptions.userId, userId));
+      const subscribedHashtagIds = subscribedHashtags.map((h) => h.hashtagId);
+
+      // Get video IDs that match subscribed hashtags
+      if (subscribedHashtagIds.length > 0) {
+        const hashtagVideos = await db
+          .select({ videoId: videoHashtags.videoId })
+          .from(videoHashtags)
+          .where(inArray(videoHashtags.hashtagId, subscribedHashtagIds));
+        hashtagVideoIds = hashtagVideos.map((v) => v.videoId);
+      }
     }
 
     const result = await db
@@ -52,13 +71,27 @@ export class NeonDatabaseService implements DatabaseService {
       .innerJoin(users, eq(videos.userId, users.id))
       .where(eq(videos.status, "ready"))
       .orderBy(
-        // Prioritize followed users if logged in
-        ...(followingIds.length > 0
+        ...(followingIds.length > 0 || hashtagVideoIds.length > 0
           ? [
-              sql`CASE WHEN ${videos.userId} IN (${sql.join(
-                followingIds.map((id) => sql`${id}`),
-                sql`, `
-              )}) THEN 0 ELSE 1 END`,
+              sql`CASE
+                WHEN ${videos.userId} IN (${
+                  followingIds.length > 0
+                    ? sql.join(
+                        followingIds.map((id) => sql`${id}`),
+                        sql`, `
+                      )
+                    : sql`NULL`
+                }) THEN 0
+                WHEN ${videos.id} IN (${
+                  hashtagVideoIds.length > 0
+                    ? sql.join(
+                        hashtagVideoIds.map((id) => sql`${id}`),
+                        sql`, `
+                      )
+                    : sql`NULL`
+                }) THEN 1
+                ELSE 2
+              END`,
               desc(videos.createdAt),
             ]
           : [desc(videos.createdAt)])
@@ -519,6 +552,87 @@ export class NeonDatabaseService implements DatabaseService {
       .limit(limit);
 
     return result.map((r) => ({ name: r.name, count: r.count }));
+  }
+
+  // ============================================
+  // HASHTAG SUBSCRIPTIONS
+  // ============================================
+
+  async subscribeToHashtag(userId: string, hashtagName: string): Promise<void> {
+    // Find or create the hashtag
+    let hashtagId: string;
+    const [existing] = await db
+      .select({ id: hashtags.id })
+      .from(hashtags)
+      .where(eq(hashtags.name, hashtagName))
+      .limit(1);
+
+    if (existing) {
+      hashtagId = existing.id;
+    } else {
+      const [created] = await db
+        .insert(hashtags)
+        .values({ name: hashtagName })
+        .returning({ id: hashtags.id });
+      hashtagId = created.id;
+    }
+
+    await db
+      .insert(hashtagSubscriptions)
+      .values({ userId, hashtagId })
+      .onConflictDoNothing();
+  }
+
+  async unsubscribeFromHashtag(userId: string, hashtagName: string): Promise<void> {
+    const [hashtag] = await db
+      .select({ id: hashtags.id })
+      .from(hashtags)
+      .where(eq(hashtags.name, hashtagName))
+      .limit(1);
+
+    if (hashtag) {
+      await db
+        .delete(hashtagSubscriptions)
+        .where(
+          and(
+            eq(hashtagSubscriptions.userId, userId),
+            eq(hashtagSubscriptions.hashtagId, hashtag.id)
+          )
+        );
+    }
+  }
+
+  async isSubscribedToHashtag(userId: string, hashtagName: string): Promise<boolean> {
+    const [hashtag] = await db
+      .select({ id: hashtags.id })
+      .from(hashtags)
+      .where(eq(hashtags.name, hashtagName))
+      .limit(1);
+
+    if (!hashtag) return false;
+
+    const result = await db
+      .select({ id: hashtagSubscriptions.id })
+      .from(hashtagSubscriptions)
+      .where(
+        and(
+          eq(hashtagSubscriptions.userId, userId),
+          eq(hashtagSubscriptions.hashtagId, hashtag.id)
+        )
+      )
+      .limit(1);
+
+    return result.length > 0;
+  }
+
+  async getSubscribedHashtags(userId: string): Promise<{ name: string }[]> {
+    const result = await db
+      .select({ name: hashtags.name })
+      .from(hashtagSubscriptions)
+      .innerJoin(hashtags, eq(hashtagSubscriptions.hashtagId, hashtags.id))
+      .where(eq(hashtagSubscriptions.userId, userId));
+
+    return result;
   }
 
   // ============================================
