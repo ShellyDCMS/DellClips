@@ -163,7 +163,7 @@ export default function VideoPlayer({
       <video
         ref={videoRef}
         data-testid="video-element"
-        className="w-full h-full object-contain"
+        className="w-full h-full object-cover"
         playsInline
         webkit-playsinline=""
         muted={isMuted}
@@ -191,17 +191,17 @@ export default function VideoPlayer({
         </div>
       )}
 
-      {/* Custom Mute button — positioned below the safe area */}
+      {/* Custom Mute button */}
       <button
         data-testid="mute-button"
         onClick={toggleMute}
         onTouchStart={toggleMute}
-        className="absolute right-4 w-12 h-12 bg-black/50 rounded-full
+        className="absolute right-4 z-20 w-12 h-12 bg-black/50 rounded-full
              flex items-center justify-center backdrop-blur-sm
-             hover:bg-black/70 active:bg-black/80 transition-colors z-20
+             hover:bg-black/70 active:bg-black/80 transition-colors
              touch-manipulation"
         style={{
-          top: "calc(env(safe-area-inset-top, 16px) + 8px)",
+          top: "max(16px, env(safe-area-inset-top, 16px))",
           WebkitTapHighlightColor: "transparent",
           touchAction: "manipulation",
         }}
@@ -213,7 +213,7 @@ export default function VideoPlayer({
             className="absolute left-4 bg-black/50 rounded-full px-3 py-1.5
                backdrop-blur-sm z-20 animate-pulse"
             style={{
-              top: "calc(env(safe-area-inset-top, 16px) + 8px)",
+              top: "max(16px, env(safe-area-inset-top, 16px))",
               animationDuration: "3s",
               animationIterationCount: "2",
             }}
