@@ -6,14 +6,19 @@ export default function PWAiOSPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    const isIOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-      !(window as unknown as { MSStream?: unknown }).MSStream;
-
+    // Don't show if already installed as PWA (standalone mode)
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (navigator as unknown as { standalone?: boolean }).standalone === true;
 
+    if (isStandalone) return;
+
+    // Detect iOS device (not browser — we don't care which browser)
+    const isiOSDevice =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+      !(window as unknown as { MSStream?: unknown }).MSStream;
+
+    // Check if previously dismissed
     const dismissed = localStorage.getItem("pwa-ios-dismissed");
     if (dismissed) {
       const daysSince =
@@ -21,7 +26,7 @@ export default function PWAiOSPrompt() {
       if (daysSince < 14) return;
     }
 
-    if (isIOS && !isStandalone) {
+    if (isiOSDevice) {
       setTimeout(() => setShowPrompt(true), 2000);
     }
   }, []);
@@ -59,13 +64,13 @@ export default function PWAiOSPrompt() {
         </div>
         <div className="flex-1">
           <h3 className="text-white font-bold text-sm">Install DellClips</h3>
-          <p className="text-gray-400 text-xs mt-1 leading-relaxed">
+          <p className="text-gray-400 text-xs mt-1">
             To install this app on your device:
           </p>
         </div>
       </div>
 
-      {/* Step-by-step instructions */}
+      {/* Step-by-step instructions — no browser name mentioned */}
       <div className="mt-3 space-y-2">
         <div className="flex items-center gap-2">
           <span
@@ -83,7 +88,7 @@ export default function PWAiOSPrompt() {
             >
               <path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z" />
             </svg>{" "}
-            <strong className="text-white">Share</strong> button in Safari
+            <strong className="text-white">Share</strong> button in your browser
           </p>
         </div>
 
@@ -114,8 +119,7 @@ export default function PWAiOSPrompt() {
       </div>
 
       <p className="text-gray-600 text-[10px] mt-3 text-center">
-        The Share button is in Safari&apos;s toolbar — check both the top and bottom of
-        your screen
+        Look for the Share button in your browser&apos;s toolbar
       </p>
     </div>
   );
