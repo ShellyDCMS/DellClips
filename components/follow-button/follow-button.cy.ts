@@ -48,8 +48,10 @@ describe("FollowButton", () => {
 
   describe("given the user clicks the Follow button", () => {
     beforeEach(() => {
+      given.interceptFollow();
       when.render();
       when.clickFollow();
+      when.waitForFollow();
     });
 
     it('then the button text should change to "Following"', () => {
@@ -60,8 +62,10 @@ describe("FollowButton", () => {
   describe("given the user clicks the Following button to unfollow", () => {
     beforeEach(() => {
       given.initialIsFollowing(true);
+      given.interceptUnfollow();
       when.render();
       when.clickFollow();
+      when.waitForUnfollow();
     });
 
     it('then the button text should change back to "Follow"', () => {

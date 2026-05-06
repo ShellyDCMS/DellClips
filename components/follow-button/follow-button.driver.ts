@@ -21,11 +21,29 @@ export class FollowButtonDriver extends BaseTestDriver<FollowButtonDriverProps> 
     initialIsFollowing: (value: boolean = true) => {
       this.props.initialIsFollowing = value;
     },
+    interceptFollow: () => {
+      this.helper.given.interceptAndMockResponse({
+        method: "POST",
+        url: `**/api/users/${this.props.userId}/follow`,
+        alias: "follow",
+        response: { body: { following: true } },
+      });
+    },
+    interceptUnfollow: () => {
+      this.helper.given.interceptAndMockResponse({
+        method: "DELETE",
+        url: `**/api/users/${this.props.userId}/follow`,
+        alias: "unfollow",
+        response: { body: { following: false } },
+      });
+    },
   };
 
   when = {
     ...this._when,
     clickFollow: () => this.helper.when.click("follow-button"),
+    waitForFollow: () => this.helper.when.waitForResponse("follow"),
+    waitForUnfollow: () => this.helper.when.waitForResponse("unfollow"),
   };
 
   get = {
