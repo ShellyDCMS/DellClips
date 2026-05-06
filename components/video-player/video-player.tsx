@@ -73,7 +73,10 @@ export default function VideoPlayer({
     // Create and resume an AudioContext on user gesture
     // This unlocks the audio pipeline in iOS standalone mode
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof window.AudioContext })
+          .webkitAudioContext;
       if (AudioContext) {
         const ctx = new AudioContext();
         // Create a short silent buffer and play it
@@ -88,7 +91,7 @@ export default function VideoPlayer({
           ctx.resume();
         }
       }
-    } catch (e) {
+    } catch {
       // AudioContext not available — continue without it
     }
 
