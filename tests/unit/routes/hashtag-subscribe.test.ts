@@ -21,9 +21,12 @@ import { POST, DELETE } from "@/app/api/hashtags/[name]/subscribe/route";
 import { NextRequest } from "next/server";
 
 function createRequest(method: string): NextRequest {
-  return new NextRequest(new URL("/api/hashtags/delltech/subscribe", "http://localhost:3000"), {
-    method,
-  });
+  return new NextRequest(
+    new URL("/api/hashtags/delltech/subscribe", "http://localhost:3000"),
+    {
+      method,
+    }
+  );
 }
 
 function createParams(name: string): { params: Promise<{ name: string }> } {
@@ -149,7 +152,10 @@ describe("DELETE /api/hashtags/[name]/subscribe", () => {
         mockUnsubscribeFromHashtag.mockResolvedValue(undefined);
 
         // when
-        const response = await DELETE(createRequest("DELETE"), createParams("#Engineering"));
+        const response = await DELETE(
+          createRequest("DELETE"),
+          createParams("#Engineering")
+        );
 
         // then
         expect(response.status).toBe(200);
