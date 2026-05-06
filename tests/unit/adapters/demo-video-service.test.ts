@@ -28,13 +28,7 @@ describe("DemoVideoService", () => {
 
       it("then it should return one of the known demo video IDs", async () => {
         // given
-        const knownIds = [
-          "demo-big-buck-bunny",
-          "demo-sintel",
-          "demo-tears-of-steel",
-          "demo-elephant-dream",
-          "demo-test-pattern",
-        ];
+        const knownIds = ["demo-1", "demo-2", "demo-3", "demo-4", "demo-5"];
 
         // when
         const result = await service.createUploadUrl("user-456");
@@ -45,32 +39,20 @@ describe("DemoVideoService", () => {
     });
 
     describe("when getting a playback URL for a known demo asset", () => {
-      it("then it should return the matching HLS stream URL for big-buck-bunny", () => {
+      it("then it should return the Mux HLS stream URL for demo-1", () => {
         // when
-        const url = service.getPlaybackUrl("demo-big-buck-bunny");
+        const url = service.getPlaybackUrl("demo-1");
 
         // then
         expect(url).toBe("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8");
       });
 
-      it("then it should return the matching HLS stream URL for sintel", () => {
+      it("then it should return the Mux HLS stream URL for demo-3", () => {
         // when
-        const url = service.getPlaybackUrl("demo-sintel");
+        const url = service.getPlaybackUrl("demo-3");
 
         // then
-        expect(url).toBe(
-          "https://bitdash-a.akamaihd.net/content/sintel/hls/playlist.m3u8"
-        );
-      });
-
-      it("then it should return the matching HLS stream URL for tears-of-steel", () => {
-        // when
-        const url = service.getPlaybackUrl("demo-tears-of-steel");
-
-        // then
-        expect(url).toBe(
-          "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8"
-        );
+        expect(url).toBe("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8");
       });
     });
 
@@ -87,7 +69,7 @@ describe("DemoVideoService", () => {
     describe("when deleting a video", () => {
       it("then it should resolve without error (no-op)", async () => {
         // when / then
-        await expect(service.deleteVideo("demo-big-buck-bunny")).resolves.toBeUndefined();
+        await expect(service.deleteVideo("demo-1")).resolves.toBeUndefined();
       });
     });
   });
