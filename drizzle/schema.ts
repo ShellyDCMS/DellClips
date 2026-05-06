@@ -178,7 +178,27 @@ export const videoHashtags = pgTable(
     hashtagIdIdx: index("idx_video_hashtags_hashtag").on(table.hashtagId),
   })
 );
-
+// ============================================
+// HASHTAG SUBSCRIPTIONS (user subscribes to hashtags)
+// ============================================
+export const hashtagSubscriptions = pgTable(
+  "hashtag_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    hashtagId: uuid("hashtag_id")
+      .notNull()
+      .references(() => hashtags.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueSubscription: unique().on(table.userId, table.hashtagId),
+    userIdIdx: index("idx_hashtag_subs_user").on(table.userId),
+    hashtagIdIdx: index("idx_hashtag_subs_hashtag").on(table.hashtagId),
+  })
+);
 // ============================================
 // AUTH.JS REQUIRED TABLES
 // ============================================

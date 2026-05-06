@@ -133,4 +133,10 @@ export interface DatabaseService {
   getUserByEmail(
     email: string
   ): Promise<{ id: string; email: string; name: string | null } | null>;
+
+  // Hashtag Subscriptions
+  subscribeToHashtag(userId: string, hashtagName: string): Promise<void>;
+  unsubscribeFromHashtag(userId: string, hashtagName: string): Promise<void>;
+  isSubscribedToHashtag(userId: string, hashtagName: string): Promise<boolean>;
+  getSubscribedHashtags(userId: string): Promise<{ name: string }[]>;
 }
