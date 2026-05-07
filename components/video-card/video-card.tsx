@@ -2,6 +2,7 @@
 
 import VideoPlayer from "@/components/video-player/video-player";
 import { timeAgo } from "@/lib/utils";
+import Image from "next/image";
 import { useState } from "react";
 
 interface VideoCardProps {
@@ -137,10 +138,12 @@ export default function VideoCard({
                             text-white font-bold text-sm border-2 border-white"
             >
               {video.author.avatarUrl ? (
-                <img
+                <Image
                   src={video.author.avatarUrl}
                   alt={video.author.name || ""}
                   className="w-full h-full rounded-full object-cover"
+                  width={44}
+                  height={44}
                 />
               ) : (
                 authorInitial

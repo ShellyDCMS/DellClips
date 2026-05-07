@@ -1,6 +1,7 @@
 import FollowButton from "@/components/follow-button/follow-button";
 import { auth, signOut } from "@/lib/auth";
 import { databaseService } from "@/lib/services";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -55,10 +56,12 @@ export default async function ProfilePage({
                      text-white text-2xl font-bold mb-3"
         >
           {user.avatarUrl ? (
-            <img
+            <Image
               src={user.avatarUrl}
               alt={user.name || ""}
               className="w-full h-full rounded-full object-cover"
+              width={80}
+              height={80}
             />
           ) : (
             user.name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()
