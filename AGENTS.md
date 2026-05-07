@@ -12,11 +12,12 @@ Tests live in `tests/unit/` and run via `npx vitest run`. All mocking uses `vi.m
 
 ### Adapter Tests (`tests/unit/adapters/`)
 
-| File                               | Covers                                                            |
-| ---------------------------------- | ----------------------------------------------------------------- |
-| `cloudflare-video-service.test.ts` | `CloudflareVideoService` — upload URL, playback URL, delete       |
-| `demo-video-service.test.ts`       | `DemoVideoService` — fake upload, HLS playback URLs, no-op delete |
-| `resend-email-service.test.ts`     | Email service adapter                                             |
+| File                               | Covers                                                                                                               |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `cloudflare-video-service.test.ts` | `CloudflareVideoService` — upload URL, playback URL, delete                                                          |
+| `demo-video-service.test.ts`       | `DemoVideoService` — fake upload, HLS playback URLs, no-op delete                                                    |
+| `resend-email-service.test.ts`     | Email service adapter                                                                                                |
+| `gmail-email-service.test.ts`      | `GmailEmailService` — sendMail recipient, code in body/subject, DellClips sender, error propagation (driver pattern) |
 
 ### API Route Tests (`tests/unit/routes/`)
 
@@ -34,9 +35,23 @@ Tests live in `tests/unit/` and run via `npx vitest run`. All mocking uses `vi.m
 | `search.test.ts`            | `GET /api/videos/search`                     | Hashtag vs query, hashtag priority, limit cap, hasMore pagination  |
 | `hashtag-subscribe.test.ts` | `POST/DELETE /api/hashtags/[name]/subscribe` | Auth, subscribe/unsubscribe, # stripping, normalization, DB errors |
 
+### Utility / Helper Tests (`tests/unit/utils/`)
+
+| File                   | Covers                                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------------- |
+| `utils.test.ts`        | `isDellEmail`, `parseHashtags`, `normalizeHashtag`, `timeAgo`, `REPORT_REASONS`                           |
+| `auth-helpers.test.ts` | `getSession`, `requireAuth`, `requireAdmin`, `requireUserId` — auth/redirect/role checks (driver pattern) |
+
 ### Mocking Pattern for Route Tests
 
 All route tests mock `@/lib/auth` and `@/lib/services` at the module level using `vi.mock()`. Each test verifies: auth guard (401), input validation (400), not found (404), forbidden (403 where applicable), success response, and DB error handling (500).
+
+### Vitest Driver Pattern
+
+Tests marked "(driver pattern)" use a separate `.driver.ts` file with `given`/`when`/`get` objects:
+
+- **Driver** (`.driver.ts`) — owns mocks, service instantiation, result/error capture. Imports `beforeEach`/`vi` from `vitest`. Exposes `beforeAndAfter()`, `given`, `when`, `get`.
+- **Test** (`.test.ts`) — imports driver + `chance`. Destructures `{ given, when, get }`. Uses BDD structure: `describe('given …') → beforeEach(given/when) → it('then …', expect(get…))`. One assertion per `it`.
 
 ## Cypress Component Tests
 
@@ -54,11 +69,17 @@ Tests live co-located with components as `<name>.cy.ts` + `<name>.driver.ts`. Ru
 | `FollowButton`     | `follow-button/follow-button.driver.ts`         | `follow-button/follow-button.cy.ts`         | Follow/unfollow toggle text                                                                    |
 | `ReportDialog`     | `report-dialog/report-dialog.driver.ts`         | `report-dialog/report-dialog.cy.ts`         | Open/close, reason selection, submit with description, cancel callback                         |
 | `HashtagSubscribe` | `hashtag-subscribe/hashtag-subscribe.driver.ts` | `hashtag-subscribe/hashtag-subscribe.cy.ts` | Visibility, hashtag text, subscribe/unsubscribe click with intercepted API                     |
+| `LoginForm`        | `login-form/login-form.driver.ts`               | `login-form/login-form.cy.ts`               | Email input, submit button, non-dell email error, HTML validation                              |
+| `SearchBar`        | `search-bar/search-bar.driver.ts`               | `search-bar/search-bar.cy.ts`               | Input visible, placeholder, search callback, empty/whitespace guard                            |
+| `FeedClient`       | `app/(app)/feed/feed-client.driver.ts`          | `app/(app)/feed/feed-client.cy.ts`          | Empty feed, video count, comment open/close, report open/cancel/submit wiring                  |
+| `SearchClient`     | `app/(app)/search/search-client.driver.ts`      | `app/(app)/search/search-client.cy.ts`      | Trending/subscriptions/hashtag/query headers, no results, search results grid                  |
 
 ### Driver Composition
 
 - `VideoCardDriver` composes `VideoPlayerDriver` (delegates `get.videoPlayer`)
 - `VideoFeedDriver` composes `VideoCardDriver` (delegates `when.videoCard`, `get.videoCard`)
+- `FeedClientDriver` composes `VideoFeedDriver`, `CommentSectionDriver`, `ReportDialogDriver`
+- `SearchClientDriver` composes `SearchBarDriver`, `HashtagSubscribeDriver`
 
 ### Next.js Context Wrappers
 

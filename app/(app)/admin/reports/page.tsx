@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth-helpers";
 import { databaseService } from "@/lib/services";
 import { redirect } from "next/navigation";
 
 export default async function AdminReportsPage() {
+  await requireAdmin(); // Redirects non-admins to /feed
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/login");

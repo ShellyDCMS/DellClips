@@ -32,5 +32,5 @@ export default async function FeedPage() {
     })
   );
 
-  return <FeedClient initialVideos={enrichedVideos} />;
+  return <FeedClient initialVideos={enrichedVideos} currentUserId={session.user.id} />;
 }
