@@ -66,4 +66,44 @@ describe("VideoPlayer", () => {
       get.muteButton().should("be.visible");
     });
   });
+
+  describe("given a direct MP4 playback URL", () => {
+    beforeEach(() => {
+      given.playbackUrl("https://drive.google.com/uc?export=download&id=abc123.mp4");
+    });
+
+    describe("when the player is active", () => {
+      beforeEach(() => {
+        given.isActive();
+        when.render();
+      });
+
+      it("then the video player container should be visible", () => {
+        get.videoPlayer().should("be.visible");
+      });
+
+      it("then the video element should be visible", () => {
+        get.videoElement().should("be.visible");
+      });
+
+      it("then the mute button should be visible", () => {
+        get.muteButton().should("be.visible");
+      });
+    });
+
+    describe("when the player is not active", () => {
+      beforeEach(() => {
+        given.isActive(false);
+        when.render();
+      });
+
+      it("then the video player container should be visible", () => {
+        get.videoPlayer().should("be.visible");
+      });
+
+      it("then the play overlay should not exist", () => {
+        get.playOverlay().should("not.exist");
+      });
+    });
+  });
 });

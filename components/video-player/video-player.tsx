@@ -1,5 +1,4 @@
 "use client";
-
 import Hls from "hls.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -22,12 +21,20 @@ export default function VideoPlayer({
   const [isMuted, setIsMuted] = useState(true);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
-  // Initialize HLS
+  // ============================================
+  // EFFECT 1: Initialize video source (HLS or MP4)
+  // Depends on: [playbackUrl]
+  // Only runs when the playback URL changes
+  // ============================================
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (Hls.isSupported()) {
+    // Determine if the URL is HLS (.m3u8) or direct MP4
+    const isHLS = playbackUrl.includes(".m3u8");
+
+    if (isHLS && Hls.isSupported()) {
+      // HLS stream — use hls.js (Chrome, Firefox, etc.)
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
@@ -40,13 +47,21 @@ export default function VideoPlayer({
         hls.destroy();
         hlsRef.current = null;
       };
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari native HLS support (iOS)
+    } else if (isHLS && video.canPlayType("application/vnd.apple.mpegurl")) {
+      // HLS stream — Safari native support (iOS)
+      video.src = playbackUrl;
+    } else {
+      // Direct MP4 — no HLS library needed
       video.src = playbackUrl;
     }
   }, [playbackUrl]);
 
-  // Auto-play/pause based on active state
+  // ============================================
+  // EFFECT 2: Auto-play/pause based on scroll position
+  // Depends on: [isActive]
+  // Runs frequently as user scrolls — must NOT
+  // reinitialize the video source
+  // ============================================
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -62,16 +77,12 @@ export default function VideoPlayer({
   }, [isActive]);
 
   // iOS PWA audio unlock
-  // In standalone mode, we need to unlock audio on the FIRST user gesture.
-  // This creates a silent audio context that "unlocks" the audio pipeline.
   const unlockAudio = useCallback(() => {
     if (audioUnlocked) return;
 
     const video = videoRef.current;
     if (!video) return;
 
-    // Create and resume an AudioContext on user gesture
-    // This unlocks the audio pipeline in iOS standalone mode
     try {
       const AudioContext =
         window.AudioContext ||
@@ -79,34 +90,29 @@ export default function VideoPlayer({
           .webkitAudioContext;
       if (AudioContext) {
         const ctx = new AudioContext();
-        // Create a short silent buffer and play it
         const buffer = ctx.createBuffer(1, 1, 22050);
         const source = ctx.createBufferSource();
         source.buffer = buffer;
         source.connect(ctx.destination);
         source.start(0);
 
-        // Resume the context (required for iOS)
         if (ctx.state === "suspended") {
           ctx.resume();
         }
       }
     } catch {
-      // AudioContext not available — continue without it
+      // AudioContext not available
     }
 
-    // Also try to play the video unmuted briefly to unlock
     video.muted = false;
     video
       .play()
       .then(() => {
-        // If we don't want it unmuted yet, re-mute
         if (isMuted) {
           video.muted = true;
         }
       })
       .catch(() => {
-        // Play failed — re-mute
         video.muted = true;
       });
 
@@ -117,7 +123,6 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    // Unlock audio on first interaction (iOS PWA)
     unlockAudio();
 
     if (video.paused) {
@@ -139,14 +144,12 @@ export default function VideoPlayer({
       const video = videoRef.current;
       if (!video) return;
 
-      // Unlock audio on first interaction (iOS PWA)
       unlockAudio();
 
       const newMuted = !video.muted;
       video.muted = newMuted;
       setIsMuted(newMuted);
 
-      // If unmuting, ensure the video is playing
       if (!newMuted && video.paused) {
         video.play().catch(() => {});
       }
@@ -217,7 +220,7 @@ export default function VideoPlayer({
         )}
       </button>
 
-      {/* Physical mute switch reminder — shown when unmute fails */}
+      {/* Physical mute switch reminder */}
       {!isMuted && isActive && (
         <div
           data-testid="unmute-hint"
