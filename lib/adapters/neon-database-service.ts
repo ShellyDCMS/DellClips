@@ -18,6 +18,7 @@ import type {
   SearchVideosInput,
   VideoWithAuthor,
 } from "@/lib/ports/database-service";
+import { displayNameFromEmail } from "@/lib/utils";
 import { and, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
 export class NeonDatabaseService implements DatabaseService {
@@ -249,6 +250,7 @@ export class NeonDatabaseService implements DatabaseService {
         createdAt: comments.createdAt,
         authorId: users.id,
         authorName: users.name,
+        authorEmail: users.email,
         authorAvatarUrl: users.avatarUrl,
       })
       .from(comments)
@@ -262,7 +264,7 @@ export class NeonDatabaseService implements DatabaseService {
       createdAt: r.createdAt,
       author: {
         id: r.authorId,
-        name: r.authorName,
+        name: r.authorName || displayNameFromEmail(r.authorEmail),
         avatarUrl: r.authorAvatarUrl,
       },
     }));
@@ -744,7 +746,7 @@ export class NeonDatabaseService implements DatabaseService {
       createdAt: v.createdAt,
       author: {
         id: v.authorId,
-        name: v.authorName,
+        name: v.authorName || displayNameFromEmail(v.authorEmail),
         email: v.authorEmail,
         avatarUrl: v.authorAvatarUrl,
       },

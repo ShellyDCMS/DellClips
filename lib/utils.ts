@@ -39,3 +39,12 @@ export function timeAgo(date: Date): string {
 export function isDellEmail(email: string): boolean {
   return email.toLowerCase().endsWith("@dell.com");
 }
+
+// Display name from email (e.g. "shelly.goldblit@dell.com" → "Shelly Goldblit")
+export function displayNameFromEmail(email: string): string {
+  const local = email.split("@")[0];
+  return local
+    .split(/[._-]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
