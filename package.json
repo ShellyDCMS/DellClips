@@ -42,7 +42,7 @@
     "@shellygo/cypress-test-utils": "^6.0.6",
     "@tailwindcss/postcss": "^4",
     "@types/chance": "^1.1.8",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
