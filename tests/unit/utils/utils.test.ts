@@ -1,4 +1,5 @@
 import {
+  displayNameFromEmail,
   isDellEmail,
   normalizeHashtag,
   parseHashtags,
@@ -107,6 +108,44 @@ describe("timeAgo", () => {
     it("then it should show months", () => {
       const date = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
       expect(timeAgo(date)).toBe("2mo ago");
+    });
+  });
+});
+
+describe("displayNameFromEmail", () => {
+  describe("given an email with dot-separated name", () => {
+    it("then it should capitalize each part", () => {
+      expect(displayNameFromEmail("shelly.goldblit@dell.com")).toBe("Shelly Goldblit");
+    });
+  });
+
+  describe("given an email with underscore-separated name", () => {
+    it("then it should capitalize each part", () => {
+      expect(displayNameFromEmail("john_doe@dell.com")).toBe("John Doe");
+    });
+  });
+
+  describe("given an email with hyphen-separated name", () => {
+    it("then it should capitalize each part", () => {
+      expect(displayNameFromEmail("mary-jane@dell.com")).toBe("Mary Jane");
+    });
+  });
+
+  describe("given a single-word email", () => {
+    it("then it should capitalize it", () => {
+      expect(displayNameFromEmail("admin@dell.com")).toBe("Admin");
+    });
+  });
+
+  describe("given an email with mixed separators", () => {
+    it("then it should split on all separators", () => {
+      expect(displayNameFromEmail("john.doe_smith@dell.com")).toBe("John Doe Smith");
+    });
+  });
+
+  describe("given an email with uppercase letters", () => {
+    it("then it should normalize to title case", () => {
+      expect(displayNameFromEmail("SHELLY.GOLDBLIT@DELL.COM")).toBe("Shelly Goldblit");
     });
   });
 });
