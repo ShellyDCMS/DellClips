@@ -13,6 +13,8 @@ vi.mock("nodemailer", () => ({
 vi.stubEnv("GMAIL_USER", "dellclips@gmail.com");
 vi.stubEnv("GMAIL_APP_PASSWORD", "test-app-password");
 
+const DEFAULT_RELAY_EMAIL = "dell.clips@dell.com";
+
 export class GmailEmailServiceDriver {
   private service!: GmailEmailService;
   private lastError: Error | null = null;
@@ -21,6 +23,7 @@ export class GmailEmailServiceDriver {
   beforeAndAfter = () => {
     beforeEach(() => {
       mockSendMail.mockReset();
+      delete process.env.DELL_RELAY_EMAIL;
       this.service = new GmailEmailService();
       this.lastError = null;
       this.lastCallArgs = null;
@@ -34,6 +37,10 @@ export class GmailEmailServiceDriver {
     sendMailFails: (errorMessage: string) => {
       mockSendMail.mockRejectedValueOnce(new Error(errorMessage));
     },
+    relayEmail: (relayEmail: string) => {
+      process.env.DELL_RELAY_EMAIL = relayEmail;
+      this.service = new GmailEmailService();
+    },
   };
 
   when = {
@@ -45,11 +52,20 @@ export class GmailEmailServiceDriver {
         this.lastError = error as Error;
       }
     },
+    sendMagicLink: async (email: string, url: string) => {
+      try {
+        await this.service.sendMagicLink(email, url);
+        this.lastCallArgs = mockSendMail.mock.calls[0]?.[0] ?? null;
+      } catch (error) {
+        this.lastError = error as Error;
+      }
+    },
   };
 
   get = {
     sendMailMock: () => mockSendMail,
     lastCallArgs: () => this.lastCallArgs,
     lastError: () => this.lastError,
+    defaultRelayEmail: () => DEFAULT_RELAY_EMAIL,
   };
 }

@@ -12,12 +12,12 @@ Tests live in `tests/unit/` and run via `npx vitest run`. All mocking uses `vi.m
 
 ### Adapter Tests (`tests/unit/adapters/`)
 
-| File                               | Covers                                                                                                               |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `cloudflare-video-service.test.ts` | `CloudflareVideoService` — upload URL, playback URL, delete                                                          |
-| `demo-video-service.test.ts`       | `DemoVideoService` — fake upload, HLS playback URLs, no-op delete                                                    |
-| `resend-email-service.test.ts`     | Email service adapter                                                                                                |
-| `gmail-email-service.test.ts`      | `GmailEmailService` — sendMail recipient, code in body/subject, DellClips sender, error propagation (driver pattern) |
+| File                               | Covers                                                                                                                                                                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cloudflare-video-service.test.ts` | `CloudflareVideoService` — upload URL, playback URL, delete                                                                                                                                                                                   |
+| `demo-video-service.test.ts`       | `DemoVideoService` — fake upload, HLS playback URLs, no-op delete                                                                                                                                                                             |
+| `resend-email-service.test.ts`     | Email service adapter                                                                                                                                                                                                                         |
+| `gmail-email-service.test.ts`      | `GmailEmailService` — relay recipient, sendVerificationCode (code in body/subject/text, recipient in subject/body), sendMagicLink (URL in body, relay routing), custom DELL_RELAY_EMAIL, DellClips sender, error propagation (driver pattern) |
 
 ### API Route Tests (`tests/unit/routes/`)
 
@@ -59,20 +59,21 @@ Tests live co-located with components as `<name>.cy.ts` + `<name>.driver.ts`. Ru
 
 ### Tested Components
 
-| Component          | Driver                                          | Test                                        | Key scenarios                                                                                  |
-| ------------------ | ----------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `VideoPlayer`      | `video-player/video-player.driver.ts`           | `video-player/video-player.cy.ts`           | Visible when active/inactive, mute button, play overlay                                        |
-| `VideoCard`        | `video-card/video-card.driver.ts`               | `video-card/video-card.cy.ts`               | Title/desc/hashtags display, null handling, like/comment/report/profile callbacks, menu toggle |
-| `VideoFeed`        | `video-feed/video-feed.driver.ts`               | `video-feed/video-feed.cy.ts`               | Empty feed message, video card count, feed container visibility                                |
-| `CommentSection`   | `comment-section/comment-section.driver.ts`     | `comment-section/comment-section.cy.ts`     | Open/close, comment list, empty state, close callback, submit disabled                         |
-| `NavBar`           | `nav-bar/nav-bar.driver.ts`                     | `nav-bar/nav-bar.cy.ts`                     | Visible on all pages, link labels, requires Next.js context wrappers                           |
-| `FollowButton`     | `follow-button/follow-button.driver.ts`         | `follow-button/follow-button.cy.ts`         | Follow/unfollow toggle text                                                                    |
-| `ReportDialog`     | `report-dialog/report-dialog.driver.ts`         | `report-dialog/report-dialog.cy.ts`         | Open/close, reason selection, submit with description, cancel callback                         |
-| `HashtagSubscribe` | `hashtag-subscribe/hashtag-subscribe.driver.ts` | `hashtag-subscribe/hashtag-subscribe.cy.ts` | Visibility, hashtag text, subscribe/unsubscribe click with intercepted API                     |
-| `LoginForm`        | `login-form/login-form.driver.ts`               | `login-form/login-form.cy.ts`               | Email input, submit button, non-dell email error, HTML validation                              |
-| `SearchBar`        | `search-bar/search-bar.driver.ts`               | `search-bar/search-bar.cy.ts`               | Input visible, placeholder, search callback, empty/whitespace guard                            |
-| `FeedClient`       | `app/(app)/feed/feed-client.driver.ts`          | `app/(app)/feed/feed-client.cy.ts`          | Empty feed, video count, comment open/close, report open/cancel/submit wiring                  |
-| `SearchClient`     | `app/(app)/search/search-client.driver.ts`      | `app/(app)/search/search-client.cy.ts`      | Trending/subscriptions/hashtag/query headers, no results, search results grid                  |
+| Component          | Driver                                          | Test                                        | Key scenarios                                                                                                                                   |
+| ------------------ | ----------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VideoPlayer`      | `video-player/video-player.driver.ts`           | `video-player/video-player.cy.ts`           | Visible when active/inactive, mute button, play overlay                                                                                         |
+| `VideoCard`        | `video-card/video-card.driver.ts`               | `video-card/video-card.cy.ts`               | Title/desc/hashtags display, null handling, like/comment/report/profile callbacks, menu toggle                                                  |
+| `VideoFeed`        | `video-feed/video-feed.driver.ts`               | `video-feed/video-feed.cy.ts`               | Empty feed message, video card count, feed container visibility                                                                                 |
+| `CommentSection`   | `comment-section/comment-section.driver.ts`     | `comment-section/comment-section.cy.ts`     | Open/close, comment list, empty state, close callback, submit disabled                                                                          |
+| `NavBar`           | `nav-bar/nav-bar.driver.ts`                     | `nav-bar/nav-bar.cy.ts`                     | Visible on all pages, link labels, requires Next.js context wrappers                                                                            |
+| `FollowButton`     | `follow-button/follow-button.driver.ts`         | `follow-button/follow-button.cy.ts`         | Follow/unfollow toggle text                                                                                                                     |
+| `ReportDialog`     | `report-dialog/report-dialog.driver.ts`         | `report-dialog/report-dialog.cy.ts`         | Open/close, reason selection, submit with description, cancel callback                                                                          |
+| `HashtagSubscribe` | `hashtag-subscribe/hashtag-subscribe.driver.ts` | `hashtag-subscribe/hashtag-subscribe.cy.ts` | Visibility, hashtag text, subscribe/unsubscribe click with intercepted API                                                                      |
+| `LoginForm`        | `login-form/login-form.driver.ts`               | `login-form/login-form.cy.ts`               | Email input, submit button, non-dell email error, HTML validation                                                                               |
+| `SearchBar`        | `search-bar/search-bar.driver.ts`               | `search-bar/search-bar.cy.ts`               | Input visible, placeholder, search callback, empty/whitespace guard                                                                             |
+| `FeedClient`       | `app/(app)/feed/feed-client.driver.ts`          | `app/(app)/feed/feed-client.cy.ts`          | Empty feed, video count, comment open/close, report open/cancel/submit wiring                                                                   |
+| `SearchClient`     | `app/(app)/search/search-client.driver.ts`      | `app/(app)/search/search-client.cy.ts`      | Trending/subscriptions/hashtag/query headers, no results, search results grid                                                                   |
+| `VerifyForm`       | `app/(auth)/verify/verify-form.driver.ts`       | `app/(auth)/verify/verify-form.cy.ts`       | OTP input visible/placeholder/maxlength/inputMode, submit disabled when empty/partial, enabled with 6 digits, non-numeric filtering, email prop |
 
 ### Driver Composition
 
