@@ -9,7 +9,7 @@ import { UploadUrlResult, VideoService } from "@/lib/ports/video-service";
  * Good enough for demos and MVP testing.
  */
 export class GDriveVideoService implements VideoService {
-  async createUploadUrl(userId: string): Promise<UploadUrlResult> {
+  async createUploadUrl(_userId: string): Promise<UploadUrlResult> {
     // Google Drive doesn't support programmatic upload without OAuth
     // Videos are uploaded manually and the file ID is recorded
     console.log(
