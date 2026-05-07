@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import type { VideoWithAuthor } from "@/lib/ports/database-service";
 import { databaseService, videoService } from "@/lib/services";
 import { redirect } from "next/navigation";
 import SearchClient from "./search-client";
@@ -17,7 +18,7 @@ export default async function SearchPage({
   const query = params.q || "";
   const hashtag = params.hashtag || "";
 
-  let videos;
+  let videos: VideoWithAuthor[];
   let isSubscribed = false;
 
   if (hashtag) {
