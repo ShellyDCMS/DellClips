@@ -28,6 +28,7 @@ interface VideoFeedProps {
   onOpenReport: (videoId: string) => void;
   onHashtagClick: (hashtag: string) => void;
   onProfileClick: (userId: string) => void;
+  currentUserId: string;
 }
 
 export default function VideoFeed({
@@ -36,6 +37,7 @@ export default function VideoFeed({
   onOpenReport,
   onHashtagClick,
   onProfileClick,
+  currentUserId,
 }: VideoFeedProps) {
   const [videos, setVideos] = useState<Video[]>(initialVideos);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -146,6 +148,7 @@ export default function VideoFeed({
             onReport={onOpenReport}
             onHashtagClick={onHashtagClick}
             onProfileClick={onProfileClick}
+            currentUserId={currentUserId}
           />
         </div>
       ))}

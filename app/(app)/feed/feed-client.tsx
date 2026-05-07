@@ -27,9 +27,10 @@ interface Video {
 
 interface FeedClientProps {
   initialVideos: Video[];
+  currentUserId: string;
 }
 
-export default function FeedClient({ initialVideos }: FeedClientProps) {
+export default function FeedClient({ initialVideos, currentUserId }: FeedClientProps) {
   const router = useRouter();
   const [commentVideoId, setCommentVideoId] = useState<string | null>(null);
   const [reportVideoId, setReportVideoId] = useState<string | null>(null);
@@ -50,6 +51,10 @@ export default function FeedClient({ initialVideos }: FeedClientProps) {
     setReportVideoId(null);
   };
 
+  const handleHashtagClick = (hashtag: string) => {
+    router.push(`/search?hashtag=${encodeURIComponent(hashtag)}`);
+  };
+
   const handleReportSubmit = async (reason: string, description?: string) => {
     if (!reportVideoId) return;
 
@@ -66,11 +71,6 @@ export default function FeedClient({ initialVideos }: FeedClientProps) {
     setReportVideoId(null);
   };
 
-  const handleHashtagClick = (hashtag: string) => {
-    // TODO: Navigate to search results filtered by hashtag
-    console.log("Hashtag clicked:", hashtag);
-  };
-
   const handleProfileClick = (userId: string) => {
     router.push(`/profile/${userId}`);
   };
@@ -83,6 +83,7 @@ export default function FeedClient({ initialVideos }: FeedClientProps) {
         onOpenReport={handleOpenReport}
         onHashtagClick={handleHashtagClick}
         onProfileClick={handleProfileClick}
+        currentUserId={currentUserId}
       />
 
       {/* Comment Panel */}

@@ -24,6 +24,7 @@ interface VideoCardProps {
     hashtags: string[];
   };
   isActive: boolean;
+  currentUserId?: string;
   onLike: (videoId: string, liked: boolean) => void;
   onComment: (videoId: string) => void;
   onReport: (videoId: string) => void;
@@ -34,6 +35,7 @@ interface VideoCardProps {
 export default function VideoCard({
   video,
   isActive,
+  currentUserId,
   onLike,
   onComment,
   onReport,
@@ -43,6 +45,9 @@ export default function VideoCard({
   const [liked, setLiked] = useState(video.hasLiked);
   const [likeCount, setLikeCount] = useState(video.likeCount);
   const [showMenu, setShowMenu] = useState(false);
+  const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
+
+  const isOwnVideo = currentUserId === video.author.id;
 
   const handleLike = async () => {
     const newLiked = !liked;
@@ -53,7 +58,6 @@ export default function VideoCard({
       const method = newLiked ? "POST" : "DELETE";
       const res = await fetch(`/api/videos/${video.id}/like`, { method });
       if (!res.ok) {
-        // Revert on failure
         setLiked(!newLiked);
         setLikeCount((prev) => (newLiked ? prev - 1 : prev + 1));
       }
@@ -63,6 +67,23 @@ export default function VideoCard({
     }
 
     onLike(video.id, newLiked);
+  };
+
+  const handleQuickFollow = async () => {
+    const newState = !isFollowingAuthor;
+    setIsFollowingAuthor(newState);
+
+    try {
+      const method = newState ? "POST" : "DELETE";
+      const res = await fetch(`/api/users/${video.author.id}/follow`, {
+        method,
+      });
+      if (!res.ok) {
+        setIsFollowingAuthor(!newState);
+      }
+    } catch {
+      setIsFollowingAuthor(!newState);
+    }
   };
 
   const authorInitial =
@@ -98,28 +119,51 @@ export default function VideoCard({
           </div>
         </div>
       )}
+
       {/* Right Side Actions */}
-      <div className="absolute right-3 bottom-32 flex flex-col items-center gap-5 z-10">
-        {/* Profile */}
-        <button
-          data-testid="profile-button"
-          onClick={() => onProfileClick(video.author.id)}
-          className="flex flex-col items-center"
-        >
-          <div className="w-11 h-11 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold text-sm border-2 border-white">
-            {video.author.avatarUrl ? (
-              <Image
-                src={video.author.avatarUrl}
-                alt={video.author.name || ""}
-                className="w-full h-full rounded-full object-cover"
-                width={44}
-                height={44}
-              />
-            ) : (
-              authorInitial
-            )}
-          </div>
-        </button>
+      <div
+        className="absolute right-3 flex flex-col items-center gap-5 z-10"
+        style={{
+          bottom: "max(140px, calc(env(safe-area-inset-bottom, 0px) + 140px))",
+        }}
+      >
+        {/* Profile + Quick Follow */}
+        <div className="flex flex-col items-center relative">
+          <button
+            data-testid="profile-button"
+            onClick={() => onProfileClick(video.author.id)}
+          >
+            <div
+              className="w-11 h-11 rounded-full bg-gray-600 flex items-center justify-center
+                            text-white font-bold text-sm border-2 border-white"
+            >
+              {video.author.avatarUrl ? (
+                <Image
+                  src={video.author.avatarUrl}
+                  alt={video.author.name || ""}
+                  className="w-full h-full rounded-full object-cover"
+                  width={44}
+                  height={44}
+                />
+              ) : (
+                authorInitial
+              )}
+            </div>
+          </button>
+          {/* Quick follow button below avatar */}
+          {!isOwnVideo && (
+            <button
+              data-testid="quick-follow-button"
+              onClick={handleQuickFollow}
+              className={`absolute -bottom-2 w-5 h-5 rounded-full flex items-center
+                          justify-center text-white text-[10px] font-bold ${
+                            isFollowingAuthor ? "bg-gray-600" : "bg-red-500"
+                          }`}
+            >
+              {isFollowingAuthor ? "✓" : "+"}
+            </button>
+          )}
+        </div>
 
         {/* Like */}
         <button
@@ -201,7 +245,6 @@ export default function VideoCard({
         className="absolute bottom-0 left-0 right-16 p-4 z-10
                       bg-gradient-to-t from-black/80 via-black/40 to-transparent"
       >
-        {/* Author */}
         <button
           data-testid="author-name"
           onClick={() => onProfileClick(video.author.id)}
@@ -210,14 +253,12 @@ export default function VideoCard({
           @{video.author.name || video.author.email.split("@")[0]}
         </button>
 
-        {/* Title */}
         {video.title && (
           <p data-testid="video-title" className="text-white text-sm mt-1">
             {video.title}
           </p>
         )}
 
-        {/* Description (truncated) */}
         {video.description && (
           <p
             data-testid="video-description"
@@ -227,7 +268,6 @@ export default function VideoCard({
           </p>
         )}
 
-        {/* Hashtags */}
         {video.hashtags.length > 0 && (
           <div data-testid="hashtags" className="flex flex-wrap gap-1 mt-2">
             {video.hashtags.map((tag) => (
@@ -243,7 +283,6 @@ export default function VideoCard({
           </div>
         )}
 
-        {/* Timestamp */}
         <p className="text-gray-500 text-xs mt-1">{timeAgo(new Date(video.createdAt))}</p>
       </div>
     </div>

@@ -8,7 +8,7 @@ export default defineConfig({
   },
 
   component: {
-    specPattern: "components/**/*.cy.ts",
+    specPattern: ["components/**/*.cy.ts", "app/**/*.cy.ts"],
     devServer: {
       framework: "next",
       bundler: "webpack",
