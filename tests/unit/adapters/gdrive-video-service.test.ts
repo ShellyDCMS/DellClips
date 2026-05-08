@@ -42,7 +42,7 @@ describe("GDriveVideoService", () => {
       it("then it should return a Google Drive direct download URL", () => {
         const url = service.getPlaybackUrl(`gdrive-${fileId}`);
 
-        expect(url).toBe(`https://drive.google.com/uc?export=download&id=${fileId}`);
+        expect(url).toBe(`https://drive.google.com/file/d/${fileId}/preview`);
       });
 
       it("then it should strip the gdrive- prefix from the file ID", () => {
