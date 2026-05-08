@@ -19,7 +19,7 @@ vi.mock("@/lib/services", () => ({
   },
 }));
 
-import { POST, DELETE } from "@/app/api/videos/[id]/follow/route";
+import { DELETE, POST } from "@/app/api/users/[id]/follow/route";
 import { NextRequest } from "next/server";
 
 function createRequest(method: string): NextRequest {
