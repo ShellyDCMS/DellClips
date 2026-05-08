@@ -24,10 +24,6 @@ vi.mock("@/lib/services", () => ({
 import { GET, PUT } from "@/app/api/admin/config/route";
 import { NextRequest } from "next/server";
 
-function createGetRequest(): NextRequest {
-  return new NextRequest(new URL("/api/admin/config", "http://localhost:3000"));
-}
-
 function createPutRequest(body: Record<string, unknown>): NextRequest {
   return new NextRequest(new URL("/api/admin/config", "http://localhost:3000"), {
     method: "PUT",
