@@ -21,20 +21,17 @@ export default function VideoPlayer({
   const [isMuted, setIsMuted] = useState(true);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
-  // ============================================
-  // EFFECT 1: Initialize video source (HLS or MP4)
-  // Depends on: [playbackUrl]
-  // Only runs when the playback URL changes
-  // ============================================
+  // Detect if this is a Google Drive URL
+  const isGoogleDrive = playbackUrl.includes("drive.google.com");
+
+  // Effect 1: Initialize video source
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Determine if the URL is HLS (.m3u8) or direct MP4
     const isHLS = playbackUrl.includes(".m3u8");
 
     if (isHLS && Hls.isSupported()) {
-      // HLS stream — use hls.js (Chrome, Firefox, etc.)
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
@@ -48,28 +45,19 @@ export default function VideoPlayer({
         hlsRef.current = null;
       };
     } else if (isHLS && video.canPlayType("application/vnd.apple.mpegurl")) {
-      // HLS stream — Safari native support (iOS)
       video.src = playbackUrl;
     } else {
-      // Direct MP4 — no HLS library needed
       video.src = playbackUrl;
     }
   }, [playbackUrl]);
 
-  // ============================================
-  // EFFECT 2: Auto-play/pause based on scroll position
-  // Depends on: [isActive]
-  // Runs frequently as user scrolls — must NOT
-  // reinitialize the video source
-  // ============================================
+  // Effect 2: Auto-play/pause based on scroll
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     if (isActive) {
-      video.play().catch(() => {
-        // Autoplay blocked — user needs to interact first
-      });
+      video.play().catch(() => {});
     } else {
       video.pause();
       video.currentTime = 0;
@@ -156,6 +144,33 @@ export default function VideoPlayer({
     },
     [unlockAudio]
   );
+
+  // Google Drive: Use iframe (can't use <video> element)
+  if (isGoogleDrive) {
+    return (
+      <div data-testid="video-player" className="relative w-full h-full bg-black">
+        {isActive ? (
+          <iframe
+            src={playbackUrl}
+            className="w-full h-full border-0"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title="DellClips Video"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+            <svg
+              className="w-16 h-16 text-gray-700"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
