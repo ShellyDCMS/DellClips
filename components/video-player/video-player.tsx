@@ -1,4 +1,5 @@
 "use client";
+import { trackEvent } from "@/lib/analytics";
 import Hls from "hls.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -187,7 +188,10 @@ export default function VideoPlayer({
         muted={isMuted}
         loop
         preload="metadata"
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          trackEvent("video_view");
+        }}
         onPause={() => setIsPlaying(false)}
       />
 

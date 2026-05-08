@@ -256,3 +256,24 @@ export const appConfig = pgTable("app_config", {
   updatedBy: uuid("updated_by").references(() => users.id),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// ============================================
+// ANALYTICS EVENTS
+// ============================================
+export const analyticsEvents = pgTable(
+  "analytics_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    eventType: varchar("event_type", { length: 50 }).notNull(),
+    videoId: uuid("video_id").references(() => videos.id, { onDelete: "set null" }),
+    metadata: text("metadata"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    eventTypeIdx: index("idx_analytics_event_type").on(table.eventType),
+    userIdIdx: index("idx_analytics_user_id").on(table.userId),
+    videoIdIdx: index("idx_analytics_video_id").on(table.videoId),
+    createdAtIdx: index("idx_analytics_created_at").on(table.createdAt),
+  })
+);

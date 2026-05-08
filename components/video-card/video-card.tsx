@@ -1,10 +1,10 @@
 "use client";
 
 import VideoPlayer from "@/components/video-player/video-player";
+import { trackEvent } from "@/lib/analytics";
 import { timeAgo } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
-
 interface VideoCardProps {
   video: {
     id: string;
@@ -55,6 +55,7 @@ export default function VideoCard({
     const newLiked = !liked;
     setLiked(newLiked);
     setLikeCount((prev) => (newLiked ? prev + 1 : prev - 1));
+    trackEvent(newLiked ? "video_like" : "video_unlike", video.id);
 
     try {
       const method = newLiked ? "POST" : "DELETE";
@@ -74,7 +75,9 @@ export default function VideoCard({
   const handleQuickFollow = async () => {
     const newState = !isFollowingAuthor;
     setIsFollowingAuthor(newState);
-
+    trackEvent(newState ? "user_follow" : "user_unfollow", undefined, {
+      targetUserId: video.author.id,
+    });
     try {
       const method = newState ? "POST" : "DELETE";
       const res = await fetch(`/api/users/${video.author.id}/follow`, {

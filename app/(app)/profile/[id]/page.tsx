@@ -120,7 +120,6 @@ export default async function ProfilePage({
               </form>
 
               {/* Admin Link */}
-              {/* Admin Links */}
               {user.role === "admin" && (
                 <div className="flex gap-2 items-center">
                   <Link
@@ -135,6 +134,14 @@ export default async function ProfilePage({
                         {pendingReportCount}
                       </span>
                     )}
+                  </Link>
+                  <Link
+                    href="/admin/analytics"
+                    data-testid="admin-analytics-link"
+                    className="px-4 py-2 bg-blue-900 text-blue-300 rounded-lg text-sm
+                 hover:bg-blue-800 transition-colors inline-flex items-center gap-1"
+                  >
+                    📊 Analytics
                   </Link>
                   <Link
                     href="/admin/settings"
