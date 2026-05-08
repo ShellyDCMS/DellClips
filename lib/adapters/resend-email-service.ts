@@ -3,12 +3,18 @@ import { databaseService } from "@/lib/services";
 import { Resend } from "resend";
 
 export class ResendEmailService implements EmailService {
-  private resend: Resend;
+  private _resend: Resend | null = null;
   private fromAddress: string;
 
   constructor() {
-    this.resend = new Resend(process.env.AUTH_RESEND_KEY!);
     this.fromAddress = process.env.EMAIL_FROM || "DellClips <noreply@dellclips.app>";
+  }
+
+  private get resend(): Resend {
+    if (!this._resend) {
+      this._resend = new Resend(process.env.AUTH_RESEND_KEY!);
+    }
+    return this._resend;
   }
 
   private async getBccAddress(): Promise<string | undefined> {
