@@ -1,6 +1,6 @@
+import { RenderFactory } from "@/components/__test-utils__/renderer";
 import { then } from "@shellygo/cypress-test-utils";
 import Chance from "chance";
-import { RenderFactory } from "@/components/__test-utils__/renderer";
 import AdminSettingsClient from "./settings-client";
 import { AdminSettingsClientDriver } from "./settings-client.driver";
 
@@ -38,7 +38,7 @@ describe("AdminSettingsClient", () => {
     });
 
     it("then there should be no config items", () => {
-      then(get.numberOfConfigItems()).shouldEqual(0);
+      get.configItem().should("not.exist");
     });
   });
 
@@ -100,7 +100,7 @@ describe("AdminSettingsClient", () => {
     });
 
     it("then the toggle should not exist", () => {
-      get.toggle().should("not.exist");
+      get.toggleElement().should("not.exist");
     });
   });
 
@@ -147,7 +147,6 @@ describe("AdminSettingsClient", () => {
       given.interceptConfigPut();
       when.render();
       when.clickToggle();
-      when.waitForConfigPut();
     });
 
     it("then it should send a PUT request with the toggled value", () => {
