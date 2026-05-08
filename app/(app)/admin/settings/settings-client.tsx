@@ -63,8 +63,10 @@ export default function AdminSettingsClient({ initialConfig }: Props) {
   };
 
   return (
-    <div className="h-full overflow-y-auto px-4 pt-12 pb-20">
-      <h1 className="text-white text-xl font-bold mb-6">App Settings</h1>
+    <div data-testid="admin-settings" className="h-full overflow-y-auto px-4 pt-12 pb-20">
+      <h1 data-testid="settings-title" className="text-white text-xl font-bold mb-6">
+        App Settings
+      </h1>
 
       <div className="space-y-4">
         {config.map((item) => {
@@ -73,18 +75,30 @@ export default function AdminSettingsClient({ initialConfig }: Props) {
           return (
             <div
               key={item.key}
+              data-testid="config-item"
               className="bg-gray-900 border border-gray-800 rounded-xl p-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-white font-semibold text-sm">{item.key}</p>
+                  <p
+                    data-testid="config-key"
+                    className="text-white font-semibold text-sm"
+                  >
+                    {item.key}
+                  </p>
                   {item.description && (
-                    <p className="text-gray-500 text-xs mt-1">{item.description}</p>
+                    <p
+                      data-testid="config-description"
+                      className="text-gray-500 text-xs mt-1"
+                    >
+                      {item.description}
+                    </p>
                   )}
                 </div>
 
                 {isBool ? (
                   <button
+                    data-testid="config-toggle"
                     onClick={() => handleToggle(item.key, item.value)}
                     disabled={saving === item.key}
                     className={`relative w-12 h-6 rounded-full transition-colors
@@ -103,6 +117,7 @@ export default function AdminSettingsClient({ initialConfig }: Props) {
                   </button>
                 ) : (
                   <input
+                    data-testid="config-text-input"
                     type="text"
                     value={item.value}
                     onChange={(e) => {
@@ -121,7 +136,9 @@ export default function AdminSettingsClient({ initialConfig }: Props) {
               </div>
 
               {saving === item.key && (
-                <p className="text-blue-400 text-xs mt-2">Saving...</p>
+                <p data-testid="config-saving" className="text-blue-400 text-xs mt-2">
+                  Saving...
+                </p>
               )}
             </div>
           );
