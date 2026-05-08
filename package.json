@@ -18,11 +18,11 @@
     "test:all": "vitest run && cypress run",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:fix": "prettier --write .",
     "format:check": "prettier --check .",
     "seed": "npx tsx --env-file=.env.local scripts/seed-demo-videos.ts",
     "seed:users": "npx tsx --env-file=.env.local scripts/seed-user-videos.ts",
-    "seed:gdrive": "npx tsx --env-file=.env.local scripts/seed-gdrive-videos.ts"
+    "seed:gdrive": "npx tsx --env-file=.env.local scripts/seed-gdrive-videos.ts",
+    "seed:cf": "npx tsx --env-file=.env.local scripts/seed-cf-videos.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
