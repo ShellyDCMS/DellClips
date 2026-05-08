@@ -67,9 +67,45 @@ describe("VideoPlayer", () => {
     });
   });
 
+  describe("given a Google Drive playback URL", () => {
+    beforeEach(() => {
+      given.playbackUrl("https://drive.google.com/file/d/abc123/preview");
+    });
+
+    describe("when the player is active", () => {
+      beforeEach(() => {
+        given.isActive();
+        when.render();
+      });
+
+      it("then the video player container should be visible", () => {
+        get.videoPlayer().should("be.visible");
+      });
+
+      it("then the video element should not exist (iframe used instead)", () => {
+        get.videoElement().should("not.exist");
+      });
+
+      it("then the mute button should not exist", () => {
+        get.muteButton().should("not.exist");
+      });
+    });
+
+    describe("when the player is not active", () => {
+      beforeEach(() => {
+        given.isActive(false);
+        when.render();
+      });
+
+      it("then the video player container should be visible", () => {
+        get.videoPlayer().should("be.visible");
+      });
+    });
+  });
+
   describe("given a direct MP4 playback URL", () => {
     beforeEach(() => {
-      given.playbackUrl("https://drive.google.com/uc?export=download&id=abc123.mp4");
+      given.playbackUrl("https://example.com/video.mp4");
     });
 
     describe("when the player is active", () => {
