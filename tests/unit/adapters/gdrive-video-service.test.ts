@@ -16,9 +16,7 @@ describe("GDriveVideoService", () => {
       it("then it should return a manual upload URL", async () => {
         const result = await service.createUploadUrl(chance.guid());
 
-        expect(result.uploadUrl).toBe(
-          "https://drive.google.com/upload-manually"
-        );
+        expect(result.uploadUrl).toBe("https://drive.google.com/upload-manually");
       });
 
       it("then it should return an asset ID with manual-upload prefix", async () => {
@@ -44,9 +42,7 @@ describe("GDriveVideoService", () => {
       it("then it should return a Google Drive direct download URL", () => {
         const url = service.getPlaybackUrl(`gdrive-${fileId}`);
 
-        expect(url).toBe(
-          `https://drive.google.com/uc?export=download&id=${fileId}`
-        );
+        expect(url).toBe(`https://drive.google.com/uc?export=download&id=${fileId}`);
       });
 
       it("then it should strip the gdrive- prefix from the file ID", () => {
@@ -61,9 +57,7 @@ describe("GDriveVideoService", () => {
       it("then it should fallback to the Mux test stream", () => {
         const url = service.getPlaybackUrl(chance.word());
 
-        expect(url).toBe(
-          "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
-        );
+        expect(url).toBe("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8");
       });
     });
 
