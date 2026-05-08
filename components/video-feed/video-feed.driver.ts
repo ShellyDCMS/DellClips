@@ -1,5 +1,5 @@
-import { VideoCardDriver } from "../video-card/video-card.driver";
 import { BaseTestDriver } from "../__test-utils__/base-test-driver";
+import { VideoCardDriver } from "../video-card/video-card.driver";
 
 interface VideoFeedDriverProps {
   initialVideos?: {
@@ -11,6 +11,7 @@ interface VideoFeedDriverProps {
     likeCount: number;
     commentCount: number;
     hasLiked: boolean;
+    isFollowingAuthor: boolean;
     createdAt: string;
     author: {
       id: string;

@@ -14,6 +14,7 @@ interface VideoCardProps {
     likeCount: number;
     commentCount: number;
     hasLiked: boolean;
+    isFollowingAuthor: boolean;
     createdAt: string;
     author: {
       id: string;
@@ -45,8 +46,9 @@ export default function VideoCard({
   const [liked, setLiked] = useState(video.hasLiked);
   const [likeCount, setLikeCount] = useState(video.likeCount);
   const [showMenu, setShowMenu] = useState(false);
-  const [isFollowingAuthor, setIsFollowingAuthor] = useState(false);
-
+  const [isFollowingAuthor, setIsFollowingAuthor] = useState(
+    video.isFollowingAuthor // ← USE THE PROP
+  );
   const isOwnVideo = currentUserId === video.author.id;
 
   const handleLike = async () => {

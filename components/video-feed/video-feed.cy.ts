@@ -11,6 +11,7 @@ const makeVideo = (id: string, title: string) => ({
   likeCount: 10,
   commentCount: 3,
   hasLiked: false,
+  isFollowingAuthor: false,
   createdAt: new Date().toISOString(),
   author: {
     id: "author-1",

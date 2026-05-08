@@ -86,6 +86,7 @@ describe("GET /api/videos", () => {
           },
         ]);
         given.userLikedVideo(true);
+        given.isFollowing(true);
         given.playbackUrl(playbackUrl);
         await when.getVideos();
       });
@@ -97,6 +98,35 @@ describe("GET /api/videos", () => {
       it("then it should enrich videos with like status", () => {
         expect(get.body().videos[0].hasLiked).toBe(true);
       });
+
+      it("then it should enrich videos with follow status", () => {
+        expect(get.body().videos[0].isFollowingAuthor).toBe(true);
+      });
+    });
+
+    describe("when the video author is the current user", () => {
+      beforeEach(async () => {
+        given.videoFeed([
+          {
+            id: chance.guid(),
+            title: chance.sentence(),
+            videoPlaybackId: chance.guid(),
+            status: "ready",
+            author: { id: userId, name: chance.name() },
+          },
+        ]);
+        given.userLikedVideo(false);
+        given.playbackUrl(chance.url());
+        await when.getVideos();
+      });
+
+      it("then isFollowingAuthor should be false", () => {
+        expect(get.body().videos[0].isFollowingAuthor).toBe(false);
+      });
+
+      it("then isFollowing should not have been called", () => {
+        expect(get.isFollowingMock()).not.toHaveBeenCalled();
+      });
     });
 
     describe("when results equal the limit", () => {
@@ -105,9 +135,11 @@ describe("GET /api/videos", () => {
           Array.from({ length: 20 }, (_, i) => ({
             id: `video-${i}`,
             videoPlaybackId: `playback-${i}`,
+            author: { id: chance.guid(), name: chance.name() },
           }))
         );
         given.userLikedVideo(false);
+        given.isFollowing(false);
         given.playbackUrl(chance.url());
         await when.getVideos();
       });
@@ -119,8 +151,15 @@ describe("GET /api/videos", () => {
 
     describe("when results are fewer than limit", () => {
       beforeEach(async () => {
-        given.videoFeed([{ id: chance.guid(), videoPlaybackId: chance.guid() }]);
+        given.videoFeed([
+          {
+            id: chance.guid(),
+            videoPlaybackId: chance.guid(),
+            author: { id: chance.guid(), name: chance.name() },
+          },
+        ]);
         given.userLikedVideo(false);
+        given.isFollowing(false);
         given.playbackUrl(chance.url());
         await when.getVideos();
       });
