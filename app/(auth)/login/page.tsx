@@ -1,5 +1,6 @@
 import LoginForm from "@/components/login-form/login-form";
 import { auth } from "@/lib/auth";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage({
@@ -19,10 +20,15 @@ export default async function LoginPage({
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
       {/* Logo / Brand */}
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold text-white mb-2">
-          Dell<span className="text-blue-500">Clips</span>
-        </h1>
+      <div className="mb-8 flex flex-col items-center text-center">
+        <Image
+          src="/dell-clips.png"
+          alt="DellClips"
+          width={120}
+          height={120}
+          priority
+          className="mb-4"
+        />
         <p className="text-gray-400 text-sm">Short-form video for Dell employees</p>
       </div>
 
