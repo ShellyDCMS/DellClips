@@ -1,6 +1,6 @@
-import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { RenderFactory } from "@/components/__test-utils__/renderer";
 import Chance from "chance";
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import FeedClient from "./feed-client";
 import { FeedClientDriver } from "./feed-client.driver";
 
@@ -15,6 +15,7 @@ const makeVideo = (id: string) => ({
   likeCount: chance.integer({ min: 0, max: 100 }),
   commentCount: chance.integer({ min: 0, max: 50 }),
   hasLiked: false,
+  isFollowingAuthor: false,
   createdAt: new Date().toISOString(),
   author: {
     id: chance.guid(),

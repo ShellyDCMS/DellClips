@@ -12,6 +12,7 @@ interface Video {
   likeCount: number;
   commentCount: number;
   hasLiked: boolean;
+  isFollowingAuthor: boolean;
   createdAt: string;
   author: {
     id: string;

@@ -1,7 +1,7 @@
+import { BaseTestDriver } from "@/components/__test-utils__/base-test-driver";
 import { CommentSectionDriver } from "@/components/comment-section/comment-section.driver";
 import { ReportDialogDriver } from "@/components/report-dialog/report-dialog.driver";
 import { VideoFeedDriver } from "@/components/video-feed/video-feed.driver";
-import { BaseTestDriver } from "@/components/__test-utils__/base-test-driver";
 
 interface FeedClientDriverProps {
   initialVideos?: {
@@ -13,6 +13,7 @@ interface FeedClientDriverProps {
     likeCount: number;
     commentCount: number;
     hasLiked: boolean;
+    isFollowingAuthor: boolean;
     createdAt: string;
     author: {
       id: string;

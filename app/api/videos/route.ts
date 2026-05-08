@@ -23,17 +23,21 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Enrich each video with its playback URL and like status
     const enrichedVideos = await Promise.all(
       videos.map(async (video) => {
         const hasLiked = await databaseService.hasUserLikedVideo(
           session.user!.id!,
           video.id
         );
+        const isFollowingAuthor =
+          video.author.id === session.user!.id
+            ? false
+            : await databaseService.isFollowing(session.user!.id!, video.author.id);
         return {
           ...video,
           playbackUrl: videoService.getPlaybackUrl(video.videoPlaybackId),
           hasLiked,
+          isFollowingAuthor,
         };
       })
     );

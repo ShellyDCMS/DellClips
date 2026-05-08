@@ -1,5 +1,5 @@
-import { VideoPlayerDriver } from "../video-player/video-player.driver";
 import { BaseTestDriver } from "../__test-utils__/base-test-driver";
+import { VideoPlayerDriver } from "../video-player/video-player.driver";
 
 interface VideoCardDriverProps {
   video?: {
@@ -10,6 +10,7 @@ interface VideoCardDriverProps {
     likeCount: number;
     commentCount: number;
     hasLiked: boolean;
+    isFollowingAuthor: boolean;
     createdAt: string;
     author: {
       id: string;
@@ -20,6 +21,7 @@ interface VideoCardDriverProps {
     hashtags: string[];
   };
   isActive?: boolean;
+  currentUserId?: string;
   onLike?: (videoId: string, liked: boolean) => void;
   onComment?: (videoId: string) => void;
   onReport?: (videoId: string) => void;
@@ -60,6 +62,9 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     onProfileClickSpy: () => {
       this.props.onProfileClick = this.helper.given.spy("onProfileClick");
     },
+    currentUserId: (userId: string) => {
+      this.props.currentUserId = userId;
+    },
     fetchReturnsLikeSuccess: () => {
       this.helper.given.stubObjectMethod(window, "fetch").resolves(
         new Response(JSON.stringify({ liked: true }), {
@@ -87,6 +92,7 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     clickProfile: () => this.helper.when.click("profile-button"),
     clickAuthorName: () => this.helper.when.click("author-name"),
     clickHashtag: (tag: string) => this.helper.when.click(`hashtag-${tag}`),
+    clickQuickFollow: () => this.helper.when.click("quick-follow-button"),
   };
 
   get = {
@@ -111,5 +117,7 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     onReportSpy: () => this.helper.get.spy("onReport"),
     onHashtagClickSpy: () => this.helper.get.spy("onHashtagClick"),
     onProfileClickSpy: () => this.helper.get.spy("onProfileClick"),
+    quickFollowButton: () => this.helper.get.elementByTestId("quick-follow-button"),
+    quickFollowButtonText: () => this.helper.get.elementsText("quick-follow-button"),
   };
 }

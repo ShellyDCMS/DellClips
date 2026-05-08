@@ -10,6 +10,7 @@ const mockVideo = {
   likeCount: 42,
   commentCount: 7,
   hasLiked: false,
+  isFollowingAuthor: false,
   createdAt: new Date().toISOString(),
   author: {
     id: "author-1",
@@ -249,6 +250,49 @@ describe("VideoCard", () => {
 
     it("then the onLike callback should be called with the video id and false", () => {
       get.onLikeSpy().should("have.been.calledWith", "video-1", false);
+    });
+  });
+
+  describe("given the video is not the current user's own video", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      given.currentUserId("different-user");
+      when.render();
+    });
+
+    it("then the quick follow button should be visible", () => {
+      get.quickFollowButton().should("be.visible");
+    });
+
+    it("then the quick follow button should show + when not following", () => {
+      get.quickFollowButtonText().should("include", "+");
+    });
+  });
+
+  describe("given the video is the current user's own video", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      given.currentUserId("author-1");
+      when.render();
+    });
+
+    it("then the quick follow button should not exist", () => {
+      get.quickFollowButton().should("not.exist");
+    });
+  });
+
+  describe("given the user is already following the author", () => {
+    beforeEach(() => {
+      given.video({ ...mockVideo, isFollowingAuthor: true });
+      given.isActive();
+      given.currentUserId("different-user");
+      when.render();
+    });
+
+    it("then the quick follow button should show checkmark", () => {
+      get.quickFollowButtonText().should("include", "\u2713");
     });
   });
 });

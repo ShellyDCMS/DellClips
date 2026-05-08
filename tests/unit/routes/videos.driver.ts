@@ -9,6 +9,7 @@ vi.mock("@/lib/auth", () => ({
 
 const mockGetVideoFeed = vi.fn();
 const mockHasUserLikedVideo = vi.fn();
+const mockIsFollowing = vi.fn();
 const mockCreateVideoRecord = vi.fn();
 const mockGetPlaybackUrl = vi.fn();
 
@@ -16,6 +17,7 @@ vi.mock("@/lib/services", () => ({
   databaseService: {
     getVideoFeed: (...args: unknown[]) => mockGetVideoFeed(...args),
     hasUserLikedVideo: (...args: unknown[]) => mockHasUserLikedVideo(...args),
+    isFollowing: (...args: unknown[]) => mockIsFollowing(...args),
     createVideoRecord: (...args: unknown[]) => mockCreateVideoRecord(...args),
   },
   videoService: {
@@ -54,6 +56,9 @@ export class VideosDriver {
     playbackUrl: (url: string) => {
       mockGetPlaybackUrl.mockReturnValue(url);
     },
+    isFollowing: (following: boolean) => {
+      mockIsFollowing.mockResolvedValue(following);
+    },
     createVideoRecord: (result: any) => {
       mockCreateVideoRecord.mockResolvedValue(result);
     },
@@ -83,6 +88,7 @@ export class VideosDriver {
     status: () => this.lastResponse!.status,
     body: () => this.lastBody,
     getVideoFeedMock: () => mockGetVideoFeed,
+    isFollowingMock: () => mockIsFollowing,
     createVideoRecordMock: () => mockCreateVideoRecord,
   };
 }
