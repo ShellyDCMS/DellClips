@@ -18,6 +18,7 @@ Tests live in `tests/unit/` and run via `npx vitest run`. All mocking uses `vi.m
 | `demo-video-service.test.ts`       | `DemoVideoService` — fake upload, HLS playback URLs, no-op delete                                                                                                                                                                             |
 | `resend-email-service.test.ts`     | Email service adapter                                                                                                                                                                                                                         |
 | `gmail-email-service.test.ts`      | `GmailEmailService` — relay recipient, sendVerificationCode (code in body/subject/text, recipient in subject/body), sendMagicLink (URL in body, relay routing), custom DELL_RELAY_EMAIL, DellClips sender, error propagation (driver pattern) |
+| `gdrive-video-service.test.ts`     | `GDriveVideoService` — manual upload URL, gdrive playback URL, non-gdrive fallback, no-op delete                                                                                                                                              |
 
 ### API Route Tests (`tests/unit/routes/`)
 
@@ -61,7 +62,7 @@ Tests live co-located with components as `<name>.cy.ts` + `<name>.driver.ts`. Ru
 
 | Component          | Driver                                          | Test                                        | Key scenarios                                                                                                                                   |
 | ------------------ | ----------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VideoPlayer`      | `video-player/video-player.driver.ts`           | `video-player/video-player.cy.ts`           | Visible when active/inactive, mute button, play overlay                                                                                         |
+| `VideoPlayer`      | `video-player/video-player.driver.ts`           | `video-player/video-player.cy.ts`           | Visible when active/inactive, mute button, play overlay, direct MP4 playback URL                                                                |
 | `VideoCard`        | `video-card/video-card.driver.ts`               | `video-card/video-card.cy.ts`               | Title/desc/hashtags display, null handling, like/comment/report/profile callbacks, menu toggle                                                  |
 | `VideoFeed`        | `video-feed/video-feed.driver.ts`               | `video-feed/video-feed.cy.ts`               | Empty feed message, video card count, feed container visibility                                                                                 |
 | `CommentSection`   | `comment-section/comment-section.driver.ts`     | `comment-section/comment-section.cy.ts`     | Open/close, comment list, empty state, close callback, submit disabled                                                                          |

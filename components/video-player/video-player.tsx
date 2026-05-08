@@ -1,5 +1,4 @@
 "use client";
-
 import Hls from "hls.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -22,12 +21,17 @@ export default function VideoPlayer({
   const [isMuted, setIsMuted] = useState(true);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
-  // Initialize HLS
+  // Detect if this is a Google Drive URL
+  const isGoogleDrive = playbackUrl.includes("drive.google.com");
+
+  // Effect 1: Initialize video source
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (Hls.isSupported()) {
+    const isHLS = playbackUrl.includes(".m3u8");
+
+    if (isHLS && Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
@@ -40,21 +44,20 @@ export default function VideoPlayer({
         hls.destroy();
         hlsRef.current = null;
       };
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari native HLS support (iOS)
+    } else if (isHLS && video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = playbackUrl;
+    } else {
       video.src = playbackUrl;
     }
   }, [playbackUrl]);
 
-  // Auto-play/pause based on active state
+  // Effect 2: Auto-play/pause based on scroll
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     if (isActive) {
-      video.play().catch(() => {
-        // Autoplay blocked — user needs to interact first
-      });
+      video.play().catch(() => {});
     } else {
       video.pause();
       video.currentTime = 0;
@@ -62,16 +65,12 @@ export default function VideoPlayer({
   }, [isActive]);
 
   // iOS PWA audio unlock
-  // In standalone mode, we need to unlock audio on the FIRST user gesture.
-  // This creates a silent audio context that "unlocks" the audio pipeline.
   const unlockAudio = useCallback(() => {
     if (audioUnlocked) return;
 
     const video = videoRef.current;
     if (!video) return;
 
-    // Create and resume an AudioContext on user gesture
-    // This unlocks the audio pipeline in iOS standalone mode
     try {
       const AudioContext =
         window.AudioContext ||
@@ -79,34 +78,29 @@ export default function VideoPlayer({
           .webkitAudioContext;
       if (AudioContext) {
         const ctx = new AudioContext();
-        // Create a short silent buffer and play it
         const buffer = ctx.createBuffer(1, 1, 22050);
         const source = ctx.createBufferSource();
         source.buffer = buffer;
         source.connect(ctx.destination);
         source.start(0);
 
-        // Resume the context (required for iOS)
         if (ctx.state === "suspended") {
           ctx.resume();
         }
       }
     } catch {
-      // AudioContext not available — continue without it
+      // AudioContext not available
     }
 
-    // Also try to play the video unmuted briefly to unlock
     video.muted = false;
     video
       .play()
       .then(() => {
-        // If we don't want it unmuted yet, re-mute
         if (isMuted) {
           video.muted = true;
         }
       })
       .catch(() => {
-        // Play failed — re-mute
         video.muted = true;
       });
 
@@ -117,7 +111,6 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    // Unlock audio on first interaction (iOS PWA)
     unlockAudio();
 
     if (video.paused) {
@@ -139,20 +132,45 @@ export default function VideoPlayer({
       const video = videoRef.current;
       if (!video) return;
 
-      // Unlock audio on first interaction (iOS PWA)
       unlockAudio();
 
       const newMuted = !video.muted;
       video.muted = newMuted;
       setIsMuted(newMuted);
 
-      // If unmuting, ensure the video is playing
       if (!newMuted && video.paused) {
         video.play().catch(() => {});
       }
     },
     [unlockAudio]
   );
+
+  // Google Drive: Use iframe (can't use <video> element)
+  if (isGoogleDrive) {
+    return (
+      <div data-testid="video-player" className="relative w-full h-full bg-black">
+        {isActive ? (
+          <iframe
+            src={playbackUrl}
+            className="w-full h-full border-0"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title="DellClips Video"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+            <svg
+              className="w-16 h-16 text-gray-700"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -217,7 +235,7 @@ export default function VideoPlayer({
         )}
       </button>
 
-      {/* Physical mute switch reminder — shown when unmute fails */}
+      {/* Physical mute switch reminder */}
       {!isMuted && isActive && (
         <div
           data-testid="unmute-hint"
