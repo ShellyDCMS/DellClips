@@ -1,12 +1,12 @@
 import { UploadUrlResult, VideoService } from "@/lib/ports/video-service";
 
 export class CloudflareVideoService implements VideoService {
-  private accountId: string;
-  private apiToken: string;
+  private get accountId(): string {
+    return process.env.CF_ACCOUNT_ID!;
+  }
 
-  constructor() {
-    this.accountId = process.env.CF_ACCOUNT_ID!;
-    this.apiToken = process.env.CF_STREAM_TOKEN!;
+  private get apiToken(): string {
+    return process.env.CF_STREAM_TOKEN!;
   }
 
   async createUploadUrl(userId: string): Promise<UploadUrlResult> {

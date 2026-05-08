@@ -1,4 +1,5 @@
 import {
+  appConfig,
   comments,
   follows,
   hashtags,
@@ -752,5 +753,55 @@ export class NeonDatabaseService implements DatabaseService {
       },
       hashtags: hashtagMap.get(v.id) || [],
     }));
+  }
+
+  // ============================================
+  // APP CONFIGURATION
+  // ============================================
+
+  async getConfigValue(key: string): Promise<string | null> {
+    const result = await db
+      .select({ value: appConfig.value })
+      .from(appConfig)
+      .where(eq(appConfig.key, key))
+      .limit(1);
+
+    return result[0]?.value || null;
+  }
+
+  async setConfigValue(key: string, value: string, updatedBy: string): Promise<void> {
+    const [existing] = await db
+      .select({ id: appConfig.id })
+      .from(appConfig)
+      .where(eq(appConfig.key, key))
+      .limit(1);
+
+    if (existing) {
+      await db
+        .update(appConfig)
+        .set({ value, updatedBy, updatedAt: new Date() })
+        .where(eq(appConfig.key, key));
+    } else {
+      await db.insert(appConfig).values({ key, value, updatedBy });
+    }
+  }
+
+  async getAllConfig(): Promise<
+    {
+      key: string;
+      value: string;
+      description: string | null;
+      updatedAt: Date;
+    }[]
+  > {
+    return await db
+      .select({
+        key: appConfig.key,
+        value: appConfig.value,
+        description: appConfig.description,
+        updatedAt: appConfig.updatedAt,
+      })
+      .from(appConfig)
+      .orderBy(appConfig.key);
   }
 }
