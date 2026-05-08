@@ -6,8 +6,7 @@ export class ResendEmailService implements EmailService {
   private fromAddress: string;
 
   constructor() {
-    this.resend = new Resend(process.env.AUTH_RESEND_KEY!);
-    // Use your new Cloudflare domain
+    this.resend = new Resend(process.env.AUTH_RESEND_KEY || "re_dummy");
     this.fromAddress = process.env.EMAIL_FROM || "DellClips <noreply@dellclips.app>";
   }
 
