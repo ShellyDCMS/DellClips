@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock environment variables
 vi.stubEnv("CF_ACCOUNT_ID", "test-account-id");
 vi.stubEnv("CF_STREAM_TOKEN", "test-api-token");
+vi.stubEnv("CF_CUSTOMER_SUBDOMAIN", "test-customer-subdomain");
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -94,7 +95,7 @@ describe("CloudflareVideoService", () => {
 
         // then
         expect(url).toBe(
-          "https://customer-test-account-id.cloudflarestream.com/video-abc123/manifest/video.m3u8"
+          "https://customer-test-customer-subdomain.cloudflarestream.com/video-abc123/manifest/video.m3u8"
         );
       });
     });

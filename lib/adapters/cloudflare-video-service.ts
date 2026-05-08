@@ -9,6 +9,10 @@ export class CloudflareVideoService implements VideoService {
     return process.env.CF_STREAM_TOKEN!;
   }
 
+  private get customerSubdomain(): string {
+    return process.env.CF_CUSTOMER_SUBDOMAIN!;
+  }
+
   async createUploadUrl(userId: string): Promise<UploadUrlResult> {
     const response = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/stream/direct_upload`,
@@ -37,7 +41,7 @@ export class CloudflareVideoService implements VideoService {
   }
 
   getPlaybackUrl(assetId: string): string {
-    return `https://customer-${this.accountId}.cloudflarestream.com/${assetId}/manifest/video.m3u8`;
+    return `https://customer-${this.customerSubdomain}.cloudflarestream.com/${assetId}/manifest/video.m3u8`;
   }
 
   async deleteVideo(assetId: string): Promise<void> {
