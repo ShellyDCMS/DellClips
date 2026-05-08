@@ -244,3 +244,15 @@ export const verificationTokens = pgTable(
     compoundKey: unique().on(table.identifier, table.token),
   })
 );
+
+// ============================================
+// APP CONFIGURATION (admin-manageable settings)
+// ============================================
+export const appConfig = pgTable("app_config", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: varchar("key", { length: 255 }).unique().notNull(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedBy: uuid("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

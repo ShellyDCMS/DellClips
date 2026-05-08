@@ -139,4 +139,10 @@ export interface DatabaseService {
   unsubscribeFromHashtag(userId: string, hashtagName: string): Promise<void>;
   isSubscribedToHashtag(userId: string, hashtagName: string): Promise<boolean>;
   getSubscribedHashtags(userId: string): Promise<{ name: string }[]>;
+  // App Configuration
+  getConfigValue(key: string): Promise<string | null>;
+  setConfigValue(key: string, value: string, updatedBy: string): Promise<void>;
+  getAllConfig(): Promise<
+    { key: string; value: string; description: string | null; updatedAt: Date }[]
+  >;
 }

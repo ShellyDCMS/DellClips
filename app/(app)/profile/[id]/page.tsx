@@ -120,23 +120,31 @@ export default async function ProfilePage({
               </form>
 
               {/* Admin Link */}
+              {/* Admin Links */}
               {user.role === "admin" && (
-                <Link
-                  href="/admin/reports"
-                  data-testid="admin-link"
-                  className="px-6 py-2 bg-orange-900 text-orange-300 rounded-lg text-sm
-                             hover:bg-orange-800 transition-colors inline-flex items-center gap-2"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-                  </svg>
-                  Review Reports
-                  {pendingReportCount > 0 && (
-                    <span className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full">
-                      {pendingReportCount}
-                    </span>
-                  )}
-                </Link>
+                <div className="flex gap-2 items-center">
+                  <Link
+                    href="/admin/reports"
+                    data-testid="admin-reports-link"
+                    className="px-4 py-2 bg-orange-900 text-orange-300 rounded-lg text-sm
+                 hover:bg-orange-800 transition-colors inline-flex items-center gap-1"
+                  >
+                    📋 Reports
+                    {pendingReportCount > 0 && (
+                      <span className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        {pendingReportCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    href="/admin/settings"
+                    data-testid="admin-settings-link"
+                    className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm
+                 hover:bg-gray-700 transition-colors inline-flex items-center gap-1"
+                  >
+                    ⚙️ Settings
+                  </Link>
+                </div>
               )}
             </>
           ) : (
