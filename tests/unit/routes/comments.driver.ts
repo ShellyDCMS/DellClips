@@ -13,8 +13,7 @@ const mockCreateComment = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
-    getCommentsByVideoId: (...args: unknown[]) =>
-      mockGetCommentsByVideoId(...args),
+    getCommentsByVideoId: (...args: unknown[]) => mockGetCommentsByVideoId(...args),
     getVideoById: (...args: unknown[]) => mockGetVideoById(...args),
     createComment: (...args: unknown[]) => mockCreateComment(...args),
   },

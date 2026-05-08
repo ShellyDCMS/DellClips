@@ -13,8 +13,7 @@ const mockGetPlaybackUrl = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
-    getVideosByHashtag: (...args: unknown[]) =>
-      mockGetVideosByHashtag(...args),
+    getVideosByHashtag: (...args: unknown[]) => mockGetVideosByHashtag(...args),
     searchVideos: (...args: unknown[]) => mockSearchVideos(...args),
   },
   videoService: {

@@ -12,10 +12,8 @@ const mockUnsubscribeFromHashtag = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
-    subscribeToHashtag: (...args: unknown[]) =>
-      mockSubscribeToHashtag(...args),
-    unsubscribeFromHashtag: (...args: unknown[]) =>
-      mockUnsubscribeFromHashtag(...args),
+    subscribeToHashtag: (...args: unknown[]) => mockSubscribeToHashtag(...args),
+    unsubscribeFromHashtag: (...args: unknown[]) => mockUnsubscribeFromHashtag(...args),
   },
 }));
 
@@ -55,10 +53,7 @@ export class HashtagSubscribeDriver {
   when = {
     subscribe: async (name: string) => {
       const request = new NextRequest(
-        new URL(
-          `/api/hashtags/${name}/subscribe`,
-          "http://localhost:3000"
-        ),
+        new URL(`/api/hashtags/${name}/subscribe`, "http://localhost:3000"),
         { method: "POST" }
       );
       this.lastResponse = await POST(request, {
@@ -68,10 +63,7 @@ export class HashtagSubscribeDriver {
     },
     unsubscribe: async (name: string) => {
       const request = new NextRequest(
-        new URL(
-          `/api/hashtags/${name}/subscribe`,
-          "http://localhost:3000"
-        ),
+        new URL(`/api/hashtags/${name}/subscribe`, "http://localhost:3000"),
         { method: "DELETE" }
       );
       this.lastResponse = await DELETE(request, {

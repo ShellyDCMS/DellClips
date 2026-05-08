@@ -69,14 +69,11 @@ export class VideosDriver {
       this.lastBody = await this.lastResponse.json();
     },
     postVideo: async (body: Record<string, unknown>) => {
-      const request = new NextRequest(
-        new URL("/api/videos", "http://localhost:3000"),
-        {
-          method: "POST",
-          body: JSON.stringify(body),
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const request = new NextRequest(new URL("/api/videos", "http://localhost:3000"), {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" },
+      });
       this.lastResponse = await POST(request);
       this.lastBody = await this.lastResponse.json();
     },
