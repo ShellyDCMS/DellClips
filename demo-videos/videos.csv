@@ -1,0 +1,4 @@
+gdriveFileId,userEmail,userName,title,description,hashtags
+1oYvLaJF-EjaX6tk2iEVT2tvZKJpK-nDc,vishaka.mani@dell.com,Vishaka Mani,DEV IQ Slack Bot,An expert bot (created using DevIQ) in slack,"deviq, bot, slack"
+1G9sy1QzIIAKAm0hkvnIQRrsQBYBQCWeb,shelly.goldblit@dell.com,Shell Goldblit,Pokedex created with SWE 1.6,"prompt: build a pokemon catalog application using pokeapi. it should show the image of a current pokemon, allow the user to browse through pokemons using Prev and Nect buttons, display pokemon name. please builkd a single html page, use only js, no python or other dependencies. use the pokeapi as backend server","good-first-project"
+,,,,,""

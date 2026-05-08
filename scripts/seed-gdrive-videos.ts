@@ -12,20 +12,21 @@ const db = drizzle(sql, { schema });
 // Replace these with your actual Google Drive file IDs
 const GDRIVE_VIDEOS = [
   {
-    gdriveFileId: "REPLACE_WITH_ACTUAL_FILE_ID_1",
-    userEmail: "john.doe@dell.com",
-    userName: "John Doe",
-    title: "Q4 Engineering Highlights",
-    description: "A look back at our biggest achievements this quarter",
-    hashtags: ["engineering", "highlights", "q4"],
+    gdriveFileId: "1oYvLaJF-EjaX6tk2iEVT2tvZKJpK-nDc",
+    userEmail: "vishaka.mani@dell.com",
+    userName: "Vishaka Mani",
+    title: "DEV IQ Slack Bot",
+    description: "An expert bot (created using DevIQ) in slack",
+    hashtags: ["deviq", "bot", "slack"],
   },
   {
-    gdriveFileId: "REPLACE_WITH_ACTUAL_FILE_ID_2",
-    userEmail: "jane.smith@dell.com",
-    userName: "Jane Smith",
-    title: "Sales Kickoff 2026",
-    description: "Key takeaways from this year's SKO",
-    hashtags: ["sales", "sko", "2026"],
+    gdriveFileId: "1G9sy1QzIIAKAm0hkvnIQRrsQBYBQCWeb",
+    userEmail: "shelly.goldblit@dell.com",
+    userName: "Shell Goldblit",
+    title: "Pokedex created with SWE 1.6",
+    description:
+      "prompt: build a pokemon catalog application using pokeapi. it should show the image of a current pokemon, allow the user to browse through pokemons using Prev and Nect buttons, display pokemon name. please builkd a single html page, use only js, no python or other dependencies. use the pokeapi as backend server",
+    hashtags: ["good-first-project"],
   },
   // Add more videos...
 ];
