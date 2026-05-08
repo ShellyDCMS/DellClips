@@ -1,179 +1,157 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import Chance from "chance";
+import { beforeEach, describe, expect, it } from "vitest";
+import { FollowDriver } from "./follow.driver";
 
-// Mock auth
-const mockAuth = vi.fn();
-vi.mock("@/lib/auth", () => ({
-  auth: () => mockAuth(),
-}));
+const chance = new Chance();
 
-// Mock database service
-const mockGetUserById = vi.fn();
-const mockFollowUser = vi.fn();
-const mockUnfollowUser = vi.fn();
-
-vi.mock("@/lib/services", () => ({
-  databaseService: {
-    getUserById: (...args: unknown[]) => mockGetUserById(...args),
-    followUser: (...args: unknown[]) => mockFollowUser(...args),
-    unfollowUser: (...args: unknown[]) => mockUnfollowUser(...args),
-  },
-}));
-
-import { DELETE, POST } from "@/app/api/users/[id]/follow/route";
-import { NextRequest } from "next/server";
-
-function createRequest(method: string): NextRequest {
-  return new NextRequest(new URL("/api/videos/user-2/follow", "http://localhost:3000"), {
-    method,
-  });
-}
-
-function createParams(id: string): { params: Promise<{ id: string }> } {
-  return { params: Promise.resolve({ id }) };
-}
-
-describe("POST /api/videos/[id]/follow", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+describe("POST /api/users/[id]/follow", () => {
+  const driver = new FollowDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
 
   describe("given an unauthenticated user", () => {
-    beforeEach(() => {
-      mockAuth.mockResolvedValue(null);
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.follow("user-2");
     });
 
-    it("then it should return 401", async () => {
-      // when
-      const response = await POST(createRequest("POST"), createParams("user-2"));
-
-      // then
-      expect(response.status).toBe(401);
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
     });
   });
 
   describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
     beforeEach(() => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+      given.authenticatedUser(userId);
     });
 
     describe("when trying to follow themselves", () => {
-      it("then it should return 400", async () => {
-        // when
-        const response = await POST(createRequest("POST"), createParams("user-1"));
+      beforeEach(async () => {
+        await when.follow(userId);
+      });
 
-        // then
-        expect(response.status).toBe(400);
-        const body = await response.json();
-        expect(body.error).toBe("Cannot follow yourself");
+      it("then it should return 400", () => {
+        expect(get.status()).toBe(400);
+      });
+
+      it("then it should return Cannot follow yourself error", () => {
+        expect(get.body().error).toBe("Cannot follow yourself");
       });
     });
 
     describe("when the target user does not exist", () => {
-      it("then it should return 404", async () => {
-        // given
-        mockGetUserById.mockResolvedValue(null);
+      beforeEach(async () => {
+        given.targetUserNotFound();
+        await when.follow("nonexistent");
+      });
 
-        // when
-        const response = await POST(createRequest("POST"), createParams("nonexistent"));
+      it("then it should return 404", () => {
+        expect(get.status()).toBe(404);
+      });
 
-        // then
-        expect(response.status).toBe(404);
-        const body = await response.json();
-        expect(body.error).toBe("User not found");
+      it("then it should return User not found error", () => {
+        expect(get.body().error).toBe("User not found");
       });
     });
 
     describe("when the target user exists", () => {
-      it("then it should follow the user and return following true", async () => {
-        // given
-        mockGetUserById.mockResolvedValue({ id: "user-2", name: "Jane" });
-        mockFollowUser.mockResolvedValue(undefined);
+      const targetId = chance.guid();
 
-        // when
-        const response = await POST(createRequest("POST"), createParams("user-2"));
+      beforeEach(async () => {
+        given.targetUser({ id: targetId, name: chance.name() });
+        given.followSucceeds();
+        await when.follow(targetId);
+      });
 
-        // then
-        const body = await response.json();
-        expect(body.following).toBe(true);
-        expect(mockFollowUser).toHaveBeenCalledWith({
-          followerId: "user-1",
-          followingId: "user-2",
+      it("then it should return following true", () => {
+        expect(get.body().following).toBe(true);
+      });
+
+      it("then it should call followUser with correct arguments", () => {
+        expect(get.followUserMock()).toHaveBeenCalledWith({
+          followerId: userId,
+          followingId: targetId,
         });
       });
     });
 
     describe("when the database throws an error", () => {
-      it("then it should return 500", async () => {
-        // given
-        mockGetUserById.mockResolvedValue({ id: "user-2" });
-        mockFollowUser.mockRejectedValue(new Error("DB error"));
+      const targetId = chance.guid();
 
-        // when
-        const response = await POST(createRequest("POST"), createParams("user-2"));
+      beforeEach(async () => {
+        given.targetUser({ id: targetId });
+        given.followFails(new Error("DB error"));
+        await when.follow(targetId);
+      });
 
-        // then
-        expect(response.status).toBe(500);
-        const body = await response.json();
-        expect(body.error).toBe("Failed to follow user");
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
+
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to follow user");
       });
     });
   });
 });
 
-describe("DELETE /api/videos/[id]/follow", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+describe("DELETE /api/users/[id]/follow", () => {
+  const driver = new FollowDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
 
   describe("given an unauthenticated user", () => {
-    beforeEach(() => {
-      mockAuth.mockResolvedValue(null);
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.unfollow("user-2");
     });
 
-    it("then it should return 401", async () => {
-      // when
-      const response = await DELETE(createRequest("DELETE"), createParams("user-2"));
-
-      // then
-      expect(response.status).toBe(401);
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
     });
   });
 
   describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
     beforeEach(() => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+      given.authenticatedUser(userId);
     });
 
     describe("when unfollowing a user", () => {
-      it("then it should unfollow and return following false", async () => {
-        // given
-        mockUnfollowUser.mockResolvedValue(undefined);
+      const targetId = chance.guid();
 
-        // when
-        const response = await DELETE(createRequest("DELETE"), createParams("user-2"));
+      beforeEach(async () => {
+        given.unfollowSucceeds();
+        await when.unfollow(targetId);
+      });
 
-        // then
-        const body = await response.json();
-        expect(body.following).toBe(false);
-        expect(mockUnfollowUser).toHaveBeenCalledWith({
-          followerId: "user-1",
-          followingId: "user-2",
+      it("then it should return following false", () => {
+        expect(get.body().following).toBe(false);
+      });
+
+      it("then it should call unfollowUser with correct arguments", () => {
+        expect(get.unfollowUserMock()).toHaveBeenCalledWith({
+          followerId: userId,
+          followingId: targetId,
         });
       });
     });
 
     describe("when the database throws an error", () => {
-      it("then it should return 500", async () => {
-        // given
-        mockUnfollowUser.mockRejectedValue(new Error("DB error"));
+      beforeEach(async () => {
+        given.unfollowFails(new Error("DB error"));
+        await when.unfollow(chance.guid());
+      });
 
-        // when
-        const response = await DELETE(createRequest("DELETE"), createParams("user-2"));
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
 
-        // then
-        expect(response.status).toBe(500);
-        const body = await response.json();
-        expect(body.error).toBe("Failed to unfollow user");
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to unfollow user");
       });
     });
   });

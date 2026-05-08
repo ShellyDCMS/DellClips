@@ -1,243 +1,181 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import Chance from "chance";
+import { beforeEach, describe, expect, it } from "vitest";
+import { CommentsDriver } from "./comments.driver";
 
-// Mock auth
-const mockAuth = vi.fn();
-vi.mock("@/lib/auth", () => ({
-  auth: () => mockAuth(),
-}));
-
-// Mock database service
-const mockGetCommentsByVideoId = vi.fn();
-const mockGetVideoById = vi.fn();
-const mockCreateComment = vi.fn();
-
-vi.mock("@/lib/services", () => ({
-  databaseService: {
-    getCommentsByVideoId: (...args: unknown[]) => mockGetCommentsByVideoId(...args),
-    getVideoById: (...args: unknown[]) => mockGetVideoById(...args),
-    createComment: (...args: unknown[]) => mockCreateComment(...args),
-  },
-}));
-
-import { GET, POST } from "@/app/api/videos/[id]/comments/route";
-import { NextRequest } from "next/server";
-
-function createGetRequest(): NextRequest {
-  return new NextRequest(
-    new URL("/api/videos/video-1/comments", "http://localhost:3000")
-  );
-}
-
-function createPostRequest(body: Record<string, unknown>): NextRequest {
-  return new NextRequest(
-    new URL("/api/videos/video-1/comments", "http://localhost:3000"),
-    {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    }
-  );
-}
-
-function createParams(id: string): { params: Promise<{ id: string }> } {
-  return { params: Promise.resolve({ id }) };
-}
+const chance = new Chance();
 
 describe("GET /api/videos/[id]/comments", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const driver = new CommentsDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
 
   describe("given an unauthenticated user", () => {
-    beforeEach(() => {
-      mockAuth.mockResolvedValue(null);
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.getComments("video-1");
     });
 
-    it("then it should return 401", async () => {
-      // when
-      const response = await GET(createGetRequest(), createParams("video-1"));
-
-      // then
-      expect(response.status).toBe(401);
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
     });
   });
 
   describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
     beforeEach(() => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+      given.authenticatedUser(userId);
     });
 
     describe("when fetching comments for a video", () => {
-      it("then it should return the comments", async () => {
-        // given
-        const mockComments = [
+      const commentText = chance.sentence();
+      const videoId = chance.guid();
+
+      beforeEach(async () => {
+        given.comments([
           {
-            id: "comment-1",
-            text: "Great video!",
+            id: chance.guid(),
+            text: commentText,
             createdAt: new Date().toISOString(),
-            author: { id: "user-2", name: "Jane", avatarUrl: null },
+            author: { id: chance.guid(), name: chance.name(), avatarUrl: null },
           },
-        ];
-        mockGetCommentsByVideoId.mockResolvedValue(mockComments);
-
-        // when
-        const response = await GET(createGetRequest(), createParams("video-1"));
-
-        // then
-        const body = await response.json();
-        expect(body.comments).toHaveLength(1);
-        expect(body.comments[0].text).toBe("Great video!");
+        ]);
+        await when.getComments(videoId);
       });
 
-      it("then it should pass the video ID to the database service", async () => {
-        // given
-        mockGetCommentsByVideoId.mockResolvedValue([]);
+      it("then it should return the comments", () => {
+        expect(get.body().comments).toHaveLength(1);
+      });
 
-        // when
-        await GET(createGetRequest(), createParams("video-42"));
+      it("then the comment text should match", () => {
+        expect(get.body().comments[0].text).toBe(commentText);
+      });
 
-        // then
-        expect(mockGetCommentsByVideoId).toHaveBeenCalledWith("video-42");
+      it("then it should pass the video ID to the database service", () => {
+        expect(get.getCommentsMock()).toHaveBeenCalledWith(videoId);
       });
     });
 
     describe("when the database throws an error", () => {
-      it("then it should return 500", async () => {
-        // given
-        mockGetCommentsByVideoId.mockRejectedValue(new Error("DB error"));
+      beforeEach(async () => {
+        given.commentsFetchFails(new Error("DB error"));
+        await when.getComments("video-1");
+      });
 
-        // when
-        const response = await GET(createGetRequest(), createParams("video-1"));
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
 
-        // then
-        expect(response.status).toBe(500);
-        const body = await response.json();
-        expect(body.error).toBe("Failed to fetch comments");
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to fetch comments");
       });
     });
   });
 });
 
 describe("POST /api/videos/[id]/comments", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const driver = new CommentsDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
 
   describe("given an unauthenticated user", () => {
-    beforeEach(() => {
-      mockAuth.mockResolvedValue(null);
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.postComment("video-1", { text: "Hello" });
     });
 
-    it("then it should return 401", async () => {
-      // when
-      const response = await POST(
-        createPostRequest({ text: "Hello" }),
-        createParams("video-1")
-      );
-
-      // then
-      expect(response.status).toBe(401);
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
     });
   });
 
   describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
     beforeEach(() => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+      given.authenticatedUser(userId);
     });
 
     describe("when sending a valid comment", () => {
-      it("then it should create the comment and return 201", async () => {
-        // given
-        mockGetVideoById.mockResolvedValue({ id: "video-1" });
-        mockCreateComment.mockResolvedValue({ id: "comment-new" });
+      const videoId = chance.guid();
+      const commentText = chance.sentence();
+      const commentId = chance.guid();
 
-        // when
-        const response = await POST(
-          createPostRequest({ text: "Nice work!" }),
-          createParams("video-1")
-        );
-
-        // then
-        expect(response.status).toBe(201);
-        const body = await response.json();
-        expect(body.comment.id).toBe("comment-new");
+      beforeEach(async () => {
+        given.video({ id: videoId });
+        given.createComment({ id: commentId });
+        await when.postComment(videoId, { text: commentText });
       });
 
-      it("then it should pass the correct arguments to createComment", async () => {
-        // given
-        mockGetVideoById.mockResolvedValue({ id: "video-1" });
-        mockCreateComment.mockResolvedValue({ id: "comment-new" });
+      it("then it should return 201", () => {
+        expect(get.status()).toBe(201);
+      });
 
-        // when
-        await POST(createPostRequest({ text: "Nice work!" }), createParams("video-1"));
+      it("then it should return the comment id", () => {
+        expect(get.body().comment.id).toBe(commentId);
+      });
 
-        // then
-        expect(mockCreateComment).toHaveBeenCalledWith("user-1", "video-1", "Nice work!");
+      it("then it should pass the correct arguments to createComment", () => {
+        expect(get.createCommentMock()).toHaveBeenCalledWith(
+          userId,
+          videoId,
+          commentText
+        );
       });
     });
 
     describe("when sending an empty text", () => {
-      it("then it should return 400", async () => {
-        // when
-        const response = await POST(
-          createPostRequest({ text: "" }),
-          createParams("video-1")
-        );
+      beforeEach(async () => {
+        await when.postComment("video-1", { text: "" });
+      });
 
-        // then
-        expect(response.status).toBe(400);
-        const body = await response.json();
-        expect(body.error).toBe("Invalid request");
+      it("then it should return 400", () => {
+        expect(get.status()).toBe(400);
+      });
+
+      it("then it should return Invalid request error", () => {
+        expect(get.body().error).toBe("Invalid request");
       });
     });
 
     describe("when the text exceeds 1000 characters", () => {
-      it("then it should return 400", async () => {
-        // when
-        const response = await POST(
-          createPostRequest({ text: "a".repeat(1001) }),
-          createParams("video-1")
-        );
+      beforeEach(async () => {
+        await when.postComment("video-1", { text: "a".repeat(1001) });
+      });
 
-        // then
-        expect(response.status).toBe(400);
+      it("then it should return 400", () => {
+        expect(get.status()).toBe(400);
       });
     });
 
     describe("when the video does not exist", () => {
-      it("then it should return 404", async () => {
-        // given
-        mockGetVideoById.mockResolvedValue(null);
+      beforeEach(async () => {
+        given.videoNotFound();
+        await when.postComment("nonexistent", { text: "Hello" });
+      });
 
-        // when
-        const response = await POST(
-          createPostRequest({ text: "Hello" }),
-          createParams("nonexistent")
-        );
+      it("then it should return 404", () => {
+        expect(get.status()).toBe(404);
+      });
 
-        // then
-        expect(response.status).toBe(404);
-        const body = await response.json();
-        expect(body.error).toBe("Video not found");
+      it("then it should return Video not found error", () => {
+        expect(get.body().error).toBe("Video not found");
       });
     });
 
     describe("when the database throws an error", () => {
-      it("then it should return 500", async () => {
-        // given
-        mockGetVideoById.mockResolvedValue({ id: "video-1" });
-        mockCreateComment.mockRejectedValue(new Error("DB error"));
+      beforeEach(async () => {
+        given.video({ id: "video-1" });
+        given.createCommentFails(new Error("DB error"));
+        await when.postComment("video-1", { text: "Hello" });
+      });
 
-        // when
-        const response = await POST(
-          createPostRequest({ text: "Hello" }),
-          createParams("video-1")
-        );
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
 
-        // then
-        expect(response.status).toBe(500);
-        const body = await response.json();
-        expect(body.error).toBe("Failed to create comment");
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to create comment");
       });
     });
   });

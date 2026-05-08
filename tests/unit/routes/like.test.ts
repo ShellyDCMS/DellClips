@@ -1,161 +1,137 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import Chance from "chance";
+import { beforeEach, describe, expect, it } from "vitest";
+import { LikeDriver } from "./like.driver";
 
-// Mock auth
-const mockAuth = vi.fn();
-vi.mock("@/lib/auth", () => ({
-  auth: () => mockAuth(),
-}));
-
-// Mock database service
-const mockGetVideoById = vi.fn();
-const mockLikeVideo = vi.fn();
-const mockUnlikeVideo = vi.fn();
-
-vi.mock("@/lib/services", () => ({
-  databaseService: {
-    getVideoById: (...args: unknown[]) => mockGetVideoById(...args),
-    likeVideo: (...args: unknown[]) => mockLikeVideo(...args),
-    unlikeVideo: (...args: unknown[]) => mockUnlikeVideo(...args),
-  },
-}));
-
-import { POST, DELETE } from "@/app/api/videos/[id]/like/route";
-import { NextRequest } from "next/server";
-
-function createRequest(method: string): NextRequest {
-  return new NextRequest(new URL("/api/videos/video-1/like", "http://localhost:3000"), {
-    method,
-  });
-}
-
-function createParams(id: string): { params: Promise<{ id: string }> } {
-  return { params: Promise.resolve({ id }) };
-}
+const chance = new Chance();
 
 describe("POST /api/videos/[id]/like", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const driver = new LikeDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
 
   describe("given an unauthenticated user", () => {
-    beforeEach(() => {
-      mockAuth.mockResolvedValue(null);
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.likeVideo("video-1");
     });
 
-    it("then it should return 401", async () => {
-      // when
-      const response = await POST(createRequest("POST"), createParams("video-1"));
-
-      // then
-      expect(response.status).toBe(401);
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
     });
   });
 
   describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
     beforeEach(() => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+      given.authenticatedUser(userId);
     });
 
     describe("when the video does not exist", () => {
-      it("then it should return 404", async () => {
-        // given
-        mockGetVideoById.mockResolvedValue(null);
+      beforeEach(async () => {
+        given.videoNotFound();
+        await when.likeVideo("nonexistent");
+      });
 
-        // when
-        const response = await POST(createRequest("POST"), createParams("nonexistent"));
+      it("then it should return 404", () => {
+        expect(get.status()).toBe(404);
+      });
 
-        // then
-        expect(response.status).toBe(404);
-        const body = await response.json();
-        expect(body.error).toBe("Video not found");
+      it("then it should return Video not found error", () => {
+        expect(get.body().error).toBe("Video not found");
       });
     });
 
     describe("when the video exists", () => {
-      it("then it should like the video and return liked true", async () => {
-        // given
-        mockGetVideoById.mockResolvedValue({ id: "video-1" });
-        mockLikeVideo.mockResolvedValue(undefined);
+      const videoId = chance.guid();
 
-        // when
-        const response = await POST(createRequest("POST"), createParams("video-1"));
+      beforeEach(async () => {
+        given.video({ id: videoId });
+        given.likeSucceeds();
+        await when.likeVideo(videoId);
+      });
 
-        // then
-        const body = await response.json();
-        expect(body.liked).toBe(true);
-        expect(mockLikeVideo).toHaveBeenCalledWith("user-1", "video-1");
+      it("then it should return liked true", () => {
+        expect(get.body().liked).toBe(true);
+      });
+
+      it("then it should call likeVideo with correct arguments", () => {
+        expect(get.likeVideoMock()).toHaveBeenCalledWith(userId, videoId);
       });
     });
 
     describe("when the database throws an error", () => {
-      it("then it should return 500", async () => {
-        // given
-        mockGetVideoById.mockResolvedValue({ id: "video-1" });
-        mockLikeVideo.mockRejectedValue(new Error("DB error"));
+      const videoId = chance.guid();
 
-        // when
-        const response = await POST(createRequest("POST"), createParams("video-1"));
+      beforeEach(async () => {
+        given.video({ id: videoId });
+        given.likeFails(new Error("DB error"));
+        await when.likeVideo(videoId);
+      });
 
-        // then
-        expect(response.status).toBe(500);
-        const body = await response.json();
-        expect(body.error).toBe("Failed to like video");
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
+
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to like video");
       });
     });
   });
 });
 
 describe("DELETE /api/videos/[id]/like", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const driver = new LikeDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
 
   describe("given an unauthenticated user", () => {
-    beforeEach(() => {
-      mockAuth.mockResolvedValue(null);
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.unlikeVideo("video-1");
     });
 
-    it("then it should return 401", async () => {
-      // when
-      const response = await DELETE(createRequest("DELETE"), createParams("video-1"));
-
-      // then
-      expect(response.status).toBe(401);
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
     });
   });
 
   describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
     beforeEach(() => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+      given.authenticatedUser(userId);
     });
 
     describe("when unliking a video", () => {
-      it("then it should unlike the video and return liked false", async () => {
-        // given
-        mockUnlikeVideo.mockResolvedValue(undefined);
+      const videoId = chance.guid();
 
-        // when
-        const response = await DELETE(createRequest("DELETE"), createParams("video-1"));
+      beforeEach(async () => {
+        given.unlikeSucceeds();
+        await when.unlikeVideo(videoId);
+      });
 
-        // then
-        const body = await response.json();
-        expect(body.liked).toBe(false);
-        expect(mockUnlikeVideo).toHaveBeenCalledWith("user-1", "video-1");
+      it("then it should return liked false", () => {
+        expect(get.body().liked).toBe(false);
+      });
+
+      it("then it should call unlikeVideo with correct arguments", () => {
+        expect(get.unlikeVideoMock()).toHaveBeenCalledWith(userId, videoId);
       });
     });
 
     describe("when the database throws an error", () => {
-      it("then it should return 500", async () => {
-        // given
-        mockUnlikeVideo.mockRejectedValue(new Error("DB error"));
+      beforeEach(async () => {
+        given.unlikeFails(new Error("DB error"));
+        await when.unlikeVideo(chance.guid());
+      });
 
-        // when
-        const response = await DELETE(createRequest("DELETE"), createParams("video-1"));
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
 
-        // then
-        expect(response.status).toBe(500);
-        const body = await response.json();
-        expect(body.error).toBe("Failed to unlike video");
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to unlike video");
       });
     });
   });

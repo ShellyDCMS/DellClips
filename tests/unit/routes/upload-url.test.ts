@@ -1,91 +1,70 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import Chance from "chance";
+import { beforeEach, describe, expect, it } from "vitest";
+import { UploadUrlDriver } from "./upload-url.driver";
 
-// Mock auth
-const mockAuth = vi.fn();
-vi.mock("@/lib/auth", () => ({
-  auth: () => mockAuth(),
-}));
-
-// Mock video service
-const mockCreateUploadUrl = vi.fn();
-vi.mock("@/lib/services", () => ({
-  videoService: {
-    createUploadUrl: (...args: unknown[]) => mockCreateUploadUrl(...args),
-  },
-}));
-
-import { POST } from "@/app/api/video/upload-url/route";
+const chance = new Chance();
 
 describe("POST /api/video/upload-url", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const driver = new UploadUrlDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
 
   describe("given an unauthenticated user", () => {
-    beforeEach(() => {
-      mockAuth.mockResolvedValue(null);
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.createUploadUrl();
     });
 
-    it("then it should return 401", async () => {
-      // when
-      const response = await POST();
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
+    });
 
-      // then
-      expect(response.status).toBe(401);
-      const body = await response.json();
-      expect(body.error).toBe("Unauthorized");
+    it("then it should return Unauthorized error", () => {
+      expect(get.body().error).toBe("Unauthorized");
     });
   });
 
   describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
     beforeEach(() => {
-      mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+      given.authenticatedUser(userId);
     });
 
     describe("when creating an upload URL succeeds", () => {
-      it("then it should return the upload URL and asset ID", async () => {
-        // given
-        mockCreateUploadUrl.mockResolvedValue({
-          uploadUrl: "https://upload.example.com/abc",
-          assetId: "asset-123",
-        });
+      const uploadUrl = chance.url();
+      const assetId = chance.guid();
 
-        // when
-        const response = await POST();
-
-        // then
-        const body = await response.json();
-        expect(body.uploadUrl).toBe("https://upload.example.com/abc");
-        expect(body.assetId).toBe("asset-123");
+      beforeEach(async () => {
+        given.uploadUrl({ uploadUrl, assetId });
+        await when.createUploadUrl();
       });
 
-      it("then it should pass the user ID to the video service", async () => {
-        // given
-        mockCreateUploadUrl.mockResolvedValue({
-          uploadUrl: "https://upload.example.com/abc",
-          assetId: "asset-123",
-        });
+      it("then it should return the upload URL", () => {
+        expect(get.body().uploadUrl).toBe(uploadUrl);
+      });
 
-        // when
-        await POST();
+      it("then it should return the asset ID", () => {
+        expect(get.body().assetId).toBe(assetId);
+      });
 
-        // then
-        expect(mockCreateUploadUrl).toHaveBeenCalledWith("user-1");
+      it("then it should pass the user ID to the video service", () => {
+        expect(get.createUploadUrlMock()).toHaveBeenCalledWith(userId);
       });
     });
 
     describe("when the video service throws an error", () => {
-      it("then it should return 500", async () => {
-        // given
-        mockCreateUploadUrl.mockRejectedValue(new Error("Service error"));
+      beforeEach(async () => {
+        given.uploadUrlFails(new Error("Service error"));
+        await when.createUploadUrl();
+      });
 
-        // when
-        const response = await POST();
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
 
-        // then
-        expect(response.status).toBe(500);
-        const body = await response.json();
-        expect(body.error).toBe("Failed to create upload URL");
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to create upload URL");
       });
     });
   });

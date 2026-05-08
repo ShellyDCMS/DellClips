@@ -44,16 +44,14 @@ Tests live in `tests/unit/` and run via `npx vitest run`. All mocking uses `vi.m
 | `utils.test.ts`        | `isDellEmail`, `parseHashtags`, `normalizeHashtag`, `timeAgo`, `REPORT_REASONS`                           |
 | `auth-helpers.test.ts` | `getSession`, `requireAuth`, `requireAdmin`, `requireUserId` — auth/redirect/role checks (driver pattern) |
 
-### Mocking Pattern for Route Tests
-
-All route tests mock `@/lib/auth` and `@/lib/services` at the module level using `vi.mock()`. Each test verifies: auth guard (401), input validation (400), not found (404), forbidden (403 where applicable), success response, and DB error handling (500).
-
 ### Vitest Driver Pattern
 
-Tests marked "(driver pattern)" use a separate `.driver.ts` file with `given`/`when`/`get` objects:
+All route tests, utility tests, and adapter tests that use the driver pattern follow this structure:
 
-- **Driver** (`.driver.ts`) — owns mocks, service instantiation, result/error capture. Imports `beforeEach`/`vi` from `vitest`. Exposes `beforeAndAfter()`, `given`, `when`, `get`.
+- **Driver** (`.driver.ts`) — owns mocks (`vi.mock()` for `@/lib/auth`, `@/lib/services`, etc.), request construction, result/error capture. Imports `beforeEach`/`vi` from `vitest`. Exposes `beforeAndAfter()`, `given`, `when`, `get`.
 - **Test** (`.test.ts`) — imports driver + `chance`. Destructures `{ given, when, get }`. Uses BDD structure: `describe('given …') → beforeEach(given/when) → it('then …', expect(get…))`. One assertion per `it`.
+
+Each route test verifies: auth guard (401), input validation (400), not found (404), forbidden (403 where applicable), success response, and DB error handling (500).
 
 ## Cypress Component Tests
 
