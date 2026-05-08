@@ -78,7 +78,12 @@ describe("GET /api/admin/config", () => {
 
     it("then it should return config values", async () => {
       const mockConfig = [
-        { key: "email.bcc_relay_enabled", value: "true", description: "Enable BCC", updatedAt: new Date() },
+        {
+          key: "email.bcc_relay_enabled",
+          value: "true",
+          description: "Enable BCC",
+          updatedAt: new Date(),
+        },
       ];
       mockGetAllConfig.mockResolvedValue(mockConfig);
 
@@ -148,7 +153,9 @@ describe("PUT /api/admin/config", () => {
       it("then it should update the config and return success", async () => {
         mockSetConfigValue.mockResolvedValue(undefined);
 
-        const response = await PUT(createPutRequest({ key: "email.bcc_relay_enabled", value: "true" }));
+        const response = await PUT(
+          createPutRequest({ key: "email.bcc_relay_enabled", value: "true" })
+        );
 
         expect(response.status).toBe(200);
         const body = await response.json();
@@ -162,7 +169,11 @@ describe("PUT /api/admin/config", () => {
 
         await PUT(createPutRequest({ key: "app.feature", value: "enabled" }));
 
-        expect(mockSetConfigValue).toHaveBeenCalledWith("app.feature", "enabled", "admin-1");
+        expect(mockSetConfigValue).toHaveBeenCalledWith(
+          "app.feature",
+          "enabled",
+          "admin-1"
+        );
       });
     });
 
