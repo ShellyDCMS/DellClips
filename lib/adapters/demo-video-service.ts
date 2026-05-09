@@ -1,4 +1,4 @@
-import { UploadUrlResult, VideoService } from "@/lib/ports/video-service";
+import { UploadUrlResult, VideoService, WebhookResult } from "@/lib/ports/video-service";
 
 // All streams from Mux's public test infrastructure (most reliable)
 // Source: https://test-streams.mux.dev
@@ -55,5 +55,20 @@ export class DemoVideoService implements VideoService {
 
   async deleteVideo(assetId: string): Promise<void> {
     console.log(`[demo-video] Simulating delete for asset: ${assetId}`);
+  }
+
+  parseWebhook(body: string): WebhookResult {
+    if (!body || body.trim() === "") {
+      return { type: "verification", challenge: "" };
+    }
+    try {
+      const data = JSON.parse(body);
+      if (data.challenge) {
+        return { type: "verification", challenge: data.challenge };
+      }
+    } catch {
+      return { type: "verification", challenge: body };
+    }
+    return { type: "unknown" };
   }
 }

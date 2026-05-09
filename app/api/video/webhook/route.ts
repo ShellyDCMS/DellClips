@@ -1,51 +1,63 @@
-import { databaseService } from "@/lib/services";
+import { databaseService, videoService } from "@/lib/services";
 import { NextRequest, NextResponse } from "next/server";
 
-// Cloudflare Stream sends a POST when video processing completes
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-
-    console.log("[webhook] Received:", JSON.stringify(body, null, 2));
-
-    // Cloudflare Stream webhook payload structure
-    // See: https://developers.cloudflare.com/stream/manage-video-library/using-webhooks/
-    const uid = body?.uid;
-    const status = body?.status;
-    const duration = body?.duration;
-    const readyToStream = body?.readyToStream;
-
-    if (!uid) {
-      console.error("[webhook] Missing uid in webhook payload");
-      return NextResponse.json({ error: "Missing uid" }, { status: 400 });
-    }
-
-    if (readyToStream === true || status?.state === "ready") {
-      console.log(`[webhook] Video ${uid} is ready. Duration: ${duration}s`);
-
-      await databaseService.updateVideoStatus(uid, "ready", duration || undefined);
-
-      return NextResponse.json({ received: true, status: "ready" });
-    }
-
-    if (status?.state === "error") {
-      console.error(`[webhook] Video ${uid} failed:`, status?.errorReasonCode);
-
-      await databaseService.updateVideoStatus(uid, "errored");
-
-      return NextResponse.json({ received: true, status: "errored" });
-    }
-
-    // For any other status (e.g., "inprogress"), acknowledge but don't update
-    console.log(`[webhook] Video ${uid} status: ${status?.state || "unknown"}`);
-    return NextResponse.json({ received: true, status: "acknowledged" });
-  } catch (error) {
-    console.error("[webhook] Error processing webhook:", error);
-    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
-  }
+// GET — Some platforms verify by sending GET
+export async function GET() {
+  return NextResponse.json({ status: "ok" }, { status: 200 });
 }
 
-// Cloudflare may send HEAD requests to verify the webhook URL
+// HEAD — Some platforms verify by sending HEAD
 export async function HEAD() {
   return new Response(null, { status: 200 });
+}
+
+// POST — Handles verification challenges AND video-ready notifications
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.text();
+
+    // Delegate parsing to the video service adapter
+    // Each adapter knows its own webhook format
+    const result = videoService.parseWebhook(body);
+
+    switch (result.type) {
+      case "verification":
+        console.log("[webhook] Verification challenge received");
+        return new Response(result.challenge || "", {
+          status: 200,
+          headers: { "Content-Type": "text/plain" },
+        });
+
+      case "video_ready":
+        console.log(
+          `[webhook] Video ${result.assetId} is ready. Duration: ${result.duration}s`
+        );
+        if (result.assetId) {
+          await databaseService.updateVideoStatus(
+            result.assetId,
+            "ready",
+            result.duration
+          );
+        }
+        return NextResponse.json({ received: true, status: "ready" });
+
+      case "video_error":
+        console.error(`[webhook] Video ${result.assetId} failed: ${result.errorReason}`);
+        if (result.assetId) {
+          await databaseService.updateVideoStatus(result.assetId, "errored");
+        }
+        return NextResponse.json({ received: true, status: "errored" });
+
+      case "unknown":
+      default:
+        console.log("[webhook] Unknown event, acknowledging");
+        return NextResponse.json({ received: true, status: "acknowledged" });
+    }
+  } catch (error) {
+    console.error("[webhook] Error:", error);
+    return NextResponse.json(
+      { received: true, error: "Processing failed" },
+      { status: 200 }
+    );
+  }
 }

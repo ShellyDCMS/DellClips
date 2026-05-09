@@ -1,16 +1,14 @@
-import { UploadUrlResult, VideoService } from "@/lib/ports/video-service";
+import { UploadUrlResult, VideoService, WebhookResult } from "@/lib/ports/video-service";
 
 export class CloudflareVideoService implements VideoService {
-  private get accountId(): string {
-    return process.env.CF_ACCOUNT_ID!;
-  }
+  private accountId: string;
+  private apiToken: string;
+  private customerSubdomain: string;
 
-  private get apiToken(): string {
-    return process.env.CF_STREAM_TOKEN!;
-  }
-
-  private get customerSubdomain(): string {
-    return process.env.CF_CUSTOMER_SUBDOMAIN!;
+  constructor() {
+    this.accountId = process.env.CF_ACCOUNT_ID!;
+    this.apiToken = process.env.CF_STREAM_TOKEN!;
+    this.customerSubdomain = process.env.CF_STREAM_CUSTOMER_SUBDOMAIN!;
   }
 
   async createUploadUrl(userId: string): Promise<UploadUrlResult> {
@@ -54,5 +52,47 @@ export class CloudflareVideoService implements VideoService {
         },
       }
     );
+  }
+
+  parseWebhook(body: string): WebhookResult {
+    // Handle empty body (connectivity check)
+    if (!body || body.trim() === "") {
+      return { type: "verification", challenge: "" };
+    }
+
+    // Try to parse as JSON
+    let data;
+    try {
+      data = JSON.parse(body);
+    } catch {
+      // Non-JSON body — treat as plain text challenge
+      return { type: "verification", challenge: body };
+    }
+
+    // Cloudflare challenge-response verification
+    if (data.type === "webhook_callback_verification" || data.challenge) {
+      return { type: "verification", challenge: data.challenge || "" };
+    }
+
+    // Cloudflare Stream video ready
+    if (data.readyToStream === true || data.status?.state === "ready") {
+      return {
+        type: "video_ready",
+        assetId: data.uid,
+        duration: data.duration,
+      };
+    }
+
+    // Cloudflare Stream video error
+    if (data.status?.state === "error") {
+      return {
+        type: "video_error",
+        assetId: data.uid,
+        errorReason: data.status?.errorReasonCode,
+      };
+    }
+
+    // Unknown event
+    return { type: "unknown", assetId: data.uid };
   }
 }

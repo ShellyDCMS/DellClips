@@ -9,62 +9,43 @@ describe("POST /api/video/webhook", () => {
   const { given, when, get } = driver;
   driver.beforeAndAfter();
 
-  describe("given a webhook payload without uid", () => {
+  describe("given parseWebhook returns verification", () => {
+    const challenge = chance.hash();
+
     beforeEach(async () => {
-      await when.postWebhook({});
+      given.parseWebhookReturns({ type: "verification", challenge });
+      await when.postWebhook("some-body");
     });
 
-    it("then it should return 400", () => {
-      expect(get.status()).toBe(400);
+    it("then it should return 200", () => {
+      expect(get.status()).toBe(200);
     });
 
-    it("then it should return Missing uid error", () => {
-      expect(get.body().error).toBe("Missing uid");
+    it("then it should return the challenge as plain text", () => {
+      expect(get.text()).toBe(challenge);
+    });
+
+    it("then it should not update video status", () => {
+      expect(get.updateVideoStatusMock()).not.toHaveBeenCalled();
     });
   });
 
-  describe("given a webhook payload with readyToStream true", () => {
-    const uid = chance.guid();
+  describe("given parseWebhook returns video_ready with assetId and duration", () => {
+    const assetId = chance.guid();
     const duration = chance.floating({ min: 1, max: 300, fixed: 1 });
 
     beforeEach(async () => {
       given.updateVideoStatusSucceeds();
-      await when.postWebhook({ uid, readyToStream: true, duration });
+      given.parseWebhookReturns({ type: "video_ready", assetId, duration });
+      await when.postWebhook("ready-body");
     });
 
-    it("then it should update video status to ready", () => {
-      expect(get.updateVideoStatusMock()).toHaveBeenCalledWith(uid, "ready", duration);
-    });
-
-    it("then it should return ready status", () => {
-      expect(get.body().status).toBe("ready");
-    });
-  });
-
-  describe("given a webhook payload with readyToStream true and no duration", () => {
-    const uid = chance.guid();
-
-    beforeEach(async () => {
-      given.updateVideoStatusSucceeds();
-      await when.postWebhook({ uid, readyToStream: true });
-    });
-
-    it("then it should pass undefined duration", () => {
-      expect(get.updateVideoStatusMock()).toHaveBeenCalledWith(uid, "ready", undefined);
-    });
-  });
-
-  describe("given a webhook payload with status.state ready", () => {
-    const uid = chance.guid();
-    const duration = chance.integer({ min: 1, max: 300 });
-
-    beforeEach(async () => {
-      given.updateVideoStatusSucceeds();
-      await when.postWebhook({ uid, status: { state: "ready" }, duration });
-    });
-
-    it("then it should update video status to ready", () => {
-      expect(get.updateVideoStatusMock()).toHaveBeenCalledWith(uid, "ready", duration);
+    it("then it should update video status to ready with duration", () => {
+      expect(get.updateVideoStatusMock()).toHaveBeenCalledWith(
+        assetId,
+        "ready",
+        duration
+      );
     });
 
     it("then it should return ready status", () => {
@@ -72,19 +53,36 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given a webhook payload with status.state error", () => {
-    const uid = chance.guid();
+  describe("given parseWebhook returns video_ready without assetId", () => {
+    beforeEach(async () => {
+      given.parseWebhookReturns({ type: "video_ready" });
+      await when.postWebhook("ready-no-id");
+    });
+
+    it("then it should not update video status", () => {
+      expect(get.updateVideoStatusMock()).not.toHaveBeenCalled();
+    });
+
+    it("then it should return ready status", () => {
+      expect(get.body().status).toBe("ready");
+    });
+  });
+
+  describe("given parseWebhook returns video_error with assetId", () => {
+    const assetId = chance.guid();
 
     beforeEach(async () => {
       given.updateVideoStatusSucceeds();
-      await when.postWebhook({
-        uid,
-        status: { state: "error", errorReasonCode: "codec_unsupported" },
+      given.parseWebhookReturns({
+        type: "video_error",
+        assetId,
+        errorReason: "codec_unsupported",
       });
+      await when.postWebhook("error-body");
     });
 
     it("then it should update video status to errored", () => {
-      expect(get.updateVideoStatusMock()).toHaveBeenCalledWith(uid, "errored");
+      expect(get.updateVideoStatusMock()).toHaveBeenCalledWith(assetId, "errored");
     });
 
     it("then it should return errored status", () => {
@@ -92,12 +90,25 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given a webhook payload with an unrecognized status", () => {
+  describe("given parseWebhook returns video_error without assetId", () => {
     beforeEach(async () => {
-      await when.postWebhook({
-        uid: chance.guid(),
-        status: { state: "inprogress" },
-      });
+      given.parseWebhookReturns({ type: "video_error", errorReason: "unknown" });
+      await when.postWebhook("error-no-id");
+    });
+
+    it("then it should not update video status", () => {
+      expect(get.updateVideoStatusMock()).not.toHaveBeenCalled();
+    });
+
+    it("then it should return errored status", () => {
+      expect(get.body().status).toBe("errored");
+    });
+  });
+
+  describe("given parseWebhook returns unknown", () => {
+    beforeEach(async () => {
+      given.parseWebhookReturns({ type: "unknown", assetId: chance.guid() });
+      await when.postWebhook("unknown-body");
     });
 
     it("then it should not update video status", () => {
@@ -109,18 +120,53 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given the database throws an error", () => {
+  describe("given the database throws an error on video_ready", () => {
     beforeEach(async () => {
       given.updateVideoStatusFails(new Error("DB error"));
-      await when.postWebhook({ uid: chance.guid(), readyToStream: true });
+      given.parseWebhookReturns({
+        type: "video_ready",
+        assetId: chance.guid(),
+        duration: 10,
+      });
+      await when.postWebhook("ready-db-fail");
     });
 
-    it("then it should return 500", () => {
-      expect(get.status()).toBe(500);
+    it("then it should return 200 to avoid webhook rejection", () => {
+      expect(get.status()).toBe(200);
     });
 
-    it("then it should return failure message", () => {
-      expect(get.body().error).toBe("Webhook processing failed");
+    it("then it should return processing failed error", () => {
+      expect(get.body().error).toBe("Processing failed");
+    });
+  });
+
+  describe("given parseWebhook throws an error", () => {
+    beforeEach(async () => {
+      get.parseWebhookMock().mockImplementation(() => {
+        throw new Error("parse crash");
+      });
+      await when.postWebhook("bad-body");
+    });
+
+    it("then it should return 200 to avoid webhook rejection", () => {
+      expect(get.status()).toBe(200);
+    });
+
+    it("then it should return processing failed error", () => {
+      expect(get.body().error).toBe("Processing failed");
+    });
+  });
+
+  describe("given the request body is passed to parseWebhook", () => {
+    const rawBody = chance.sentence();
+
+    beforeEach(async () => {
+      given.parseWebhookReturns({ type: "unknown" });
+      await when.postWebhook(rawBody);
+    });
+
+    it("then it should delegate the raw body to videoService.parseWebhook", () => {
+      expect(get.parseWebhookMock()).toHaveBeenCalledWith(rawBody);
     });
   });
 });

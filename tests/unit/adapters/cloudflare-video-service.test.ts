@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock environment variables
 vi.stubEnv("CF_ACCOUNT_ID", "test-account-id");
 vi.stubEnv("CF_STREAM_TOKEN", "test-api-token");
-vi.stubEnv("CF_CUSTOMER_SUBDOMAIN", "test-customer-subdomain");
+vi.stubEnv("CF_STREAM_CUSTOMER_SUBDOMAIN", "test-customer-subdomain");
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -115,6 +115,125 @@ describe("CloudflareVideoService", () => {
             method: "DELETE",
           })
         );
+      });
+    });
+  });
+});
+
+describe("CloudflareVideoService.parseWebhook", () => {
+  let service: CloudflareVideoService;
+
+  beforeEach(() => {
+    service = new CloudflareVideoService();
+  });
+
+  describe("given an empty body", () => {
+    it("then it should return verification with empty challenge", () => {
+      expect(service.parseWebhook("")).toEqual({ type: "verification", challenge: "" });
+    });
+
+    it("then it should handle whitespace-only body", () => {
+      expect(service.parseWebhook("   ")).toEqual({
+        type: "verification",
+        challenge: "",
+      });
+    });
+  });
+
+  describe("given a non-JSON body", () => {
+    it("then it should return verification with the body as challenge", () => {
+      const plainText = "some-challenge-token";
+      expect(service.parseWebhook(plainText)).toEqual({
+        type: "verification",
+        challenge: plainText,
+      });
+    });
+  });
+
+  describe("given a webhook_callback_verification payload", () => {
+    it("then it should return verification with the challenge value", () => {
+      const body = JSON.stringify({
+        type: "webhook_callback_verification",
+        challenge: "cf-challenge-123",
+      });
+      expect(service.parseWebhook(body)).toEqual({
+        type: "verification",
+        challenge: "cf-challenge-123",
+      });
+    });
+
+    it("then it should handle missing challenge in verification payload", () => {
+      const body = JSON.stringify({ type: "webhook_callback_verification" });
+      expect(service.parseWebhook(body)).toEqual({
+        type: "verification",
+        challenge: "",
+      });
+    });
+  });
+
+  describe("given a payload with challenge field", () => {
+    it("then it should return verification", () => {
+      const body = JSON.stringify({ challenge: "direct-challenge" });
+      expect(service.parseWebhook(body)).toEqual({
+        type: "verification",
+        challenge: "direct-challenge",
+      });
+    });
+  });
+
+  describe("given a readyToStream payload", () => {
+    it("then it should return video_ready with assetId and duration", () => {
+      const body = JSON.stringify({
+        uid: "video-abc",
+        readyToStream: true,
+        duration: 42.5,
+      });
+      expect(service.parseWebhook(body)).toEqual({
+        type: "video_ready",
+        assetId: "video-abc",
+        duration: 42.5,
+      });
+    });
+  });
+
+  describe("given a status.state ready payload", () => {
+    it("then it should return video_ready", () => {
+      const body = JSON.stringify({
+        uid: "video-xyz",
+        status: { state: "ready" },
+        duration: 10,
+      });
+      expect(service.parseWebhook(body)).toEqual({
+        type: "video_ready",
+        assetId: "video-xyz",
+        duration: 10,
+      });
+    });
+  });
+
+  describe("given a status.state error payload", () => {
+    it("then it should return video_error with errorReason", () => {
+      const body = JSON.stringify({
+        uid: "video-err",
+        status: { state: "error", errorReasonCode: "codec_unsupported" },
+      });
+      expect(service.parseWebhook(body)).toEqual({
+        type: "video_error",
+        assetId: "video-err",
+        errorReason: "codec_unsupported",
+      });
+    });
+  });
+
+  describe("given an unrecognized JSON payload", () => {
+    it("then it should return unknown with the uid", () => {
+      const body = JSON.stringify({
+        uid: "video-unknown",
+        status: { state: "inprogress" },
+      });
+      expect(service.parseWebhook(body)).toEqual({
+        type: "unknown",
+        assetId: "video-unknown",
       });
     });
   });

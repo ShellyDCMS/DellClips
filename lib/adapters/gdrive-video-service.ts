@@ -1,4 +1,4 @@
-import { UploadUrlResult, VideoService } from "@/lib/ports/video-service";
+import { UploadUrlResult, VideoService, WebhookResult } from "@/lib/ports/video-service";
 
 export class GDriveVideoService implements VideoService {
   async createUploadUrl(_userId: string): Promise<UploadUrlResult> {
@@ -25,5 +25,20 @@ export class GDriveVideoService implements VideoService {
     console.log(
       `[gdrive] Delete not supported. Remove manually from Google Drive: ${assetId}`
     );
+  }
+
+  parseWebhook(body: string): WebhookResult {
+    if (!body || body.trim() === "") {
+      return { type: "verification", challenge: "" };
+    }
+    try {
+      const data = JSON.parse(body);
+      if (data.challenge) {
+        return { type: "verification", challenge: data.challenge };
+      }
+    } catch {
+      return { type: "verification", challenge: body };
+    }
+    return { type: "unknown" };
   }
 }
