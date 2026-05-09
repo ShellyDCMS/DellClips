@@ -112,9 +112,11 @@ export default function UploadClient() {
         throw new Error("Failed to save video record");
       }
 
+      const videoData = await videoRes.json();
+
       setUploadProgress(100);
       setStep("done");
-      trackEvent("video_upload", assetId, { title, hashtags });
+      trackEvent("video_upload", videoData.video.id, { title, hashtags });
 
       // Redirect to feed after a short delay
       setTimeout(() => {

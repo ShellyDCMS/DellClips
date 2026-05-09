@@ -48,6 +48,9 @@ export class AnalyticsDriver {
     insertFails: (error: Error) => {
       mockValues.mockRejectedValue(error);
     },
+    insertFailsThenSucceeds: (error: Error) => {
+      mockValues.mockRejectedValueOnce(error).mockResolvedValueOnce(undefined);
+    },
   };
 
   when = {
@@ -70,5 +73,7 @@ export class AnalyticsDriver {
     body: () => this.lastBody,
     insertMock: () => mockInsert,
     valuesMock: () => mockValues,
+    valuesCallArgs: (callIndex: number) => mockValues.mock.calls[callIndex]?.[0],
+    valuesCallCount: () => mockValues.mock.calls.length,
   };
 }

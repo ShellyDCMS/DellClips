@@ -16,4 +16,5 @@ export interface VideoService {
   getPlaybackUrl(assetId: string): string;
   deleteVideo(assetId: string): Promise<void>;
   parseWebhook(body: string): WebhookResult;
+  verifyWebhookSignature(body: string, signatureHeader: string): boolean;
 }

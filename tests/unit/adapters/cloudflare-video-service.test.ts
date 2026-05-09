@@ -1,5 +1,6 @@
 import { CloudflareVideoService } from "@/lib/adapters/cloudflare-video-service";
 import type { VideoService } from "@/lib/ports/video-service";
+import crypto from "node:crypto";
 import sinon from "sinon";
 import { StubbedInstanceCreator } from "ts-stubber";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -239,6 +240,93 @@ describe("CloudflareVideoService.parseWebhook", () => {
   });
 });
 
+describe("CloudflareVideoService.verifyWebhookSignature", () => {
+  let service: CloudflareVideoService;
+
+  beforeEach(() => {
+    service = new CloudflareVideoService();
+  });
+
+  describe("given CF_WEBHOOK_SECRET is not set", () => {
+    beforeEach(() => {
+      vi.stubEnv("CF_WEBHOOK_SECRET", "");
+    });
+
+    it("then it should return true (skip verification in dev mode)", () => {
+      expect(service.verifyWebhookSignature("body", "sig")).toBe(true);
+    });
+  });
+
+  describe("given CF_WEBHOOK_SECRET is set", () => {
+    const secret = "test-webhook-secret";
+
+    beforeEach(() => {
+      vi.stubEnv("CF_WEBHOOK_SECRET", secret);
+    });
+
+    describe("when no signature header is provided", () => {
+      it("then it should return false", () => {
+        expect(service.verifyWebhookSignature("body", "")).toBe(false);
+      });
+    });
+
+    describe("when signature header has invalid format (missing time)", () => {
+      it("then it should return false", () => {
+        expect(service.verifyWebhookSignature("body", "sig1=abc123")).toBe(false);
+      });
+    });
+
+    describe("when signature header has invalid format (missing sig1)", () => {
+      it("then it should return false", () => {
+        expect(service.verifyWebhookSignature("body", "time=123456")).toBe(false);
+      });
+    });
+
+    describe("when timestamp is too old (replay attack)", () => {
+      it("then it should return false", () => {
+        const oldTimestamp = Math.floor(Date.now() / 1000) - 600;
+        const sig = crypto
+          .createHmac("sha256", secret)
+          .update(`${oldTimestamp}.body`)
+          .digest("hex");
+        expect(
+          service.verifyWebhookSignature("body", `time=${oldTimestamp},sig1=${sig}`)
+        ).toBe(false);
+      });
+    });
+
+    describe("when signature is valid", () => {
+      it("then it should return true", () => {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const body = '{"uid":"video-123","readyToStream":true}';
+        const sig = crypto
+          .createHmac("sha256", secret)
+          .update(`${timestamp}.${body}`)
+          .digest("hex");
+        expect(
+          service.verifyWebhookSignature(body, `time=${timestamp},sig1=${sig}`)
+        ).toBe(true);
+      });
+    });
+
+    describe("when signature does not match", () => {
+      it("then it should return false", () => {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const wrongSig = crypto
+          .createHmac("sha256", secret)
+          .update(`${timestamp}.wrong-body`)
+          .digest("hex");
+        expect(
+          service.verifyWebhookSignature(
+            "actual-body",
+            `time=${timestamp},sig1=${wrongSig}`
+          )
+        ).toBe(false);
+      });
+    });
+  });
+});
+
 describe("VideoService interface (stubbed with ts-stubber)", () => {
   let stubbedService: VideoService;
 
@@ -286,5 +374,18 @@ describe("VideoService interface (stubbed with ts-stubber)", () => {
 
     // then
     expect(stub.calledOnceWith("asset-1")).toBe(true);
+  });
+
+  it("then stubbed verifyWebhookSignature should be callable", () => {
+    // given
+    const stub = stubbedService.verifyWebhookSignature as sinon.SinonStub;
+    stub.returns(true);
+
+    // when
+    const result = stubbedService.verifyWebhookSignature("body", "sig");
+
+    // then
+    expect(result).toBe(true);
+    expect(stub.calledOnceWith("body", "sig")).toBe(true);
   });
 });

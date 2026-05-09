@@ -40,7 +40,7 @@ describe("POST /api/analytics", () => {
       given.authenticatedUser(userId);
     });
 
-    describe("when sending a valid event with videoId and metadata", () => {
+    describe("when sending a valid event with a valid UUID videoId and metadata", () => {
       const eventType = "video_view";
       const videoId = chance.guid();
       const metadata = { title: chance.sentence() };
@@ -70,16 +70,60 @@ describe("POST /api/analytics", () => {
         );
       });
 
-      it("then it should insert with correct videoId", () => {
+      it("then it should insert with the valid UUID videoId", () => {
         expect(get.valuesMock()).toHaveBeenCalledWith(
           expect.objectContaining({ videoId })
         );
       });
 
-      it("then it should insert with stringified metadata", () => {
+      it("then it should insert with stringified metadata without rawVideoId", () => {
         expect(get.valuesMock()).toHaveBeenCalledWith(
           expect.objectContaining({ metadata: JSON.stringify(metadata) })
         );
+      });
+    });
+
+    describe("when sending an event with a non-UUID videoId", () => {
+      const eventType = "video_view";
+      const videoId = "cf-not-a-uuid-abc123";
+      const metadata = { title: chance.sentence() };
+
+      beforeEach(async () => {
+        given.insertSucceeds();
+        await when.postEvent({ eventType, videoId, metadata });
+      });
+
+      it("then it should insert with null videoId", () => {
+        expect(get.valuesCallArgs(0).videoId).toBeNull();
+      });
+
+      it("then it should include rawVideoId in metadata", () => {
+        const parsed = JSON.parse(get.valuesCallArgs(0).metadata);
+        expect(parsed.rawVideoId).toBe(videoId);
+      });
+
+      it("then it should preserve original metadata fields", () => {
+        const parsed = JSON.parse(get.valuesCallArgs(0).metadata);
+        expect(parsed.title).toBe(metadata.title);
+      });
+    });
+
+    describe("when sending an event with a non-UUID videoId and no metadata", () => {
+      const eventType = "video_view";
+      const videoId = "cf-not-a-uuid-abc123";
+
+      beforeEach(async () => {
+        given.insertSucceeds();
+        await when.postEvent({ eventType, videoId });
+      });
+
+      it("then it should insert with null videoId", () => {
+        expect(get.valuesCallArgs(0).videoId).toBeNull();
+      });
+
+      it("then it should store rawVideoId in metadata", () => {
+        const parsed = JSON.parse(get.valuesCallArgs(0).metadata);
+        expect(parsed.rawVideoId).toBe(videoId);
       });
     });
 
@@ -104,6 +148,37 @@ describe("POST /api/analytics", () => {
       });
     });
 
+    describe("when the first insert fails with FK error and retry succeeds", () => {
+      const eventType = "video_view";
+      const videoId = chance.guid();
+
+      beforeEach(async () => {
+        given.insertFailsThenSucceeds(new Error("FK violation"));
+        await when.postEvent({ eventType, videoId });
+      });
+
+      it("then it should return 200", () => {
+        expect(get.status()).toBe(200);
+      });
+
+      it("then it should return tracked true", () => {
+        expect(get.body().tracked).toBe(true);
+      });
+
+      it("then it should have called values twice (original + retry)", () => {
+        expect(get.valuesCallCount()).toBe(2);
+      });
+
+      it("then the retry should insert with null videoId", () => {
+        expect(get.valuesCallArgs(1).videoId).toBeNull();
+      });
+
+      it("then the retry should include rawVideoId in metadata", () => {
+        const parsed = JSON.parse(get.valuesCallArgs(1).metadata);
+        expect(parsed.rawVideoId).toBe(videoId);
+      });
+    });
+
     describe("when eventType is missing", () => {
       beforeEach(async () => {
         await when.postEvent({ videoId: chance.guid() });
@@ -118,14 +193,14 @@ describe("POST /api/analytics", () => {
       });
     });
 
-    describe("when the database throws an error", () => {
+    describe("when both insert attempts fail", () => {
       beforeEach(async () => {
         given.insertFails(new Error("DB error"));
         await when.postEvent({ eventType: "page_view" });
       });
 
-      it("then it should return 500", () => {
-        expect(get.status()).toBe(500);
+      it("then it should return 200 (analytics never returns 500)", () => {
+        expect(get.status()).toBe(200);
       });
 
       it("then it should return tracked false", () => {

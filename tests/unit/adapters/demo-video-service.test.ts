@@ -111,5 +111,15 @@ describe("DemoVideoService", () => {
         expect(service.parseWebhook(body)).toEqual({ type: "unknown" });
       });
     });
+
+    describe("when verifying a webhook signature", () => {
+      it("then it should always return true (demo adapter)", () => {
+        expect(service.verifyWebhookSignature("any-body", "any-sig")).toBe(true);
+      });
+
+      it("then it should return true even with empty arguments", () => {
+        expect(service.verifyWebhookSignature("", "")).toBe(true);
+      });
+    });
   });
 });
