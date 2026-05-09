@@ -76,13 +76,17 @@ export default function AdminSettingsClient({ initialConfig }: Props) {
             <div
               key={item.key}
               data-testid="config-item"
-              className="bg-gray-900 border border-gray-800 rounded-xl p-4"
+              className="bg-gray-900 border border-gray-800 rounded-xl p-4
+                         overflow-hidden"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
+              {/* Stack vertically on mobile, horizontal on desktop */}
+              <div className="flex flex-col gap-3">
+                {/* Label + Description */}
+                <div className="min-w-0">
                   <p
                     data-testid="config-key"
-                    className="text-white font-semibold text-sm"
+                    className="text-white font-semibold text-sm break-all"
+                    style={{ overflowWrap: "break-word", wordBreak: "break-all" }}
                   >
                     {item.key}
                   </p>
@@ -96,49 +100,55 @@ export default function AdminSettingsClient({ initialConfig }: Props) {
                   )}
                 </div>
 
-                {isBool ? (
-                  <button
-                    data-testid="config-toggle"
-                    onClick={() => handleToggle(item.key, item.value)}
-                    disabled={saving === item.key}
-                    className={`relative w-12 h-6 rounded-full transition-colors
-                               disabled:opacity-50 ${
-                                 item.value === "true" ? "bg-blue-600" : "bg-gray-700"
-                               }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 w-5 h-5 bg-white rounded-full
-                                  transition-transform ${
-                                    item.value === "true"
-                                      ? "translate-x-6"
-                                      : "translate-x-0.5"
-                                  }`}
+                {/* Control */}
+                <div className="flex-shrink-0">
+                  {isBool ? (
+                    <button
+                      data-testid="config-toggle"
+                      onClick={() => handleToggle(item.key, item.value)}
+                      disabled={saving === item.key}
+                      className={`relative w-12 h-6 rounded-full transition-colors
+                                 disabled:opacity-50 ${
+                                   item.value === "true" ? "bg-blue-600" : "bg-gray-700"
+                                 }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-5 h-5 bg-white rounded-full
+                                    transition-transform ${
+                                      item.value === "true"
+                                        ? "translate-x-6"
+                                        : "translate-x-0.5"
+                                    }`}
+                      />
+                    </button>
+                  ) : (
+                    <input
+                      data-testid="config-text-input"
+                      type="text"
+                      value={item.value}
+                      onChange={(e) => {
+                        setConfig((prev) =>
+                          prev.map((c) =>
+                            c.key === item.key ? { ...c, value: e.target.value } : c
+                          )
+                        );
+                      }}
+                      onBlur={(e) => handleTextChange(item.key, e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700
+                                 rounded-lg text-white text-sm
+                                 focus:outline-none focus:ring-2 focus:ring-blue-500
+                                 overflow-hidden text-ellipsis"
+                      style={{
+                        overflowWrap: "break-word",
+                        wordBreak: "break-all",
+                      }}
                     />
-                  </button>
-                ) : (
-                  <input
-                    data-testid="config-text-input"
-                    type="text"
-                    value={item.value}
-                    onChange={(e) => {
-                      setConfig((prev) =>
-                        prev.map((c) =>
-                          c.key === item.key ? { ...c, value: e.target.value } : c
-                        )
-                      );
-                    }}
-                    onBlur={(e) => handleTextChange(item.key, e.target.value)}
-                    className="w-48 px-3 py-1 bg-gray-800 border border-gray-700
-                               rounded-lg text-white text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                )}
+                  )}
+                </div>
               </div>
 
               {saving === item.key && (
-                <p data-testid="config-saving" className="text-blue-400 text-xs mt-2">
-                  Saving...
-                </p>
+                <p className="text-blue-400 text-xs mt-2">Saving...</p>
               )}
             </div>
           );

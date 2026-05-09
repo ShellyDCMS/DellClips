@@ -5,6 +5,7 @@ import { trackEvent } from "@/lib/analytics";
 import { timeAgo } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
+
 interface VideoCardProps {
   video: {
     id: string;
@@ -46,9 +47,8 @@ export default function VideoCard({
   const [liked, setLiked] = useState(video.hasLiked);
   const [likeCount, setLikeCount] = useState(video.likeCount);
   const [showMenu, setShowMenu] = useState(false);
-  const [isFollowingAuthor, setIsFollowingAuthor] = useState(
-    video.isFollowingAuthor // ← USE THE PROP
-  );
+  const [isFollowingAuthor, setIsFollowingAuthor] = useState(video.isFollowingAuthor);
+
   const isOwnVideo = currentUserId === video.author.id;
 
   const handleLike = async () => {
@@ -78,6 +78,7 @@ export default function VideoCard({
     trackEvent(newState ? "user_follow" : "user_unfollow", undefined, {
       targetUserId: video.author.id,
     });
+
     try {
       const method = newState ? "POST" : "DELETE";
       const res = await fetch(`/api/users/${video.author.id}/follow`, {
@@ -94,6 +95,17 @@ export default function VideoCard({
   const authorInitial =
     video.author.name?.charAt(0)?.toUpperCase() ||
     video.author.email.charAt(0).toUpperCase();
+
+  // TikTok-style drop shadow for icons on any background
+  const iconShadow = {
+    filter:
+      "drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.8)) drop-shadow(0px 0px 6px rgba(0, 0, 0, 0.4))",
+  };
+
+  // TikTok-style text shadow for readability on any background
+  const textShadow = {
+    textShadow: "0px 1px 3px rgba(0, 0, 0, 0.8), 0px 0px 6px rgba(0, 0, 0, 0.4)",
+  };
 
   return (
     <div
@@ -125,11 +137,15 @@ export default function VideoCard({
         </div>
       )}
 
-      {/* Right Side Actions */}
+      {/* ============================================ */}
+      {/* RIGHT SIDE ACTIONS — TikTok style with drop shadows */}
+      {/* No background overlay — just shadows for contrast */}
+      {/* ============================================ */}
       <div
         className="absolute right-3 flex flex-col items-center gap-5 z-10"
         style={{
           bottom: "max(140px, calc(env(safe-area-inset-bottom, 0px) + 140px))",
+          ...iconShadow,
         }}
       >
         {/* Profile + Quick Follow */}
@@ -139,23 +155,23 @@ export default function VideoCard({
             onClick={() => onProfileClick(video.author.id)}
           >
             <div
-              className="w-11 h-11 rounded-full bg-gray-600 flex items-center justify-center
-                            text-white font-bold text-sm border-2 border-white"
+              className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center
+                          text-white font-bold text-sm border-2 border-white"
+              style={iconShadow}
             >
               {video.author.avatarUrl ? (
                 <Image
                   src={video.author.avatarUrl}
                   alt={video.author.name || ""}
+                  width={48}
+                  height={48}
                   className="w-full h-full rounded-full object-cover"
-                  width={44}
-                  height={44}
                 />
               ) : (
                 authorInitial
               )}
             </div>
           </button>
-          {/* Quick follow button below avatar */}
           {!isOwnVideo && (
             <button
               data-testid="quick-follow-button"
@@ -164,6 +180,7 @@ export default function VideoCard({
                           justify-center text-white text-[10px] font-bold ${
                             isFollowingAuthor ? "bg-gray-600" : "bg-red-500"
                           }`}
+              style={iconShadow}
             >
               {isFollowingAuthor ? "✓" : "+"}
             </button>
@@ -177,11 +194,11 @@ export default function VideoCard({
           className="flex flex-col items-center"
         >
           <div
-            className={`w-11 h-11 rounded-full flex items-center justify-center ${
+            className={`w-12 h-12 rounded-full flex items-center justify-center ${
               liked ? "text-red-500" : "text-white"
             }`}
           >
-            <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
               {liked ? (
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               ) : (
@@ -189,7 +206,9 @@ export default function VideoCard({
               )}
             </svg>
           </div>
-          <span className="text-white text-xs font-semibold">{likeCount}</span>
+          <span className="text-white text-xs font-semibold" style={textShadow}>
+            {likeCount}
+          </span>
         </button>
 
         {/* Comment */}
@@ -198,12 +217,14 @@ export default function VideoCard({
           onClick={() => onComment(video.id)}
           className="flex flex-col items-center"
         >
-          <div className="w-11 h-11 rounded-full flex items-center justify-center text-white">
-            <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center text-white">
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           </div>
-          <span className="text-white text-xs font-semibold">{video.commentCount}</span>
+          <span className="text-white text-xs font-semibold" style={textShadow}>
+            {video.commentCount}
+          </span>
         </button>
 
         {/* More menu (report) */}
@@ -211,9 +232,9 @@ export default function VideoCard({
           <button
             data-testid="more-button"
             onClick={() => setShowMenu(!showMenu)}
-            className="w-11 h-11 rounded-full flex items-center justify-center text-white"
+            className="w-12 h-12 rounded-full flex items-center justify-center text-white"
           >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="5" r="2" />
               <circle cx="12" cy="12" r="2" />
               <circle cx="12" cy="19" r="2" />
@@ -223,8 +244,8 @@ export default function VideoCard({
           {showMenu && (
             <div
               data-testid="more-menu"
-              className="absolute right-12 bottom-0 bg-gray-900 rounded-lg shadow-xl
-                         border border-gray-700 overflow-hidden z-20 w-48"
+              className="absolute right-14 bottom-0 bg-gray-900/95 rounded-lg shadow-xl
+                         border border-gray-700 overflow-hidden z-20 w-48 backdrop-blur-sm"
             >
               <button
                 data-testid="report-menu-item"
@@ -245,50 +266,84 @@ export default function VideoCard({
         </div>
       </div>
 
-      {/* Bottom overlay — author info + description */}
+      {/* ============================================ */}
+      {/* BOTTOM OVERLAY — TikTok style gradient scrim */}
+      {/* Gradient from black at bottom to transparent at top */}
+      {/* Text container has strict max-width to avoid icon overlap */}
+      {/* ============================================ */}
       <div
-        className="absolute bottom-0 left-0 right-16 p-4 z-10
-                      bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+        className="absolute bottom-0 left-0 right-0 z-10"
+        style={{
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0) 100%)",
+          paddingBottom: "max(16px, env(safe-area-inset-bottom, 16px))",
+        }}
       >
-        <button
-          data-testid="author-name"
-          onClick={() => onProfileClick(video.author.id)}
-          className="font-bold text-white text-sm hover:underline"
+        {/* Text container — restricted width to avoid overlapping right-side icons */}
+        <div
+          className="px-4 pb-2"
+          style={{
+            maxWidth: "calc(100% - 80px)", // Leave 80px for the right icon bar
+          }}
         >
-          @{video.author.name || video.author.email.split("@")[0]}
-        </button>
-
-        {video.title && (
-          <p data-testid="video-title" className="text-white text-sm mt-1">
-            {video.title}
-          </p>
-        )}
-
-        {video.description && (
-          <p
-            data-testid="video-description"
-            className="text-gray-300 text-xs mt-1 line-clamp-2"
+          {/* Author */}
+          <button
+            data-testid="author-name"
+            onClick={() => onProfileClick(video.author.id)}
+            className="font-bold text-white text-sm hover:underline"
+            style={textShadow}
           >
-            {video.description}
+            @{video.author.name || video.author.email.split("@")[0]}
+          </button>
+
+          {/* Title */}
+          {video.title && (
+            <p
+              data-testid="video-title"
+              className="text-white text-sm mt-1 line-clamp-1"
+              style={textShadow}
+            >
+              {video.title}
+            </p>
+          )}
+
+          {/* Description (truncated to 2 lines) */}
+          {video.description && (
+            <p
+              data-testid="video-description"
+              className="text-gray-200 text-xs mt-1 line-clamp-2"
+              style={textShadow}
+            >
+              {video.description}
+            </p>
+          )}
+
+          {/* Hashtags (wrap, don't overflow) */}
+          {video.hashtags.length > 0 && (
+            <div
+              data-testid="hashtags"
+              className="flex flex-wrap gap-1 mt-2 overflow-hidden max-h-10"
+            >
+              {video.hashtags.map((tag) => (
+                <button
+                  key={tag}
+                  data-testid={`hashtag-${tag}`}
+                  onClick={() => onHashtagClick(tag)}
+                  className="text-blue-300 text-xs font-semibold hover:underline
+                             whitespace-nowrap"
+                  style={textShadow}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Timestamp */}
+          <p className="text-gray-400 text-xs mt-1" style={textShadow}>
+            {timeAgo(new Date(video.createdAt))}
           </p>
-        )}
-
-        {video.hashtags.length > 0 && (
-          <div data-testid="hashtags" className="flex flex-wrap gap-1 mt-2">
-            {video.hashtags.map((tag) => (
-              <button
-                key={tag}
-                data-testid={`hashtag-${tag}`}
-                onClick={() => onHashtagClick(tag)}
-                className="text-blue-400 text-xs font-semibold hover:underline"
-              >
-                #{tag}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <p className="text-gray-500 text-xs mt-1">{timeAgo(new Date(video.createdAt))}</p>
+        </div>
       </div>
     </div>
   );
