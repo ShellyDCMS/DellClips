@@ -9,10 +9,34 @@ describe("POST /api/video/webhook", () => {
   const { given, when, get } = driver;
   driver.beforeAndAfter();
 
-  describe("given parseWebhook returns verification", () => {
+  describe("given signature verification fails", () => {
+    beforeEach(async () => {
+      given.signatureInvalid();
+      await when.postWebhook("some-body");
+    });
+
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
+    });
+
+    it("then it should return Invalid signature error", () => {
+      expect(get.body().error).toBe("Invalid signature");
+    });
+
+    it("then it should not call parseWebhook", () => {
+      expect(get.parseWebhookMock()).not.toHaveBeenCalled();
+    });
+
+    it("then it should not update video status", () => {
+      expect(get.updateVideoStatusMock()).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("given signature verification passes and parseWebhook returns verification", () => {
     const challenge = chance.hash();
 
     beforeEach(async () => {
+      given.signatureValid();
       given.parseWebhookReturns({ type: "verification", challenge });
       await when.postWebhook("some-body");
     });
@@ -30,11 +54,12 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given parseWebhook returns video_ready with assetId and duration", () => {
+  describe("given signature passes and parseWebhook returns video_ready with assetId and duration", () => {
     const assetId = chance.guid();
     const duration = chance.floating({ min: 1, max: 300, fixed: 1 });
 
     beforeEach(async () => {
+      given.signatureValid();
       given.updateVideoStatusSucceeds();
       given.parseWebhookReturns({ type: "video_ready", assetId, duration });
       await when.postWebhook("ready-body");
@@ -58,8 +83,9 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given parseWebhook returns video_ready without assetId", () => {
+  describe("given signature passes and parseWebhook returns video_ready without assetId", () => {
     beforeEach(async () => {
+      given.signatureValid();
       given.parseWebhookReturns({ type: "video_ready" });
       await when.postWebhook("ready-no-id");
     });
@@ -73,10 +99,11 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given parseWebhook returns video_error with assetId", () => {
+  describe("given signature passes and parseWebhook returns video_error with assetId", () => {
     const assetId = chance.guid();
 
     beforeEach(async () => {
+      given.signatureValid();
       given.updateVideoStatusSucceeds();
       given.parseWebhookReturns({
         type: "video_error",
@@ -95,8 +122,9 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given parseWebhook returns video_error without assetId", () => {
+  describe("given signature passes and parseWebhook returns video_error without assetId", () => {
     beforeEach(async () => {
+      given.signatureValid();
       given.parseWebhookReturns({ type: "video_error", errorReason: "unknown" });
       await when.postWebhook("error-no-id");
     });
@@ -110,8 +138,9 @@ describe("POST /api/video/webhook", () => {
     });
   });
 
-  describe("given parseWebhook returns unknown", () => {
+  describe("given signature passes and parseWebhook returns unknown", () => {
     beforeEach(async () => {
+      given.signatureValid();
       given.parseWebhookReturns({ type: "unknown", assetId: chance.guid() });
       await when.postWebhook("unknown-body");
     });
@@ -127,6 +156,7 @@ describe("POST /api/video/webhook", () => {
 
   describe("given the database throws an error on video_ready", () => {
     beforeEach(async () => {
+      given.signatureValid();
       given.updateVideoStatusFails(new Error("DB error"));
       given.parseWebhookReturns({
         type: "video_ready",
@@ -147,6 +177,7 @@ describe("POST /api/video/webhook", () => {
 
   describe("given parseWebhook throws an error", () => {
     beforeEach(async () => {
+      given.signatureValid();
       get.parseWebhookMock().mockImplementation(() => {
         throw new Error("parse crash");
       });
@@ -166,6 +197,7 @@ describe("POST /api/video/webhook", () => {
     const rawBody = chance.sentence();
 
     beforeEach(async () => {
+      given.signatureValid();
       given.parseWebhookReturns({ type: "unknown" });
       await when.postWebhook(rawBody);
     });
@@ -173,6 +205,39 @@ describe("POST /api/video/webhook", () => {
     it("then it should delegate the raw body to videoService.parseWebhook", () => {
       expect(get.parseWebhookMock()).toHaveBeenCalledWith(rawBody);
     });
+  });
+
+  describe("given the request body and signature are passed to verifyWebhookSignature", () => {
+    const rawBody = chance.sentence();
+    const signature = chance.hash();
+
+    beforeEach(async () => {
+      given.signatureValid();
+      given.parseWebhookReturns({ type: "unknown" });
+      await when.postWebhook(rawBody, signature);
+    });
+
+    it("then it should delegate the body and signature to verifyWebhookSignature", () => {
+      expect(get.verifyWebhookSignatureMock()).toHaveBeenCalledWith(rawBody, signature);
+    });
+  });
+});
+
+describe("GET /api/video/webhook", () => {
+  const driver = new WebhookDriver();
+  const { when, get } = driver;
+  driver.beforeAndAfter();
+
+  beforeEach(async () => {
+    await when.getHealth();
+  });
+
+  it("then it should return 200", () => {
+    expect(get.status()).toBe(200);
+  });
+
+  it("then it should return status ok", () => {
+    expect(get.body().status).toBe("ok");
   });
 });
 

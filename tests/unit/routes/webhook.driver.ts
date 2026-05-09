@@ -1,4 +1,4 @@
-import { HEAD, POST } from "@/app/api/video/webhook/route";
+import { GET, HEAD, POST } from "@/app/api/video/webhook/route";
 import type { WebhookResult } from "@/lib/ports/video-service";
 import { NextRequest } from "next/server";
 import { beforeEach, vi } from "vitest";
@@ -10,12 +10,14 @@ vi.mock("next/cache", () => ({
 
 const mockUpdateVideoStatus = vi.fn();
 const mockParseWebhook = vi.fn();
+const mockVerifyWebhookSignature = vi.fn();
 vi.mock("@/lib/services", () => ({
   databaseService: {
     updateVideoStatus: (...args: unknown[]) => mockUpdateVideoStatus(...args),
   },
   videoService: {
     parseWebhook: (...args: unknown[]) => mockParseWebhook(...args),
+    verifyWebhookSignature: (...args: unknown[]) => mockVerifyWebhookSignature(...args),
   },
 }));
 
@@ -43,15 +45,22 @@ export class WebhookDriver {
     parseWebhookReturns: (result: WebhookResult) => {
       mockParseWebhook.mockReturnValue(result);
     },
+    signatureValid: () => {
+      mockVerifyWebhookSignature.mockReturnValue(true);
+    },
+    signatureInvalid: () => {
+      mockVerifyWebhookSignature.mockReturnValue(false);
+    },
   };
 
   when = {
-    postWebhook: async (body: string = "") => {
+    postWebhook: async (body: string = "", signatureHeader: string = "sig") => {
       const request = new NextRequest(
         new URL("/api/video/webhook", "http://localhost:3000"),
         {
           method: "POST",
           body,
+          headers: { "Webhook-Signature": signatureHeader },
         }
       );
       this.lastResponse = await POST(request);
@@ -65,6 +74,10 @@ export class WebhookDriver {
     head: async () => {
       this.lastResponse = await HEAD();
     },
+    getHealth: async () => {
+      this.lastResponse = await GET();
+      this.lastBody = await this.lastResponse.json();
+    },
   };
 
   get = {
@@ -73,6 +86,7 @@ export class WebhookDriver {
     text: () => this.lastText,
     updateVideoStatusMock: () => mockUpdateVideoStatus,
     parseWebhookMock: () => mockParseWebhook,
+    verifyWebhookSignatureMock: () => mockVerifyWebhookSignature,
     revalidatePathMock: () => mockRevalidatePath,
   };
 }

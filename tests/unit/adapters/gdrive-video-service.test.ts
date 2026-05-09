@@ -109,5 +109,17 @@ describe("GDriveVideoService", () => {
         expect(service.parseWebhook(body)).toEqual({ type: "unknown" });
       });
     });
+
+    describe("when verifying a webhook signature", () => {
+      it("then it should always return true (gdrive adapter)", () => {
+        expect(service.verifyWebhookSignature(chance.sentence(), chance.hash())).toBe(
+          true
+        );
+      });
+
+      it("then it should return true even with empty arguments", () => {
+        expect(service.verifyWebhookSignature("", "")).toBe(true);
+      });
+    });
   });
 });
