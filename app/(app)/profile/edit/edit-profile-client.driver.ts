@@ -4,7 +4,7 @@ interface User {
   id: string;
   email: string;
   name: string | null;
-  avatarUrl: string | null;
+  image: string | null;
   bio?: string | null;
   department?: string | null;
   jobTitle?: string | null;
