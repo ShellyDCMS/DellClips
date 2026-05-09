@@ -161,6 +161,7 @@ export default function VideoCard({
             >
               {video.author.avatarUrl ? (
                 <Image
+                  data-testid="author-avatar"
                   src={video.author.avatarUrl}
                   alt={video.author.name || ""}
                   width={48}

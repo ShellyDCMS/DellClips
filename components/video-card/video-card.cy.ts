@@ -125,6 +125,33 @@ describe("VideoCard", () => {
     });
   });
 
+  describe("given an author with an avatar URL", () => {
+    beforeEach(() => {
+      given.video({
+        ...mockVideo,
+        author: { ...mockVideo.author, avatarUrl: "https://example.com/avatar.png" },
+      });
+      given.isActive();
+      when.render();
+    });
+
+    it("then the author avatar should be visible", () => {
+      get.authorAvatar().should("be.visible");
+    });
+  });
+
+  describe("given an author without an avatar URL", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      when.render();
+    });
+
+    it("then the author avatar should not exist", () => {
+      get.authorAvatar().should("not.exist");
+    });
+  });
+
   describe("given an author without a name", () => {
     beforeEach(() => {
       given.video({
