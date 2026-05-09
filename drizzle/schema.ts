@@ -19,13 +19,9 @@ export const users = pgTable("users", {
   name: varchar("name", { length: 255 }),
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
-  avatarUrl: text("avatar_url"),
-  // NEW PROFILE FIELDS
-  username: varchar("username", { length: 50 }).unique(),
   bio: varchar("bio", { length: 150 }),
   department: varchar("department", { length: 100 }),
   jobTitle: varchar("job_title", { length: 100 }),
-  profileLink: text("profile_link"),
   role: varchar("role", { length: 20 }).default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

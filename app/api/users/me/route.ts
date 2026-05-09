@@ -48,7 +48,7 @@ const updateProfileSchema = z.object({
   department: z.string().max(100).optional(),
   jobTitle: z.string().max(100).optional(),
   profileLink: z.string().url().max(500).optional().or(z.literal("")),
-  avatarUrl: z.string().optional(), // base64 data URL or external URL
+  image: z.string().optional(),
 });
 
 // PUT /api/users/me — Update current user's profile
@@ -83,7 +83,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Validate avatar size (base64 images can be large)
-    if (parsed.data.avatarUrl && parsed.data.avatarUrl.startsWith("data:")) {
+    if (parsed.data.image && parsed.data.image.startsWith("data:")) {
       const sizeInBytes = (parsed.data.avatarUrl.length * 3) / 4;
       const maxSizeBytes = 1 * 1024 * 1024; // 1MB max
       if (sizeInBytes > maxSizeBytes) {

@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import SearchBar from "./search-bar";
 import { SearchBarDriver } from "./search-bar.driver";
@@ -27,11 +28,11 @@ describe("SearchBar", () => {
     });
 
     it("then the search input should be visible", () => {
-      get.searchInput().should("be.visible");
+      then(get.searchInput()).shouldBeVisible();
     });
 
     it("then the search input should have correct placeholder", () => {
-      get.searchInput().should("have.attr", "placeholder", "Search videos or #hashtags");
+      then(get.searchInput()).shouldHaveAttribute("placeholder", "Search videos or #hashtags");
     });
   });
 
@@ -42,7 +43,7 @@ describe("SearchBar", () => {
     });
 
     it("then the onSearch callback should be called with the trimmed query", () => {
-      get.onSearchSpy().should("have.been.calledWith", "DellTech");
+      then(get.onSearchSpy()).shouldHaveBeenCalledWith("DellTech");
     });
   });
 
@@ -53,7 +54,7 @@ describe("SearchBar", () => {
     });
 
     it("then the onSearch callback should be called with the hashtag", () => {
-      get.onSearchSpy().should("have.been.calledWith", "#engineering");
+      then(get.onSearchSpy()).shouldHaveBeenCalledWith("#engineering");
     });
   });
 
@@ -64,7 +65,7 @@ describe("SearchBar", () => {
     });
 
     it("then the onSearch callback should not be called", () => {
-      get.onSearchSpy().should("not.have.been.called");
+      then(get.onSearchSpy()).shouldNotHaveBeenCalled();
     });
   });
 
@@ -75,7 +76,7 @@ describe("SearchBar", () => {
     });
 
     it("then the onSearch callback should not be called", () => {
-      get.onSearchSpy().should("not.have.been.called");
+      then(get.onSearchSpy()).shouldNotHaveBeenCalled();
     });
   });
 });

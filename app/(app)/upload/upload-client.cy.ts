@@ -57,11 +57,11 @@ describe("UploadClient", () => {
     });
 
     it("then the title input should not exist (not in details step)", () => {
-      get.titleInput().should("not.exist");
+      then(get.titleInput()).shouldNotExist();
     });
 
     it("then the upload button should not exist (not in details step)", () => {
-      get.uploadButton().should("not.exist");
+      then(get.uploadButton()).shouldNotExist();
     });
   });
 
@@ -124,7 +124,7 @@ describe("UploadClient", () => {
     });
 
     it("then the title input should not exist", () => {
-      get.titleInput().should("not.exist");
+      then(get.titleInput()).shouldNotExist();
     });
   });
 

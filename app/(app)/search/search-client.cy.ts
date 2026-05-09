@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { RenderFactory } from "@/components/__test-utils__/renderer";
 import Chance from "chance";
@@ -69,27 +70,27 @@ describe("SearchClient", () => {
     });
 
     it("then the search client container should be visible", () => {
-      get.searchClient().should("be.visible");
+      then(get.searchClient()).shouldBeVisible();
     });
 
     it("then the search input should be visible", () => {
-      get.searchBar.searchInput().should("be.visible");
+      then(get.searchBar.searchInput()).shouldBeVisible();
     });
 
     it("then the trending header should be visible", () => {
-      get.trendingHeader().should("be.visible");
+      then(get.trendingHeader()).shouldBeVisible();
     });
 
     it("then the trending header text should display 'Trending'", () => {
-      get.trendingHeaderText().should("include", "Trending");
+      then(get.trendingHeaderText()).shouldInclude("Trending");
     });
 
     it("then the hashtag header should not exist", () => {
-      get.hashtagHeader().should("not.exist");
+      then(get.hashtagHeader()).shouldNotExist();
     });
 
     it("then the query header should not exist", () => {
-      get.queryHeader().should("not.exist");
+      then(get.queryHeader()).shouldNotExist();
     });
   });
 
@@ -103,11 +104,11 @@ describe("SearchClient", () => {
     });
 
     it("then the subscriptions header should be visible", () => {
-      get.subscriptionsHeader().should("be.visible");
+      then(get.subscriptionsHeader()).shouldBeVisible();
     });
 
     it("then the subscriptions header text should display 'Your Subscriptions'", () => {
-      get.subscriptionsHeaderText().should("include", "Your Subscriptions");
+      then(get.subscriptionsHeaderText()).shouldInclude("Your Subscriptions");
     });
   });
 
@@ -121,23 +122,23 @@ describe("SearchClient", () => {
     });
 
     it("then the hashtag header should be visible", () => {
-      get.hashtagHeader().should("be.visible");
+      then(get.hashtagHeader()).shouldBeVisible();
     });
 
     it("then the hashtag header should display the hashtag name", () => {
-      get.hashtagHeaderText().should("include", hashtagName);
+      then(get.hashtagHeaderText()).shouldInclude(hashtagName);
     });
 
     it("then the no results message should be visible", () => {
-      get.noResults().should("be.visible");
+      then(get.noResults()).shouldBeVisible();
     });
 
     it("then the no results text should display 'No videos found'", () => {
-      get.noResultsText().should("include", "No videos found");
+      then(get.noResultsText()).shouldInclude("No videos found");
     });
 
     it("then the trending header should not exist", () => {
-      get.trendingHeader().should("not.exist");
+      then(get.trendingHeader()).shouldNotExist();
     });
   });
 
@@ -151,15 +152,15 @@ describe("SearchClient", () => {
     });
 
     it("then the query header should be visible", () => {
-      get.queryHeader().should("be.visible");
+      then(get.queryHeader()).shouldBeVisible();
     });
 
     it("then the query header should include the search term", () => {
-      get.queryHeaderText().should("include", searchQuery);
+      then(get.queryHeaderText()).shouldInclude(searchQuery);
     });
 
     it("then the hashtag header should not exist", () => {
-      get.hashtagHeader().should("not.exist");
+      then(get.hashtagHeader()).shouldNotExist();
     });
   });
 
@@ -174,11 +175,11 @@ describe("SearchClient", () => {
     });
 
     it("then the search results grid should be visible", () => {
-      get.searchResultsGrid().should("be.visible");
+      then(get.searchResultsGrid()).shouldBeVisible();
     });
 
     it("then the no results message should not exist", () => {
-      get.noResults().should("not.exist");
+      then(get.noResults()).shouldNotExist();
     });
   });
 });

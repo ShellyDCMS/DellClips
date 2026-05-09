@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import FollowButton from "./follow-button";
 import { FollowButtonDriver } from "./follow-button.driver";
@@ -27,11 +28,11 @@ describe("FollowButton", () => {
     });
 
     it('then the button should display "Follow"', () => {
-      get.followButtonText().should("include", "Follow");
+      then(get.followButtonText()).shouldInclude("Follow");
     });
 
     it("then the button should be visible", () => {
-      get.followButton().should("be.visible");
+      then(get.followButton()).shouldBeVisible();
     });
   });
 
@@ -42,7 +43,7 @@ describe("FollowButton", () => {
     });
 
     it('then the button should display "Following"', () => {
-      get.followButtonText().should("include", "Following");
+      then(get.followButtonText()).shouldInclude("Following");
     });
   });
 
@@ -55,7 +56,7 @@ describe("FollowButton", () => {
     });
 
     it('then the button text should change to "Following"', () => {
-      get.followButtonText().should("include", "Following");
+      then(get.followButtonText()).shouldInclude("Following");
     });
   });
 
@@ -69,7 +70,7 @@ describe("FollowButton", () => {
     });
 
     it('then the button text should change back to "Follow"', () => {
-      get.followButtonText().should("include", "Follow");
+      then(get.followButtonText()).shouldInclude("Follow");
     });
   });
 });

@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import CommentSection from "./comment-section";
 import { CommentSectionDriver } from "./comment-section.driver";
@@ -45,7 +46,7 @@ describe("CommentSection", () => {
     });
 
     it("then the comment section should not exist in the DOM", () => {
-      get.commentSection().should("not.exist");
+      then(get.commentSection()).shouldNotExist();
     });
   });
 
@@ -57,23 +58,23 @@ describe("CommentSection", () => {
     });
 
     it("then the comment section should be visible", () => {
-      get.commentSection().should("be.visible");
+      then(get.commentSection()).shouldBeVisible();
     });
 
     it("then the close button should be visible", () => {
-      get.closeButton().should("be.visible");
+      then(get.closeButton()).shouldBeVisible();
     });
 
     it("then the comment input should be visible", () => {
-      get.commentInput().should("be.visible");
+      then(get.commentInput()).shouldBeVisible();
     });
 
     it("then the submit button should be visible", () => {
-      get.submitButton().should("be.visible");
+      then(get.submitButton()).shouldBeVisible();
     });
 
     it("then there should be no comment items", () => {
-      get.commentItems().should("not.exist");
+      then(get.commentItems()).shouldNotExist();
     });
   });
 
@@ -86,7 +87,7 @@ describe("CommentSection", () => {
     });
 
     it("then there should be 2 comment items", () => {
-      get.numberOfComments().should("equal", 2);
+      then(get.numberOfComments()).shouldEqual(2);
     });
   });
 
@@ -99,7 +100,7 @@ describe("CommentSection", () => {
     });
 
     it("then the onClose callback should be called", () => {
-      get.onCloseSpy().should("have.been.called");
+      then(get.onCloseSpy()).shouldHaveBeenCalled();
     });
   });
 
@@ -111,7 +112,7 @@ describe("CommentSection", () => {
     });
 
     it("then the submit button should be disabled", () => {
-      get.submitButton().should("be.disabled");
+      then(get.submitButton()).shouldBeDisabled();
     });
   });
 });

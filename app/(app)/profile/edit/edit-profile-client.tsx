@@ -1,6 +1,5 @@
 "use client";
 
-import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -8,12 +7,10 @@ interface User {
   id: string;
   email: string;
   name: string | null;
-  avatarUrl: string | null;
-  username?: string | null;
+  image: string | null;
   bio?: string | null;
   department?: string | null;
   jobTitle?: string | null;
-  profileLink?: string | null;
 }
 
 interface Props {
@@ -24,12 +21,10 @@ export default function EditProfileClient({ user }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(user.name || "");
-  const [username, setUsername] = useState(user.username || "");
   const [bio, setBio] = useState(user.bio || "");
   const [department, setDepartment] = useState(user.department || "");
   const [jobTitle, setJobTitle] = useState(user.jobTitle || "");
-  const [profileLink, setProfileLink] = useState(user.profileLink || "");
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user.avatarUrl);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user.image);
   const [avatarData, setAvatarData] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -39,38 +34,29 @@ export default function EditProfileClient({ user }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       setError("Please select an image file");
       return;
     }
 
-    // Validate file size (1MB max)
     if (file.size > 1 * 1024 * 1024) {
       setError("Image must be under 1MB");
       return;
     }
 
-    // Read as base64
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
-
-      // Create a canvas to resize the image to 256x256
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
         canvas.width = 256;
         canvas.height = 256;
         const ctx = canvas.getContext("2d")!;
-
-        // Crop to square (center crop)
         const size = Math.min(img.width, img.height);
         const x = (img.width - size) / 2;
         const y = (img.height - size) / 2;
-
         ctx.drawImage(img, x, y, size, size, 0, 0, 256, 256);
-
         const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
         setAvatarPreview(resizedDataUrl);
         setAvatarData(resizedDataUrl);
@@ -90,13 +76,10 @@ export default function EditProfileClient({ user }: Props) {
       const body: Record<string, string | undefined> = {};
 
       if (name !== (user.name || "")) body.name = name;
-      if (username !== (user.username || "")) body.username = username;
       if (bio !== (user.bio || "")) body.bio = bio;
       if (department !== (user.department || "")) body.department = department;
       if (jobTitle !== (user.jobTitle || "")) body.jobTitle = jobTitle;
-      if (profileLink !== (user.profileLink || "")) body.profileLink = profileLink;
-      if (avatarData) body.avatarUrl = avatarData;
-
+      if (avatarData) body.image = avatarData;
       if (Object.keys(body).length === 0) {
         setError("No changes to save");
         setIsSaving(false);
@@ -150,16 +133,12 @@ export default function EditProfileClient({ user }: Props) {
                             text-white text-3xl font-bold overflow-hidden border-2 border-gray-600"
             >
               {avatarPreview ? (
-                <span data-testid="avatar-preview" className="w-full h-full block">
-                  <NextImage
-                    src={avatarPreview}
-                    alt="Profile"
-                    width={96}
-                    height={96}
-                    unoptimized
-                    className="w-full h-full object-cover"
-                  />
-                </span>
+                <img
+                  data-testid="avatar-preview"
+                  src={avatarPreview}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <span data-testid="avatar-initial">{initial}</span>
               )}
@@ -169,7 +148,7 @@ export default function EditProfileClient({ user }: Props) {
                             justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                <path d="M3 4V1h2v3h3v2H5v3H3V6H0V4h3zm3 6V7h3V4h7l1.83 2H21c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V10h3zm7-1c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z" />
               </svg>
             </div>
           </button>
@@ -185,43 +164,20 @@ export default function EditProfileClient({ user }: Props) {
 
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Display Name
-          </label>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Name</label>
           <input
             data-testid="name-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your display name"
+            placeholder="Your name"
             maxLength={255}
             className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
                        text-white placeholder-gray-500 text-sm
                        focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-        </div>
-
-        {/* Username */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">Username</label>
-          <div className="relative">
-            <span className="absolute left-4 top-3 text-gray-500 text-sm">@</span>
-            <input
-              data-testid="username-input"
-              type="text"
-              value={username}
-              onChange={(e) =>
-                setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))
-              }
-              placeholder="username"
-              maxLength={50}
-              className="w-full pl-8 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
-                         text-white placeholder-gray-500 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
           <p className="text-gray-600 text-xs mt-1">
-            Letters, numbers, dots, hyphens, underscores
+            Shown as @{name || user.email.split("@")[0]} on your videos
           </p>
         </div>
 

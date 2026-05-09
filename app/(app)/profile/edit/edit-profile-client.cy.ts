@@ -30,11 +30,9 @@ describe("EditProfileClient", () => {
     email: chance.email({ domain: "dell.com" }),
     name: chance.name(),
     avatarUrl: null,
-    username: chance.word(),
     bio: chance.sentence(),
     department: chance.word(),
     jobTitle: chance.word(),
-    profileLink: chance.url(),
   };
 
   beforeEach(() => {
@@ -76,31 +74,23 @@ describe("EditProfileClient", () => {
     });
 
     it("then the avatar preview should not exist", () => {
-      get.avatarPreview().should("not.exist");
+      then(get.avatarPreview()).shouldNotExist();
     });
 
     it("then the name input should contain the user's name", () => {
-      get.nameInput().should("have.value", mockUser.name);
-    });
-
-    it("then the username input should contain the user's username", () => {
-      get.usernameInput().should("have.value", mockUser.username);
+      then(get.nameInput()).shouldHaveValue(mockUser.name);
     });
 
     it("then the bio input should contain the user's bio", () => {
-      get.bioInput().should("have.value", mockUser.bio);
+      then(get.bioInput()).shouldHaveValue(mockUser.bio);
     });
 
     it("then the department input should contain the user's department", () => {
-      get.departmentInput().should("have.value", mockUser.department);
+      then(get.departmentInput()).shouldHaveValue(mockUser.department);
     });
 
     it("then the job title input should contain the user's job title", () => {
-      get.jobTitleInput().should("have.value", mockUser.jobTitle);
-    });
-
-    it("then the profile link input should contain the user's profile link", () => {
-      get.profileLinkInput().should("have.value", mockUser.profileLink);
+      then(get.jobTitleInput()).shouldHaveValue(mockUser.jobTitle);
     });
 
     it("then the save button should be visible", () => {
@@ -112,11 +102,11 @@ describe("EditProfileClient", () => {
     });
 
     it("then the error message should not exist", () => {
-      get.error().should("not.exist");
+      then(get.error()).shouldNotExist();
     });
 
     it("then the success message should not exist", () => {
-      get.success().should("not.exist");
+      then(get.success()).shouldNotExist();
     });
   });
 
@@ -131,7 +121,7 @@ describe("EditProfileClient", () => {
     });
 
     it("then the avatar initial should not exist", () => {
-      get.avatarInitial().should("not.exist");
+      then(get.avatarInitial()).shouldNotExist();
     });
   });
 
@@ -167,7 +157,7 @@ describe("EditProfileClient", () => {
       given.user(mockUser);
       given.interceptUpdateProfile();
       when.render();
-      get.nameInput().clear();
+      when.clearName();
       when.typeName(newName);
       when.clickSave();
     });
@@ -184,7 +174,7 @@ describe("EditProfileClient", () => {
       given.user(mockUser);
       given.interceptUpdateProfileFails(errorMessage);
       when.render();
-      get.nameInput().clear();
+      when.clearName();
       when.typeName(chance.name());
       when.clickSave();
     });

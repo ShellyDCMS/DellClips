@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import Chance from "chance";
 import { RenderFactory } from "../../../components/__test-utils__/renderer";
 import { VerifyForm } from "./verify-form";
@@ -28,31 +29,31 @@ describe("VerifyForm", () => {
     });
 
     it("then the OTP input should be visible", () => {
-      get.otpInput().should("be.visible");
+      then(get.otpInput()).shouldBeVisible();
     });
 
     it("then the submit button should be visible", () => {
-      get.submitButton().should("be.visible");
+      then(get.submitButton()).shouldBeVisible();
     });
 
     it("then the submit button should display 'Verify & Sign In'", () => {
-      get.submitButton().should("contain.text", "Verify & Sign In");
+      then(get.submitButton()).shouldHaveText("Verify & Sign In");
     });
 
     it("then the OTP input should have correct placeholder", () => {
-      get.otpInput().should("have.attr", "placeholder", "000000");
+      then(get.otpInput()).shouldHaveAttribute("placeholder", "000000");
     });
 
     it("then the OTP input should accept numeric input mode", () => {
-      get.otpInput().should("have.attr", "inputmode", "numeric");
+      then(get.otpInput()).shouldHaveAttribute("inputmode", "numeric");
     });
 
     it("then the OTP input should have a max length of 6", () => {
-      get.otpInput().should("have.attr", "maxlength", "6");
+      then(get.otpInput()).shouldHaveAttribute("maxlength", "6");
     });
 
     it("then the submit button should be disabled when input is empty", () => {
-      get.submitButton().should("be.disabled");
+      then(get.submitButton()).shouldBeDisabled();
     });
   });
 
@@ -65,7 +66,7 @@ describe("VerifyForm", () => {
     });
 
     it("then the submit button should be enabled", () => {
-      get.submitButton().should("not.be.disabled");
+      then(get.submitButton()).shouldBeEnabled();
     });
   });
 
@@ -78,7 +79,7 @@ describe("VerifyForm", () => {
     });
 
     it("then the submit button should remain disabled", () => {
-      get.submitButton().should("be.disabled");
+      then(get.submitButton()).shouldBeDisabled();
     });
   });
 
@@ -89,11 +90,11 @@ describe("VerifyForm", () => {
     });
 
     it("then the OTP input should only contain the numeric characters", () => {
-      get.otpInput().should("have.value", "123");
+      then(get.otpInput()).shouldHaveValue("123");
     });
 
     it("then the submit button should remain disabled", () => {
-      get.submitButton().should("be.disabled");
+      then(get.submitButton()).shouldBeDisabled();
     });
   });
 
@@ -106,11 +107,11 @@ describe("VerifyForm", () => {
     });
 
     it("then the OTP input should be visible", () => {
-      get.otpInput().should("be.visible");
+      then(get.otpInput()).shouldBeVisible();
     });
 
     it("then the submit button should be visible", () => {
-      get.submitButton().should("be.visible");
+      then(get.submitButton()).shouldBeVisible();
     });
   });
 });

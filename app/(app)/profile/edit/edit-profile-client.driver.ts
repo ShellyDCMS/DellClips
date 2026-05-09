@@ -5,11 +5,9 @@ interface User {
   email: string;
   name: string | null;
   avatarUrl: string | null;
-  username?: string | null;
   bio?: string | null;
   department?: string | null;
   jobTitle?: string | null;
-  profileLink?: string | null;
 }
 
 interface EditProfileClientDriverProps {
@@ -49,13 +47,11 @@ export class EditProfileClientDriver extends BaseTestDriver<EditProfileClientDri
 
   when = {
     ...this._when,
+    clearName: () => this.helper.when.clear("name-input"),
     typeName: (value: string) => this.helper.when.type("name-input", value),
-    typeUsername: (value: string) => this.helper.when.type("username-input", value),
     typeBio: (value: string) => this.helper.when.type("bio-input", value),
     typeDepartment: (value: string) => this.helper.when.type("department-input", value),
     typeJobTitle: (value: string) => this.helper.when.type("job-title-input", value),
-    typeProfileLink: (value: string) =>
-      this.helper.when.type("profile-link-input", value),
     clickSave: () => this.helper.when.click("save-button"),
     clickCancel: () => this.helper.when.click("cancel-button"),
     clickAvatar: () => this.helper.when.click("avatar-button"),
@@ -67,11 +63,9 @@ export class EditProfileClientDriver extends BaseTestDriver<EditProfileClientDri
     container: () => this.helper.get.elementByTestId("edit-profile"),
     title: () => this.helper.get.elementsText("edit-profile-title"),
     nameInput: () => this.helper.get.elementByTestId("name-input"),
-    usernameInput: () => this.helper.get.elementByTestId("username-input"),
     bioInput: () => this.helper.get.elementByTestId("bio-input"),
     departmentInput: () => this.helper.get.elementByTestId("department-input"),
     jobTitleInput: () => this.helper.get.elementByTestId("job-title-input"),
-    profileLinkInput: () => this.helper.get.elementByTestId("profile-link-input"),
     saveButton: () => this.helper.get.elementByTestId("save-button"),
     cancelButton: () => this.helper.get.elementByTestId("cancel-button"),
     avatarButton: () => this.helper.get.elementByTestId("avatar-button"),

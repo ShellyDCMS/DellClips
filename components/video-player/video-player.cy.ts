@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import VideoPlayer from "./video-player";
 import { VideoPlayerDriver } from "./video-player.driver";
@@ -28,15 +29,15 @@ describe("VideoPlayer", () => {
     });
 
     it("then the video player container should be visible", () => {
-      get.videoPlayer().should("be.visible");
+      then(get.videoPlayer()).shouldBeVisible();
     });
 
     it("then the video element should be visible", () => {
-      get.videoElement().should("be.visible");
+      then(get.videoElement()).shouldBeVisible();
     });
 
     it("then the mute button should be visible", () => {
-      get.muteButton().should("be.visible");
+      then(get.muteButton()).shouldBeVisible();
     });
   });
 
@@ -47,11 +48,11 @@ describe("VideoPlayer", () => {
     });
 
     it("then the video player container should be visible", () => {
-      get.videoPlayer().should("be.visible");
+      then(get.videoPlayer()).shouldBeVisible();
     });
 
     it("then the play overlay should not exist", () => {
-      get.playOverlay().should("not.exist");
+      then(get.playOverlay()).shouldNotExist();
     });
   });
 
@@ -63,7 +64,7 @@ describe("VideoPlayer", () => {
     });
 
     it("then the mute button should still be visible", () => {
-      get.muteButton().should("be.visible");
+      then(get.muteButton()).shouldBeVisible();
     });
   });
 
@@ -79,15 +80,15 @@ describe("VideoPlayer", () => {
       });
 
       it("then the video player container should be visible", () => {
-        get.videoPlayer().should("be.visible");
+        then(get.videoPlayer()).shouldBeVisible();
       });
 
       it("then the video element should not exist (iframe used instead)", () => {
-        get.videoElement().should("not.exist");
+        then(get.videoElement()).shouldNotExist();
       });
 
       it("then the mute button should not exist", () => {
-        get.muteButton().should("not.exist");
+        then(get.muteButton()).shouldNotExist();
       });
     });
 
@@ -98,7 +99,7 @@ describe("VideoPlayer", () => {
       });
 
       it("then the video player container should be visible", () => {
-        get.videoPlayer().should("be.visible");
+        then(get.videoPlayer()).shouldBeVisible();
       });
     });
   });
@@ -115,15 +116,15 @@ describe("VideoPlayer", () => {
       });
 
       it("then the video player container should be visible", () => {
-        get.videoPlayer().should("be.visible");
+        then(get.videoPlayer()).shouldBeVisible();
       });
 
       it("then the video element should be visible", () => {
-        get.videoElement().should("be.visible");
+        then(get.videoElement()).shouldBeVisible();
       });
 
       it("then the mute button should be visible", () => {
-        get.muteButton().should("be.visible");
+        then(get.muteButton()).shouldBeVisible();
       });
     });
 
@@ -134,11 +135,11 @@ describe("VideoPlayer", () => {
       });
 
       it("then the video player container should be visible", () => {
-        get.videoPlayer().should("be.visible");
+        then(get.videoPlayer()).shouldBeVisible();
       });
 
       it("then the play overlay should not exist", () => {
-        get.playOverlay().should("not.exist");
+        then(get.playOverlay()).shouldNotExist();
       });
     });
   });
