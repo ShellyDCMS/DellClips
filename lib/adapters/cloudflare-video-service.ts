@@ -1,4 +1,5 @@
 import { UploadUrlResult, VideoService, WebhookResult } from "@/lib/ports/video-service";
+import crypto from "crypto";
 
 export class CloudflareVideoService implements VideoService {
   private accountId: string;
@@ -94,5 +95,74 @@ export class CloudflareVideoService implements VideoService {
 
     // Unknown event
     return { type: "unknown", assetId: data.uid };
+  }
+
+  verifyWebhookSignature(body: string, signatureHeader: string): boolean {
+    const secret = process.env.CF_WEBHOOK_SECRET;
+
+    // If no secret is configured, skip verification (development mode)
+    if (!secret) {
+      console.warn(
+        "[cloudflare] CF_WEBHOOK_SECRET not set — skipping signature verification"
+      );
+      return true;
+    }
+
+    // If no signature header provided, reject
+    if (!signatureHeader) {
+      console.error("[cloudflare] No Webhook-Signature header present");
+      return false;
+    }
+
+    try {
+      // Parse the Webhook-Signature header
+      // Format: time=1234567890,sig1=abc123def456...
+      const parts: Record<string, string> = {};
+      signatureHeader.split(",").forEach((part) => {
+        const [key, value] = part.split("=");
+        if (key && value) {
+          parts[key.trim()] = value.trim();
+        }
+      });
+
+      const timestamp = parts["time"];
+      const signature = parts["sig1"];
+
+      if (!timestamp || !signature) {
+        console.error("[cloudflare] Invalid Webhook-Signature format");
+        return false;
+      }
+
+      // Check timestamp is not too old (5 minute tolerance)
+      const webhookTime = parseInt(timestamp, 10);
+      const now = Math.floor(Date.now() / 1000);
+      if (Math.abs(now - webhookTime) > 300) {
+        console.error("[cloudflare] Webhook timestamp too old — possible replay attack");
+        return false;
+      }
+
+      // Compute the expected signature
+      // Source string = timestamp + "." + body
+      const sourceString = `${timestamp}.${body}`;
+      const expectedSignature = crypto
+        .createHmac("sha256", secret)
+        .update(sourceString)
+        .digest("hex");
+
+      // Compare signatures (timing-safe comparison)
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      );
+
+      if (!isValid) {
+        console.error("[cloudflare] Webhook signature mismatch — rejecting");
+      }
+
+      return isValid;
+    } catch (error) {
+      console.error("[cloudflare] Signature verification error:", error);
+      return false;
+    }
   }
 }

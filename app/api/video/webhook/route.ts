@@ -2,12 +2,14 @@ import { databaseService, videoService } from "@/lib/services";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET — Some platforms verify by sending GET
+export const dynamic = "force-dynamic";
+
+// GET — Endpoint health check
 export async function GET() {
   return NextResponse.json({ status: "ok" }, { status: 200 });
 }
 
-// HEAD — Some platforms verify by sending HEAD
+// HEAD — Verification ping
 export async function HEAD() {
   return new Response(null, { status: 200 });
 }
@@ -16,9 +18,16 @@ export async function HEAD() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
+    const signatureHeader = request.headers.get("Webhook-Signature") || "";
+
+    // Verify the webhook signature (vendor-specific)
+    // This prevents spoofed webhook requests from malicious actors
+    if (!videoService.verifyWebhookSignature(body, signatureHeader)) {
+      console.error("[webhook] Signature verification FAILED — rejecting");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
 
     // Delegate parsing to the video service adapter
-    // Each adapter knows its own webhook format
     const result = videoService.parseWebhook(body);
 
     switch (result.type) {
@@ -30,18 +39,20 @@ export async function POST(request: NextRequest) {
         });
 
       case "video_ready":
-        console.log(`[webhook] Video ${result.assetId} is ready`);
+        console.log(
+          `[webhook] Video ${result.assetId} is ready. Duration: ${result.duration}s`
+        );
         if (result.assetId) {
           await databaseService.updateVideoStatus(
             result.assetId,
             "ready",
             result.duration
           );
-          // Revalidate the feed so the new video appears immediately
           revalidatePath("/feed");
           revalidatePath("/");
         }
         return NextResponse.json({ received: true, status: "ready" });
+
       case "video_error":
         console.error(`[webhook] Video ${result.assetId} failed: ${result.errorReason}`);
         if (result.assetId) {

@@ -41,4 +41,9 @@ export class GDriveVideoService implements VideoService {
     }
     return { type: "unknown" };
   }
+
+  verifyWebhookSignature(_body: string, _signatureHeader: string): boolean {
+    // Google Drive adapter doesn't use webhooks
+    return true;
+  }
 }

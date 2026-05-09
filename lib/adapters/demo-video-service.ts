@@ -71,4 +71,8 @@ export class DemoVideoService implements VideoService {
     }
     return { type: "unknown" };
   }
+  verifyWebhookSignature(_body: string, _signatureHeader: string): boolean {
+    // Demo adapter doesn't receive real webhooks
+    return true;
+  }
 }
