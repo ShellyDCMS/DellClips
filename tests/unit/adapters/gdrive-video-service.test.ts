@@ -68,5 +68,46 @@ describe("GDriveVideoService", () => {
         ).resolves.toBeUndefined();
       });
     });
+
+    describe("when parsing a webhook with empty body", () => {
+      it("then it should return verification with empty challenge", () => {
+        expect(service.parseWebhook("")).toEqual({ type: "verification", challenge: "" });
+      });
+
+      it("then it should handle whitespace-only body", () => {
+        expect(service.parseWebhook("   ")).toEqual({
+          type: "verification",
+          challenge: "",
+        });
+      });
+    });
+
+    describe("when parsing a webhook with non-JSON body", () => {
+      it("then it should return verification with the body as challenge", () => {
+        const plainText = chance.word();
+        expect(service.parseWebhook(plainText)).toEqual({
+          type: "verification",
+          challenge: plainText,
+        });
+      });
+    });
+
+    describe("when parsing a webhook with a challenge JSON payload", () => {
+      it("then it should return verification with the challenge value", () => {
+        const challenge = chance.hash();
+        const body = JSON.stringify({ challenge });
+        expect(service.parseWebhook(body)).toEqual({
+          type: "verification",
+          challenge,
+        });
+      });
+    });
+
+    describe("when parsing a webhook with an unrecognized JSON payload", () => {
+      it("then it should return unknown", () => {
+        const body = JSON.stringify({ data: chance.word() });
+        expect(service.parseWebhook(body)).toEqual({ type: "unknown" });
+      });
+    });
   });
 });

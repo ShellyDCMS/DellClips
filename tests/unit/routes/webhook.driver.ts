@@ -1,23 +1,30 @@
 import { HEAD, POST } from "@/app/api/video/webhook/route";
+import type { WebhookResult } from "@/lib/ports/video-service";
 import { NextRequest } from "next/server";
 import { beforeEach, vi } from "vitest";
 
 const mockUpdateVideoStatus = vi.fn();
+const mockParseWebhook = vi.fn();
 vi.mock("@/lib/services", () => ({
   databaseService: {
     updateVideoStatus: (...args: unknown[]) => mockUpdateVideoStatus(...args),
+  },
+  videoService: {
+    parseWebhook: (...args: unknown[]) => mockParseWebhook(...args),
   },
 }));
 
 export class WebhookDriver {
   private lastResponse: Response | null = null;
   private lastBody: any = null;
+  private lastText: string | null = null;
 
   beforeAndAfter = () => {
     beforeEach(() => {
       vi.clearAllMocks();
       this.lastResponse = null;
       this.lastBody = null;
+      this.lastText = null;
     });
   };
 
@@ -28,20 +35,27 @@ export class WebhookDriver {
     updateVideoStatusFails: (error: Error) => {
       mockUpdateVideoStatus.mockRejectedValue(error);
     },
+    parseWebhookReturns: (result: WebhookResult) => {
+      mockParseWebhook.mockReturnValue(result);
+    },
   };
 
   when = {
-    postWebhook: async (body: Record<string, unknown>) => {
+    postWebhook: async (body: string = "") => {
       const request = new NextRequest(
         new URL("/api/video/webhook", "http://localhost:3000"),
         {
           method: "POST",
-          body: JSON.stringify(body),
-          headers: { "Content-Type": "application/json" },
+          body,
         }
       );
       this.lastResponse = await POST(request);
-      this.lastBody = await this.lastResponse.json();
+      const contentType = this.lastResponse.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        this.lastBody = await this.lastResponse.json();
+      } else {
+        this.lastText = await this.lastResponse.text();
+      }
     },
     head: async () => {
       this.lastResponse = await HEAD();
@@ -51,6 +65,8 @@ export class WebhookDriver {
   get = {
     status: () => this.lastResponse!.status,
     body: () => this.lastBody,
+    text: () => this.lastText,
     updateVideoStatusMock: () => mockUpdateVideoStatus,
+    parseWebhookMock: () => mockParseWebhook,
   };
 }

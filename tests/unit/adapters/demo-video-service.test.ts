@@ -72,5 +72,44 @@ describe("DemoVideoService", () => {
         await expect(service.deleteVideo("demo-1")).resolves.toBeUndefined();
       });
     });
+
+    describe("when parsing a webhook with empty body", () => {
+      it("then it should return verification with empty challenge", () => {
+        expect(service.parseWebhook("")).toEqual({ type: "verification", challenge: "" });
+      });
+
+      it("then it should handle whitespace-only body", () => {
+        expect(service.parseWebhook("   ")).toEqual({
+          type: "verification",
+          challenge: "",
+        });
+      });
+    });
+
+    describe("when parsing a webhook with non-JSON body", () => {
+      it("then it should return verification with the body as challenge", () => {
+        expect(service.parseWebhook("plain-challenge")).toEqual({
+          type: "verification",
+          challenge: "plain-challenge",
+        });
+      });
+    });
+
+    describe("when parsing a webhook with a challenge JSON payload", () => {
+      it("then it should return verification with the challenge value", () => {
+        const body = JSON.stringify({ challenge: "demo-challenge-token" });
+        expect(service.parseWebhook(body)).toEqual({
+          type: "verification",
+          challenge: "demo-challenge-token",
+        });
+      });
+    });
+
+    describe("when parsing a webhook with an unrecognized JSON payload", () => {
+      it("then it should return unknown", () => {
+        const body = JSON.stringify({ someField: "value" });
+        expect(service.parseWebhook(body)).toEqual({ type: "unknown" });
+      });
+    });
   });
 });
