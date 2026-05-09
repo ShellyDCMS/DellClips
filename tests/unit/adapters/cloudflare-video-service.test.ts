@@ -1,5 +1,6 @@
 import { CloudflareVideoService } from "@/lib/adapters/cloudflare-video-service";
 import type { VideoService } from "@/lib/ports/video-service";
+import crypto from "node:crypto";
 import sinon from "sinon";
 import { StubbedInstanceCreator } from "ts-stubber";
 import { beforeEach, describe, expect, it, vi } from "vitest";
