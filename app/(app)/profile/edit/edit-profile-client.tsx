@@ -279,23 +279,6 @@ export default function EditProfileClient({ user }: Props) {
           />
         </div>
 
-        {/* Dell Profile Link */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            Dell Profile Link (optional)
-          </label>
-          <input
-            data-testid="profile-link-input"
-            type="url"
-            value={profileLink}
-            onChange={(e) => setProfileLink(e.target.value)}
-            placeholder="https://dell.sharepoint.com/..."
-            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg
-                       text-white placeholder-gray-500 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
         {/* Error / Success */}
         {error && (
           <p data-testid="edit-profile-error" className="text-red-400 text-sm">
