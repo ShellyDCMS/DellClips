@@ -50,10 +50,11 @@ Tests live in `tests/unit/` and run via `npx vitest run`. All mocking uses `vi.m
 
 All route tests, utility tests, and adapter tests that use the driver pattern follow this structure:
 
-- **Driver** (`.driver.ts`) — owns mocks (`vi.mock()` for `@/lib/auth`, `@/lib/services`, etc.), request construction, result/error capture. Imports `beforeEach`/`vi` from `vitest`. Exposes `beforeAndAfter()`, `given`, `when`, `get`.
+- **Driver** (`.driver.ts`) — owns mocks (`vi.mock()` for `@/lib/auth`, `@/lib/services`, `next/cache`, etc.), request construction, result/error capture. Imports `beforeEach`/`vi` from `vitest`. Exposes `beforeAndAfter()`, `given`, `when`, `get`.
 - **Test** (`.test.ts`) — imports driver + `chance`. Destructures `{ given, when, get }`. Uses BDD structure: `describe('given …') → beforeEach(given/when) → it('then …', expect(get…))`. One assertion per `it`.
+- **`next/cache` mock** — Any route that calls `revalidatePath` requires `vi.mock("next/cache", () => ({ revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args) }))` in its driver. Without this mock, `revalidatePath` throws `Invariant: static generation store missing` in Vitest.
 
-Each route test verifies: auth guard (401), input validation (400), not found (404), forbidden (403 where applicable), success response, and DB error handling (500).
+Each route test verifies: auth guard (401), input validation (400), not found (404), forbidden (403 where applicable), success response, revalidatePath calls, and DB error handling (500).
 
 ## Cypress Component Tests
 

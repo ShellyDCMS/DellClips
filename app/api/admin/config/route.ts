@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { databaseService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/admin/config — Get all config values
@@ -43,7 +44,7 @@ export async function PUT(request: NextRequest) {
     }
 
     await databaseService.setConfigValue(key, String(value), session.user.id);
-
+    revalidatePath("/admin/settings");
     return NextResponse.json({ updated: true, key, value });
   } catch (error) {
     console.error("[api/admin/config] PUT error:", error);

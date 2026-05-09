@@ -51,6 +51,11 @@ describe("POST /api/video/webhook", () => {
     it("then it should return ready status", () => {
       expect(get.body().status).toBe("ready");
     });
+
+    it("then it should revalidate the feed and root paths", () => {
+      expect(get.revalidatePathMock()).toHaveBeenCalledWith("/feed");
+      expect(get.revalidatePathMock()).toHaveBeenCalledWith("/");
+    });
   });
 
   describe("given parseWebhook returns video_ready without assetId", () => {

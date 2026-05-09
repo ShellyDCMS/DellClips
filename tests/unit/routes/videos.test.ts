@@ -244,6 +244,10 @@ describe("POST /api/videos", () => {
           hashtags: ["demo"],
         });
       });
+
+      it("then it should revalidate the feed path", () => {
+        expect(get.revalidatePathMock()).toHaveBeenCalledWith("/feed");
+      });
     });
 
     describe("when videoAssetId is missing", () => {

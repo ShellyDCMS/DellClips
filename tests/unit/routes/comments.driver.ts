@@ -2,6 +2,11 @@ import { GET, POST } from "@/app/api/videos/[id]/comments/route";
 import { NextRequest } from "next/server";
 import { beforeEach, vi } from "vitest";
 
+const mockRevalidatePath = vi.fn();
+vi.mock("next/cache", () => ({
+  revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
+}));
+
 const mockAuth = vi.fn();
 vi.mock("@/lib/auth", () => ({
   auth: () => mockAuth(),
