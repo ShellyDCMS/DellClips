@@ -35,19 +35,9 @@ export async function GET() {
 
 const updateProfileSchema = z.object({
   name: z.string().max(255).optional(),
-  username: z
-    .string()
-    .min(3)
-    .max(50)
-    .regex(
-      /^[a-zA-Z0-9._-]+$/,
-      "Username can only contain letters, numbers, dots, hyphens, and underscores"
-    )
-    .optional(),
   bio: z.string().max(150).optional(),
   department: z.string().max(100).optional(),
   jobTitle: z.string().max(100).optional(),
-  profileLink: z.string().url().max(500).optional().or(z.literal("")),
   image: z.string().optional(),
 });
 
