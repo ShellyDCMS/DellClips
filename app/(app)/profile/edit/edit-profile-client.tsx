@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -143,9 +144,12 @@ export default function EditProfileClient({ user }: Props) {
                             text-white text-3xl font-bold overflow-hidden border-2 border-gray-600"
             >
               {avatarPreview ? (
-                <img
+                <Image
                   src={avatarPreview}
                   alt="Profile"
+                  width={96}
+                  height={96}
+                  unoptimized
                   className="w-full h-full object-cover"
                 />
               ) : (

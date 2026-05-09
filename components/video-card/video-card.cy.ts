@@ -129,7 +129,7 @@ describe("VideoCard", () => {
     beforeEach(() => {
       given.video({
         ...mockVideo,
-        author: { ...mockVideo.author, avatarUrl: "https://example.com/avatar.png" },
+        author: { ...mockVideo.author, avatarUrl: "/avatar.png" },
       });
       given.isActive();
       when.render();
