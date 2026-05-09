@@ -72,12 +72,11 @@ export default function PWAInstallPrompt() {
                  rounded-2xl p-4 shadow-2xl max-w-sm mx-auto"
     >
       <div className="flex items-start gap-3">
-        <div
-          className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center
-                        text-white font-bold text-lg flex-shrink-0"
-        >
-          DC
-        </div>
+        <img
+          src="/icons/icon-192.png"
+          alt="DellClips"
+          className="w-12 h-12 rounded-xl flex-shrink-0"
+        />
 
         <div className="flex-1">
           <h3 className="text-white font-bold text-sm">Install DellClips</h3>
