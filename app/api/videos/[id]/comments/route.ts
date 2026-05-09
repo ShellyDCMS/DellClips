@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { databaseService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -65,6 +66,7 @@ export async function POST(
       id,
       parsed.data.text
     );
+    revalidatePath("/feed");
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {

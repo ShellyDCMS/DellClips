@@ -1,7 +1,9 @@
 import { auth } from "@/lib/auth";
 import { databaseService, videoService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
 // ============================================
 // GET /api/videos/:id — Get a single video
 // ============================================
@@ -71,6 +73,7 @@ export async function DELETE(
     // Delete from database (cascades to likes, comments, reports)
     await databaseService.deleteVideo(id);
 
+    revalidatePath("/feed");
     return NextResponse.json({ deleted: true });
   } catch (error) {
     console.error("[api/videos/[id]] DELETE error:", error);

@@ -2,6 +2,10 @@ import { auth } from "@/lib/auth";
 import { databaseService, videoService } from "@/lib/services";
 import { redirect } from "next/navigation";
 import FeedClient from "./feed-client";
+// Force this page to be dynamic — never cache
+// New videos should appear immediately after upload
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function FeedPage() {
   const session = await auth();

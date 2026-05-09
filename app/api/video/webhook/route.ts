@@ -1,4 +1,5 @@
 import { databaseService, videoService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET — Some platforms verify by sending GET
@@ -29,18 +30,18 @@ export async function POST(request: NextRequest) {
         });
 
       case "video_ready":
-        console.log(
-          `[webhook] Video ${result.assetId} is ready. Duration: ${result.duration}s`
-        );
+        console.log(`[webhook] Video ${result.assetId} is ready`);
         if (result.assetId) {
           await databaseService.updateVideoStatus(
             result.assetId,
             "ready",
             result.duration
           );
+          // Revalidate the feed so the new video appears immediately
+          revalidatePath("/feed");
+          revalidatePath("/");
         }
         return NextResponse.json({ received: true, status: "ready" });
-
       case "video_error":
         console.error(`[webhook] Video ${result.assetId} failed: ${result.errorReason}`);
         if (result.assetId) {

@@ -1,8 +1,11 @@
 import { auth } from "@/lib/auth";
 import { databaseService, videoService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
+import { z } from "zod";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 // ============================================
 // GET /api/videos — Fetch video feed
 // ============================================
@@ -91,6 +94,7 @@ export async function POST(request: NextRequest) {
       hashtags: parsed.data.hashtags,
     });
 
+    revalidatePath("/feed");
     return NextResponse.json({ video }, { status: 201 });
   } catch (error) {
     console.error("[api/videos] POST error:", error);

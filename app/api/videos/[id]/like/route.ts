@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { databaseService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 // ============================================
@@ -24,6 +25,7 @@ export async function POST(
     }
 
     await databaseService.likeVideo(session.user.id, id);
+    revalidatePath("/feed");
 
     return NextResponse.json({ liked: true });
   } catch (error) {
@@ -48,6 +50,7 @@ export async function DELETE(
     const { id } = await params;
 
     await databaseService.unlikeVideo(session.user.id, id);
+    revalidatePath("/feed");
 
     return NextResponse.json({ liked: false });
   } catch (error) {

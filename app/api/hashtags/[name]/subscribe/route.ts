@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { databaseService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST /api/hashtags/:name/subscribe — Subscribe to a hashtag
@@ -17,7 +18,8 @@ export async function POST(
     const normalizedName = name.toLowerCase().replace(/^#/, "");
 
     await databaseService.subscribeToHashtag(session.user.id, normalizedName);
-
+    revalidatePath("/feed");
+    revalidatePath("/search");
     return NextResponse.json({ subscribed: true });
   } catch (error) {
     console.error("[api/hashtags/subscribe] POST error:", error);
@@ -40,7 +42,8 @@ export async function DELETE(
     const normalizedName = name.toLowerCase().replace(/^#/, "");
 
     await databaseService.unsubscribeFromHashtag(session.user.id, normalizedName);
-
+    revalidatePath("/feed");
+    revalidatePath("/search");
     return NextResponse.json({ subscribed: false });
   } catch (error) {
     console.error("[api/hashtags/subscribe] DELETE error:", error);

@@ -3,6 +3,11 @@ import type { WebhookResult } from "@/lib/ports/video-service";
 import { NextRequest } from "next/server";
 import { beforeEach, vi } from "vitest";
 
+const mockRevalidatePath = vi.fn();
+vi.mock("next/cache", () => ({
+  revalidatePath: (...args: unknown[]) => mockRevalidatePath(...args),
+}));
+
 const mockUpdateVideoStatus = vi.fn();
 const mockParseWebhook = vi.fn();
 vi.mock("@/lib/services", () => ({
@@ -68,5 +73,6 @@ export class WebhookDriver {
     text: () => this.lastText,
     updateVideoStatusMock: () => mockUpdateVideoStatus,
     parseWebhookMock: () => mockParseWebhook,
+    revalidatePathMock: () => mockRevalidatePath,
   };
 }

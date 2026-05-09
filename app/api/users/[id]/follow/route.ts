@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { databaseService } from "@/lib/services";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 // ============================================
@@ -32,7 +33,8 @@ export async function POST(
       followerId: session.user.id,
       followingId: id,
     });
-
+    revalidatePath("/feed");
+    revalidatePath(`/profile/${id}`);
     return NextResponse.json({ following: true });
   } catch (error) {
     console.error("[api/users/[id]/follow] POST error:", error);
@@ -59,7 +61,8 @@ export async function DELETE(
       followerId: session.user.id,
       followingId: id,
     });
-
+    revalidatePath("/feed");
+    revalidatePath(`/profile/${id}`);
     return NextResponse.json({ following: false });
   } catch (error) {
     console.error("[api/users/[id]/follow] DELETE error:", error);

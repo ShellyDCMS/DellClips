@@ -3,7 +3,8 @@ import type { VideoWithAuthor } from "@/lib/ports/database-service";
 import { databaseService, videoService } from "@/lib/services";
 import { redirect } from "next/navigation";
 import SearchClient from "./search-client";
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 export default async function SearchPage({
   searchParams,
 }: {

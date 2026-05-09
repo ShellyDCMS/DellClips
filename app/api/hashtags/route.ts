@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { databaseService } from "@/lib/services";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
 // ============================================
 // GET /api/hashtags — Get trending hashtags
 // ============================================
