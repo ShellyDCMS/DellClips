@@ -32,7 +32,10 @@ describe("SearchBar", () => {
     });
 
     it("then the search input should have correct placeholder", () => {
-      then(get.searchInput()).shouldHaveAttribute("placeholder", "Search videos or #hashtags");
+      then(get.searchInput()).shouldHaveAttribute(
+        "placeholder",
+        "Search videos or #hashtags"
+      );
     });
   });
 

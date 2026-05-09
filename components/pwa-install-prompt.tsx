@@ -72,6 +72,7 @@ export default function PWAInstallPrompt() {
                  rounded-2xl p-4 shadow-2xl max-w-sm mx-auto"
     >
       <div className="flex items-start gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/icons/icon-192.png"
           alt="DellClips"

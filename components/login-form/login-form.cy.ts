@@ -63,7 +63,7 @@ describe("LoginForm", () => {
     });
 
     it("then the native HTML validation should prevent submission", () => {
-      then(get.emailInput()).shouldHaveAttribute("required");
+      then(get.emailInput()).shouldHaveAttribute("required", "required");
     });
   });
 });

@@ -29,7 +29,7 @@ describe("EditProfileClient", () => {
     id: chance.guid(),
     email: chance.email({ domain: "dell.com" }),
     name: chance.name(),
-    avatarUrl: null,
+    image: null,
     bio: chance.sentence(),
     department: chance.word(),
     jobTitle: chance.word(),
@@ -112,7 +112,7 @@ describe("EditProfileClient", () => {
 
   describe("given a user with an avatar URL", () => {
     beforeEach(() => {
-      given.user({ ...mockUser, avatarUrl: "/avatar.png" });
+      given.user({ ...mockUser, image: "/avatar.png" });
       when.render();
     });
 

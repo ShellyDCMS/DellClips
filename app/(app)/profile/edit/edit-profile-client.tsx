@@ -133,6 +133,7 @@ export default function EditProfileClient({ user }: Props) {
                             text-white text-3xl font-bold overflow-hidden border-2 border-gray-600"
             >
               {avatarPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   data-testid="avatar-preview"
                   src={avatarPreview}
