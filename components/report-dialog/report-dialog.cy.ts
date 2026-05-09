@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import ReportDialog from "./report-dialog";
 import { ReportDialogDriver } from "./report-dialog.driver";
@@ -30,31 +31,31 @@ describe("ReportDialog", () => {
     });
 
     it("then the dialog should be visible", () => {
-      get.dialog().should("be.visible");
+      then(get.dialog()).shouldBeVisible();
     });
 
     it("then the report reasons should be displayed", () => {
-      get.reportReasons().should("be.visible");
+      then(get.reportReasons()).shouldBeVisible();
     });
 
     it("then all five report reason buttons should be present", () => {
-      get.reasonButton("offensive").should("be.visible");
-      get.reasonButton("restricted_data").should("be.visible");
-      get.reasonButton("harassment").should("be.visible");
-      get.reasonButton("spam").should("be.visible");
-      get.reasonButton("other").should("be.visible");
+      then(get.reasonButton("offensive")).shouldBeVisible();
+      then(get.reasonButton("restricted_data")).shouldBeVisible();
+      then(get.reasonButton("harassment")).shouldBeVisible();
+      then(get.reasonButton("spam")).shouldBeVisible();
+      then(get.reasonButton("other")).shouldBeVisible();
     });
 
     it("then the description textarea should be visible", () => {
-      get.descriptionInput().should("be.visible");
+      then(get.descriptionInput()).shouldBeVisible();
     });
 
     it("then the submit button should be disabled when no reason is selected", () => {
-      get.submitButton().should("be.disabled");
+      then(get.submitButton()).shouldBeDisabled();
     });
 
     it("then the cancel button should be visible", () => {
-      get.cancelButton().should("be.visible");
+      then(get.cancelButton()).shouldBeVisible();
     });
   });
 
@@ -65,7 +66,7 @@ describe("ReportDialog", () => {
     });
 
     it("then the dialog should not exist in the DOM", () => {
-      get.dialog().should("not.exist");
+      then(get.dialog()).shouldNotExist();
     });
   });
 
@@ -77,7 +78,7 @@ describe("ReportDialog", () => {
     });
 
     it("then the submit button should be enabled", () => {
-      get.submitButton().should("not.be.disabled");
+      then(get.submitButton()).shouldBeEnabled();
     });
   });
 
@@ -90,7 +91,7 @@ describe("ReportDialog", () => {
     });
 
     it("then the onSubmit callback should be called with the reason", () => {
-      get.onSubmitSpy().should("have.been.calledWith", "spam", undefined);
+      then(get.onSubmitSpy()).shouldHaveBeenCalledWith("spam", undefined);
     });
   });
 
@@ -104,9 +105,10 @@ describe("ReportDialog", () => {
     });
 
     it("then the onSubmit callback should be called with reason and description", () => {
-      get
-        .onSubmitSpy()
-        .should("have.been.calledWith", "other", "This video contains misleading info");
+      then(get.onSubmitSpy()).shouldHaveBeenCalledWith(
+        "other",
+        "This video contains misleading info"
+      );
     });
   });
 
@@ -118,7 +120,7 @@ describe("ReportDialog", () => {
     });
 
     it("then the onClose callback should be called", () => {
-      get.onCloseSpy().should("have.been.called");
+      then(get.onCloseSpy()).shouldHaveBeenCalled();
     });
   });
 });

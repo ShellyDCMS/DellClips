@@ -57,9 +57,9 @@ export default async function ProfilePage({
           className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center
                      text-white text-2xl font-bold mb-3"
         >
-          {user.avatarUrl ? (
+          {user.image ? (
             <Image
-              src={user.avatarUrl}
+              src={user.image}
               alt={user.name || ""}
               className="w-full h-full rounded-full object-cover"
               width={80}
@@ -70,13 +70,32 @@ export default async function ProfilePage({
           )}
         </div>
 
-        {/* Name & Email */}
+        {/* Name */}
         <h1 data-testid="profile-name" className="text-white text-xl font-bold">
           {user.name || user.email.split("@")[0]}
         </h1>
+
+        {/* Email */}
         <p data-testid="profile-email" className="text-gray-500 text-sm">
           {user.email}
         </p>
+
+        {/* Department & Job Title */}
+        {(user.department || user.jobTitle) && (
+          <p className="text-gray-500 text-xs mt-1">
+            {[user.jobTitle, user.department].filter(Boolean).join(" · ")}
+          </p>
+        )}
+
+        {/* Bio */}
+        {user.bio && (
+          <p
+            data-testid="profile-bio"
+            className="text-gray-300 text-sm mt-2 text-center max-w-xs"
+          >
+            {user.bio}
+          </p>
+        )}
 
         {/* Stats */}
         <div className="flex gap-8 mt-4">
@@ -104,6 +123,15 @@ export default async function ProfilePage({
         <div className="mt-4 flex flex-col items-center gap-3">
           {isOwnProfile ? (
             <>
+              {/* Edit Profile */}
+              <Link
+                href="/profile/edit"
+                data-testid="edit-profile-button"
+                className="px-8 py-2 bg-gray-800 hover:bg-gray-700 text-white
+                 rounded-lg transition-colors text-sm"
+              >
+                Edit Profile
+              </Link>
               {/* Sign Out */}
               <form
                 action={async () => {

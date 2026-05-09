@@ -30,7 +30,7 @@ describe("AdminSettingsClient", () => {
     });
 
     it("then the settings container should be visible", () => {
-      get.container().should("be.visible");
+      then(get.container()).shouldBeVisible();
     });
 
     it("then the title should say App Settings", () => {
@@ -38,7 +38,7 @@ describe("AdminSettingsClient", () => {
     });
 
     it("then there should be no config items", () => {
-      get.configItem().should("not.exist");
+      then(get.configItem()).shouldNotExist();
     });
   });
 
@@ -63,7 +63,7 @@ describe("AdminSettingsClient", () => {
     });
 
     it("then the config key should be visible", () => {
-      get.configKey().should("be.visible");
+      then(get.configKey()).shouldBeVisible();
     });
 
     it("then the config key text should match", () => {
@@ -71,11 +71,11 @@ describe("AdminSettingsClient", () => {
     });
 
     it("then the description should be visible", () => {
-      get.configDescription().should("be.visible");
+      then(get.configDescription()).shouldBeVisible();
     });
 
     it("then the toggle button should be visible", () => {
-      get.toggle().should("be.visible");
+      then(get.toggle()).shouldBeVisible();
     });
   });
 
@@ -96,11 +96,11 @@ describe("AdminSettingsClient", () => {
     });
 
     it("then the text input should be visible", () => {
-      get.textInput().should("be.visible");
+      then(get.textInput()).shouldBeVisible();
     });
 
     it("then the toggle should not exist", () => {
-      get.toggleElement().should("not.exist");
+      then(get.toggleElement()).shouldNotExist();
     });
   });
 

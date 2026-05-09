@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { PathnameContext } from "next/dist/shared/lib/hooks-client-context.shared-runtime";
 import { RenderFactory } from "../__test-utils__/renderer";
@@ -41,31 +42,31 @@ describe("NavBar", () => {
     });
 
     it("then the nav bar should be visible", () => {
-      get.navBar().should("be.visible");
+      then(get.navBar()).shouldBeVisible();
     });
 
     it("then the Home link should display 'Home'", () => {
-      get.homeLinkText().should("include", "Home");
+      then(get.homeLinkText()).shouldInclude("Home");
     });
 
     it("then the Upload link should display 'Upload'", () => {
-      get.uploadLinkText().should("include", "Upload");
+      then(get.uploadLinkText()).shouldInclude("Upload");
     });
 
     it("then the Profile link should display 'Profile'", () => {
-      get.profileLinkText().should("include", "Profile");
+      then(get.profileLinkText()).shouldInclude("Profile");
     });
 
     it("then the Home link should be visible", () => {
-      get.homeLink().should("be.visible");
+      then(get.homeLink()).shouldBeVisible();
     });
 
     it("then the Upload link should be visible", () => {
-      get.uploadLink().should("be.visible");
+      then(get.uploadLink()).shouldBeVisible();
     });
 
     it("then the Profile link should be visible", () => {
-      get.profileLink().should("be.visible");
+      then(get.profileLink()).shouldBeVisible();
     });
   });
 
@@ -76,7 +77,7 @@ describe("NavBar", () => {
     });
 
     it("then the nav bar should be visible", () => {
-      get.navBar().should("be.visible");
+      then(get.navBar()).shouldBeVisible();
     });
   });
 
@@ -87,7 +88,7 @@ describe("NavBar", () => {
     });
 
     it("then the nav bar should be visible", () => {
-      get.navBar().should("be.visible");
+      then(get.navBar()).shouldBeVisible();
     });
   });
 });

@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import LoginForm from "./login-form";
 import { LoginFormDriver } from "./login-form.driver";
@@ -25,19 +26,19 @@ describe("LoginForm", () => {
     });
 
     it("then the email input should be visible", () => {
-      get.emailInput().should("be.visible");
+      then(get.emailInput()).shouldBeVisible();
     });
 
     it("then the submit button should be visible", () => {
-      get.submitButton().should("be.visible");
+      then(get.submitButton()).shouldBeVisible();
     });
 
     it('then the submit button should display "Continue with Email"', () => {
-      get.submitButton().should("contain.text", "Continue with Email");
+      then(get.submitButton()).shouldHaveText("Continue with Email");
     });
 
     it("then the email input should have correct placeholder", () => {
-      get.emailInput().should("have.attr", "placeholder", "yourname@dell.com");
+      then(get.emailInput()).shouldHaveAttribute("placeholder", "yourname@dell.com");
     });
   });
 
@@ -48,11 +49,11 @@ describe("LoginForm", () => {
     });
 
     it("then an error message should be displayed", () => {
-      get.errorMessage().should("be.visible");
+      then(get.errorMessage()).shouldBeVisible();
     });
 
     it("then the error should mention @dell.com", () => {
-      get.errorMessageText().should("include", "@dell.com");
+      then(get.errorMessageText()).shouldInclude("@dell.com");
     });
   });
 
@@ -62,7 +63,7 @@ describe("LoginForm", () => {
     });
 
     it("then the native HTML validation should prevent submission", () => {
-      get.emailInput().should("have.attr", "required");
+      then(get.emailInput()).shouldHaveAttribute("required", "required");
     });
   });
 });

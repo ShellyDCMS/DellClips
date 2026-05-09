@@ -119,5 +119,6 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     onProfileClickSpy: () => this.helper.get.spy("onProfileClick"),
     quickFollowButton: () => this.helper.get.elementByTestId("quick-follow-button"),
     quickFollowButtonText: () => this.helper.get.elementsText("quick-follow-button"),
+    authorAvatar: () => this.helper.get.elementByTestId("author-avatar"),
   };
 }

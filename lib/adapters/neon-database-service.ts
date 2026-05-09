@@ -67,7 +67,7 @@ export class NeonDatabaseService implements DatabaseService {
         authorId: users.id,
         authorName: users.name,
         authorEmail: users.email,
-        authorAvatarUrl: users.avatarUrl,
+        authorAvatarUrl: users.image,
       })
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))
@@ -119,7 +119,7 @@ export class NeonDatabaseService implements DatabaseService {
         authorId: users.id,
         authorName: users.name,
         authorEmail: users.email,
-        authorAvatarUrl: users.avatarUrl,
+        authorAvatarUrl: users.image,
       })
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))
@@ -147,7 +147,7 @@ export class NeonDatabaseService implements DatabaseService {
         authorId: users.id,
         authorName: users.name,
         authorEmail: users.email,
-        authorAvatarUrl: users.avatarUrl,
+        authorAvatarUrl: users.image,
       })
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))
@@ -252,7 +252,7 @@ export class NeonDatabaseService implements DatabaseService {
         authorId: users.id,
         authorName: users.name,
         authorEmail: users.email,
-        authorAvatarUrl: users.avatarUrl,
+        authorAvatarUrl: users.image,
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
@@ -488,7 +488,7 @@ export class NeonDatabaseService implements DatabaseService {
         authorId: users.id,
         authorName: users.name,
         authorEmail: users.email,
-        authorAvatarUrl: users.avatarUrl,
+        authorAvatarUrl: users.image,
       })
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))
@@ -526,7 +526,7 @@ export class NeonDatabaseService implements DatabaseService {
         authorId: users.id,
         authorName: users.name,
         authorEmail: users.email,
-        authorAvatarUrl: users.avatarUrl,
+        authorAvatarUrl: users.image,
       })
       .from(videos)
       .innerJoin(users, eq(videos.userId, users.id))

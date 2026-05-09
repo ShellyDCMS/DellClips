@@ -160,13 +160,15 @@ export default function VideoCard({
               style={iconShadow}
             >
               {video.author.avatarUrl ? (
-                <Image
-                  src={video.author.avatarUrl}
-                  alt={video.author.name || ""}
-                  width={48}
-                  height={48}
-                  className="w-full h-full rounded-full object-cover"
-                />
+                <span data-testid="author-avatar" className="w-full h-full block">
+                  <Image
+                    src={video.author.avatarUrl}
+                    alt={video.author.name || ""}
+                    width={48}
+                    height={48}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </span>
               ) : (
                 authorInitial
               )}

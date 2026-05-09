@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import VideoCard from "./video-card";
 import { VideoCardDriver } from "./video-card.driver";
@@ -53,39 +54,39 @@ describe("VideoCard", () => {
     });
 
     it("then the video card should be visible", () => {
-      get.videoCard().should("be.visible");
+      then(get.videoCard()).shouldBeVisible();
     });
 
     it("then the author name should display the author", () => {
-      get.authorNameText().should("include", "Jane Doe");
+      then(get.authorNameText()).shouldInclude("Jane Doe");
     });
 
     it("then the video title should be displayed", () => {
-      get.videoTitleText().should("include", "Amazing Video");
+      then(get.videoTitleText()).shouldInclude("Amazing Video");
     });
 
     it("then the video description should be displayed", () => {
-      get.videoDescriptionText().should("include", "A short description of the video");
+      then(get.videoDescriptionText()).shouldInclude("A short description of the video");
     });
 
     it("then the like button should be visible", () => {
-      get.likeButton().should("be.visible");
+      then(get.likeButton()).shouldBeVisible();
     });
 
     it("then the comment button should be visible", () => {
-      get.commentButton().should("be.visible");
+      then(get.commentButton()).shouldBeVisible();
     });
 
     it("then the more button should be visible", () => {
-      get.moreButton().should("be.visible");
+      then(get.moreButton()).shouldBeVisible();
     });
 
     it("then the profile button should be visible", () => {
-      get.profileButton().should("be.visible");
+      then(get.profileButton()).shouldBeVisible();
     });
 
     it("then the hashtags should be visible", () => {
-      get.hashtags().should("be.visible");
+      then(get.hashtags()).shouldBeVisible();
     });
   });
 
@@ -97,7 +98,7 @@ describe("VideoCard", () => {
     });
 
     it("then the video title should not exist", () => {
-      get.videoTitle().should("not.exist");
+      then(get.videoTitle()).shouldNotExist();
     });
   });
 
@@ -109,7 +110,7 @@ describe("VideoCard", () => {
     });
 
     it("then the video description should not exist", () => {
-      get.videoDescription().should("not.exist");
+      then(get.videoDescription()).shouldNotExist();
     });
   });
 
@@ -121,7 +122,34 @@ describe("VideoCard", () => {
     });
 
     it("then the hashtags container should not exist", () => {
-      get.hashtags().should("not.exist");
+      then(get.hashtags()).shouldNotExist();
+    });
+  });
+
+  describe("given an author with an avatar URL", () => {
+    beforeEach(() => {
+      given.video({
+        ...mockVideo,
+        author: { ...mockVideo.author, avatarUrl: "/avatar.png" },
+      });
+      given.isActive();
+      when.render();
+    });
+
+    it("then the author avatar should be visible", () => {
+      then(get.authorAvatar()).shouldBeVisible();
+    });
+  });
+
+  describe("given an author without an avatar URL", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      when.render();
+    });
+
+    it("then the author avatar should not exist", () => {
+      then(get.authorAvatar()).shouldNotExist();
     });
   });
 
@@ -136,7 +164,7 @@ describe("VideoCard", () => {
     });
 
     it("then the author name should display the email prefix", () => {
-      get.authorNameText().should("include", "jane");
+      then(get.authorNameText()).shouldInclude("jane");
     });
   });
 
@@ -149,7 +177,7 @@ describe("VideoCard", () => {
     });
 
     it("then the onComment callback should be called with the video id", () => {
-      get.onCommentSpy().should("have.been.calledWith", "video-1");
+      then(get.onCommentSpy()).shouldHaveBeenCalledWith("video-1");
     });
   });
 
@@ -162,7 +190,7 @@ describe("VideoCard", () => {
     });
 
     it("then the onProfileClick callback should be called with the author id", () => {
-      get.onProfileClickSpy().should("have.been.calledWith", "author-1");
+      then(get.onProfileClickSpy()).shouldHaveBeenCalledWith("author-1");
     });
   });
 
@@ -175,7 +203,7 @@ describe("VideoCard", () => {
     });
 
     it("then the onProfileClick callback should be called with the author id", () => {
-      get.onProfileClickSpy().should("have.been.calledWith", "author-1");
+      then(get.onProfileClickSpy()).shouldHaveBeenCalledWith("author-1");
     });
   });
 
@@ -188,7 +216,7 @@ describe("VideoCard", () => {
     });
 
     it("then the onHashtagClick callback should be called with the hashtag", () => {
-      get.onHashtagClickSpy().should("have.been.calledWith", "delltech");
+      then(get.onHashtagClickSpy()).shouldHaveBeenCalledWith("delltech");
     });
   });
 
@@ -201,11 +229,11 @@ describe("VideoCard", () => {
     });
 
     it("then the more menu should be visible", () => {
-      get.moreMenu().should("be.visible");
+      then(get.moreMenu()).shouldBeVisible();
     });
 
     it("then the report menu item should be visible", () => {
-      get.reportMenuItem().should("be.visible");
+      then(get.reportMenuItem()).shouldBeVisible();
     });
   });
 
@@ -219,11 +247,11 @@ describe("VideoCard", () => {
     });
 
     it("then the onReport callback should be called with the video id", () => {
-      get.onReportSpy().should("have.been.calledWith", "video-1");
+      then(get.onReportSpy()).shouldHaveBeenCalledWith("video-1");
     });
 
     it("then the more menu should close", () => {
-      get.moreMenu().should("not.exist");
+      then(get.moreMenu()).shouldNotExist();
     });
   });
 
@@ -236,7 +264,7 @@ describe("VideoCard", () => {
     });
 
     it("then the onLike callback should be called with the video id and true", () => {
-      get.onLikeSpy().should("have.been.calledWith", "video-1", true);
+      then(get.onLikeSpy()).shouldHaveBeenCalledWith("video-1", true);
     });
   });
 
@@ -249,7 +277,7 @@ describe("VideoCard", () => {
     });
 
     it("then the onLike callback should be called with the video id and false", () => {
-      get.onLikeSpy().should("have.been.calledWith", "video-1", false);
+      then(get.onLikeSpy()).shouldHaveBeenCalledWith("video-1", false);
     });
   });
 
@@ -262,11 +290,11 @@ describe("VideoCard", () => {
     });
 
     it("then the quick follow button should be visible", () => {
-      get.quickFollowButton().should("be.visible");
+      then(get.quickFollowButton()).shouldBeVisible();
     });
 
     it("then the quick follow button should show + when not following", () => {
-      get.quickFollowButtonText().should("include", "+");
+      then(get.quickFollowButtonText()).shouldInclude("+");
     });
   });
 
@@ -279,7 +307,7 @@ describe("VideoCard", () => {
     });
 
     it("then the quick follow button should not exist", () => {
-      get.quickFollowButton().should("not.exist");
+      then(get.quickFollowButton()).shouldNotExist();
     });
   });
 
@@ -292,7 +320,7 @@ describe("VideoCard", () => {
     });
 
     it("then the quick follow button should show checkmark", () => {
-      get.quickFollowButtonText().should("include", "\u2713");
+      then(get.quickFollowButtonText()).shouldInclude("\u2713");
     });
   });
 });

@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
 import VideoFeed from "./video-feed";
 import { VideoFeedDriver } from "./video-feed.driver";
@@ -53,11 +54,11 @@ describe("VideoFeed", () => {
     });
 
     it("then the empty feed message should be visible", () => {
-      get.emptyFeed().should("be.visible");
+      then(get.emptyFeed()).shouldBeVisible();
     });
 
     it("then the video feed container should not exist", () => {
-      get.videoFeed().should("not.exist");
+      then(get.videoFeed()).shouldNotExist();
     });
   });
 
@@ -68,15 +69,15 @@ describe("VideoFeed", () => {
     });
 
     it("then the video feed container should be visible", () => {
-      get.videoFeed().should("be.visible");
+      then(get.videoFeed()).shouldBeVisible();
     });
 
     it("then there should be 2 video cards", () => {
-      get.numberOfVideoCards().should("equal", 2);
+      then(get.numberOfVideoCards()).shouldEqual(2);
     });
 
     it("then the empty feed message should not exist", () => {
-      get.emptyFeed().should("not.exist");
+      then(get.emptyFeed()).shouldNotExist();
     });
   });
 });

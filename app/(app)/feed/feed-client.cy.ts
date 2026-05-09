@@ -1,3 +1,4 @@
+import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "@/components/__test-utils__/renderer";
 import Chance from "chance";
 import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
@@ -64,15 +65,15 @@ describe("FeedClient", () => {
     });
 
     it("then the empty feed message should be visible", () => {
-      get.videoFeed.emptyFeed().should("be.visible");
+      then(get.videoFeed.emptyFeed()).shouldBeVisible();
     });
 
     it("then the comment section should not be visible", () => {
-      get.commentSection.commentSection().should("not.exist");
+      then(get.commentSection.commentSection()).shouldNotExist();
     });
 
     it("then the report dialog should not be visible", () => {
-      get.reportDialog.dialog().should("not.exist");
+      then(get.reportDialog.dialog()).shouldNotExist();
     });
   });
 
@@ -86,11 +87,11 @@ describe("FeedClient", () => {
     });
 
     it("then the video feed should be visible", () => {
-      get.videoFeed.videoFeed().should("be.visible");
+      then(get.videoFeed.videoFeed()).shouldBeVisible();
     });
 
     it("then there should be 2 video cards", () => {
-      get.videoFeed.numberOfVideoCards().should("equal", 2);
+      then(get.videoFeed.numberOfVideoCards()).shouldEqual(2);
     });
   });
 
@@ -105,7 +106,7 @@ describe("FeedClient", () => {
     });
 
     it("then the comment section should be visible", () => {
-      get.commentSection.commentSection().should("be.visible");
+      then(get.commentSection.commentSection()).shouldBeVisible();
     });
   });
 
@@ -121,7 +122,7 @@ describe("FeedClient", () => {
     });
 
     it("then the comment section should no longer be visible", () => {
-      get.commentSection.commentSection().should("not.exist");
+      then(get.commentSection.commentSection()).shouldNotExist();
     });
   });
 
@@ -136,7 +137,7 @@ describe("FeedClient", () => {
     });
 
     it("then the report dialog should be visible", () => {
-      get.reportDialog.dialog().should("be.visible");
+      then(get.reportDialog.dialog()).shouldBeVisible();
     });
   });
 
@@ -152,7 +153,7 @@ describe("FeedClient", () => {
     });
 
     it("then the report dialog should no longer be visible", () => {
-      get.reportDialog.dialog().should("not.exist");
+      then(get.reportDialog.dialog()).shouldNotExist();
     });
   });
 
@@ -171,7 +172,7 @@ describe("FeedClient", () => {
     });
 
     it("then the report dialog should close after submission", () => {
-      get.reportDialog.dialog().should("not.exist");
+      then(get.reportDialog.dialog()).shouldNotExist();
     });
   });
 });
