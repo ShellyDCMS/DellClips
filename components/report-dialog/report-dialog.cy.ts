@@ -105,9 +105,10 @@ describe("ReportDialog", () => {
     });
 
     it("then the onSubmit callback should be called with reason and description", () => {
-      get
-        .onSubmitSpy()
-       then( ).shouldHaveBeenCalledWith("other", "This video contains misleading info");
+      then(get.onSubmitSpy()).shouldHaveBeenCalledWith(
+        "other",
+        "This video contains misleading info"
+      );
     });
   });
 

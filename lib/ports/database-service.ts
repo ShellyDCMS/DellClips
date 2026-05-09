@@ -126,9 +126,13 @@ export interface DatabaseService {
     id: string;
     email: string;
     name: string | null;
-    avatarUrl: string | null;
+    image: string | null;
+    bio: string | null;
+    department: string | null;
+    jobTitle: string | null;
     role: string;
     createdAt: Date;
+    updatedAt: Date;
   } | null>;
   getUserByEmail(
     email: string
