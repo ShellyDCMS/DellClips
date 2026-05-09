@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -129,13 +129,19 @@ export default function EditProfileClient({ user }: Props) {
   const initial = name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase();
 
   return (
-    <div className="h-full overflow-y-auto px-4 pt-12 pb-20">
-      <h1 className="text-white text-xl font-bold mb-6 text-center">Edit Profile</h1>
+    <div data-testid="edit-profile" className="h-full overflow-y-auto px-4 pt-12 pb-20">
+      <h1
+        data-testid="edit-profile-title"
+        className="text-white text-xl font-bold mb-6 text-center"
+      >
+        Edit Profile
+      </h1>
 
       <div className="max-w-sm mx-auto space-y-5">
         {/* Avatar */}
         <div className="flex flex-col items-center">
           <button
+            data-testid="avatar-button"
             onClick={() => fileInputRef.current?.click()}
             className="relative group"
           >
@@ -144,16 +150,18 @@ export default function EditProfileClient({ user }: Props) {
                             text-white text-3xl font-bold overflow-hidden border-2 border-gray-600"
             >
               {avatarPreview ? (
-                <Image
-                  src={avatarPreview}
-                  alt="Profile"
-                  width={96}
-                  height={96}
-                  unoptimized
-                  className="w-full h-full object-cover"
-                />
+                <span data-testid="avatar-preview" className="w-full h-full block">
+                  <NextImage
+                    src={avatarPreview}
+                    alt="Profile"
+                    width={96}
+                    height={96}
+                    unoptimized
+                    className="w-full h-full object-cover"
+                  />
+                </span>
               ) : (
-                initial
+                <span data-testid="avatar-initial">{initial}</span>
               )}
             </div>
             <div
@@ -181,6 +189,7 @@ export default function EditProfileClient({ user }: Props) {
             Display Name
           </label>
           <input
+            data-testid="name-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -198,6 +207,7 @@ export default function EditProfileClient({ user }: Props) {
           <div className="relative">
             <span className="absolute left-4 top-3 text-gray-500 text-sm">@</span>
             <input
+              data-testid="username-input"
               type="text"
               value={username}
               onChange={(e) =>
@@ -221,6 +231,7 @@ export default function EditProfileClient({ user }: Props) {
             Bio ({bio.length}/150)
           </label>
           <textarea
+            data-testid="bio-input"
             value={bio}
             onChange={(e) => setBio(e.target.value.slice(0, 150))}
             placeholder="Tell us about yourself"
@@ -238,6 +249,7 @@ export default function EditProfileClient({ user }: Props) {
             Department / Team
           </label>
           <input
+            data-testid="department-input"
             type="text"
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
@@ -255,6 +267,7 @@ export default function EditProfileClient({ user }: Props) {
             Job Title
           </label>
           <input
+            data-testid="job-title-input"
             type="text"
             value={jobTitle}
             onChange={(e) => setJobTitle(e.target.value)}
@@ -272,6 +285,7 @@ export default function EditProfileClient({ user }: Props) {
             Dell Profile Link (optional)
           </label>
           <input
+            data-testid="profile-link-input"
             type="url"
             value={profileLink}
             onChange={(e) => setProfileLink(e.target.value)}
@@ -283,12 +297,21 @@ export default function EditProfileClient({ user }: Props) {
         </div>
 
         {/* Error / Success */}
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-        {success && <p className="text-green-400 text-sm">{success}</p>}
+        {error && (
+          <p data-testid="edit-profile-error" className="text-red-400 text-sm">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p data-testid="edit-profile-success" className="text-green-400 text-sm">
+            {success}
+          </p>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
           <button
+            data-testid="cancel-button"
             onClick={() => router.back()}
             className="flex-1 py-3 bg-gray-800 text-gray-300 rounded-lg text-sm
                        hover:bg-gray-700 transition-colors"
@@ -296,6 +319,7 @@ export default function EditProfileClient({ user }: Props) {
             Cancel
           </button>
           <button
+            data-testid="save-button"
             onClick={handleSave}
             disabled={isSaving}
             className="flex-1 py-3 bg-blue-600 text-white rounded-lg text-sm font-semibold
