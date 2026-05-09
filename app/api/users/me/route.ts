@@ -69,22 +69,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // If username is being changed, check uniqueness
-    if (parsed.data.username) {
-      const [existing] = await db
-        .select({ id: users.id })
-        .from(users)
-        .where(eq(users.username, parsed.data.username))
-        .limit(1);
-
-      if (existing && existing.id !== session.user.id) {
-        return NextResponse.json({ error: "Username already taken" }, { status: 409 });
-      }
-    }
-
     // Validate avatar size (base64 images can be large)
     if (parsed.data.image && parsed.data.image.startsWith("data:")) {
-      const sizeInBytes = (parsed.data.avatarUrl.length * 3) / 4;
+      const sizeInBytes = (parsed.data.image.length * 3) / 4;
       const maxSizeBytes = 1 * 1024 * 1024; // 1MB max
       if (sizeInBytes > maxSizeBytes) {
         return NextResponse.json(

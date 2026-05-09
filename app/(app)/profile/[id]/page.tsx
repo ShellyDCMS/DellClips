@@ -75,13 +75,6 @@ export default async function ProfilePage({
           {user.name || user.email.split("@")[0]}
         </h1>
 
-        {/* Username (if set) */}
-        {user.username && (
-          <p data-testid="profile-username" className="text-blue-400 text-sm">
-            @{user.username}
-          </p>
-        )}
-
         {/* Email */}
         <p data-testid="profile-email" className="text-gray-500 text-sm">
           {user.email}
