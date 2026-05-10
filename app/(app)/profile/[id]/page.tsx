@@ -227,7 +227,7 @@ export default async function ProfilePage({
               <Link
                 href="/upload"
                 className="inline-block mt-3 px-4 py-2 bg-blue-600 text-white
-                           rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                     rounded-lg text-sm hover:bg-blue-700 transition-colors"
               >
                 Upload your first video
               </Link>
@@ -236,15 +236,31 @@ export default async function ProfilePage({
         ) : (
           <div className="grid grid-cols-3 gap-1">
             {userVideos.map((video) => (
-              <div
+              <Link
                 key={video.id}
+                href={`/feed?video=${video.id}`}
                 className="aspect-[9/16] bg-gray-800 rounded-lg overflow-hidden
-                           relative cursor-pointer hover:opacity-80 transition-opacity"
+                     relative cursor-pointer hover:opacity-80 transition-opacity
+                     block"
               >
-                {/* Video Thumbnail Placeholder */}
-                <div className="absolute inset-0 flex items-center justify-center">
+                {/* Video Thumbnail */}
+                <div className="absolute inset-0">
+                  <video
+                    src={videoService.getPlaybackUrl(video.videoPlaybackId)}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                </div>
+
+                {/* Play Icon Overlay */}
+                <div
+                  className="absolute inset-0 flex items-center justify-center
+                          bg-black/20"
+                >
                   <svg
-                    className="w-8 h-8 text-gray-600"
+                    className="w-8 h-8 text-white/80"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -255,7 +271,7 @@ export default async function ProfilePage({
                 {/* Video Info Overlay */}
                 <div
                   className="absolute bottom-0 left-0 right-0 p-2
-                             bg-gradient-to-t from-black/80 to-transparent"
+                       bg-gradient-to-t from-black/80 to-transparent"
                 >
                   <p className="text-white text-[10px] line-clamp-2">
                     {video.title || "Untitled"}
@@ -278,7 +294,7 @@ export default async function ProfilePage({
                     </p>
                   </div>
                 )}
-              </div>
+              </Link>
             ))}
           </div>
         )}
