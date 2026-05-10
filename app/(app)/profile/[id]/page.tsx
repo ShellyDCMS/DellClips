@@ -1,6 +1,6 @@
 import FollowButton from "@/components/follow-button/follow-button";
 import { auth, signOut } from "@/lib/auth";
-import { databaseService } from "@/lib/services";
+import { databaseService, videoService } from "@/lib/services";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
