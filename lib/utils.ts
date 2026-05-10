@@ -48,3 +48,28 @@ export function displayNameFromEmail(email: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
 }
+
+/**
+ * Generate a display name from an email address.
+ * Examples:
+ *   "roi.mizrachi@dell.com"     → "Roi Mizrachi"
+ *   "shelly.goldblit@dell.com"  → "Shelly Goldblit"
+ *   "john_doe@dell.com"         → "John Doe"
+ *   "jane-smith@dell.com"       → "Jane Smith"
+ *   "admin@dell.com"            → "Admin"
+ *   "john.q.public@dell.com"    → "John Q Public"
+ */
+export function generateNameFromEmail(email: string): string {
+  const localPart = email.split("@")[0];
+
+  return (
+    localPart
+      .replace(/[._-]/g, " ") // Replace dots, underscores, hyphens with spaces
+      .replace(/\d+/g, "") // Remove numbers
+      .trim()
+      .split(/\s+/) // Split by whitespace
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+      .join(" ")
+      .trim() || email.split("@")[0]
+  ); // Fallback to raw local part if empty
+}

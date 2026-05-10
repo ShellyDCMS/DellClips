@@ -64,6 +64,13 @@ export const authConfig: NextAuthConfig = {
       if (!user.email || !isDellEmail(user.email)) {
         return false;
       }
+
+      // Auto-generate a display name from the email if the user doesn't have one
+      if (!user.name && user.email) {
+        const { generateNameFromEmail } = await import("@/lib/utils");
+        user.name = generateNameFromEmail(user.email);
+      }
+
       return true;
     },
     async session({ session, user }) {
@@ -72,10 +79,6 @@ export const authConfig: NextAuthConfig = {
       }
       return session;
     },
-  },
-  session: {
-    strategy: "database",
-    maxAge: 30 * 24 * 60 * 60,
   },
 };
 
