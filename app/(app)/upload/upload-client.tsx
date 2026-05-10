@@ -167,8 +167,7 @@ export default function UploadClient() {
             data-testid="file-input"
             ref={fileInputRef}
             type="file"
-            accept="video/mp4,video/webm,video/quicktime"
-            capture="user"
+            accept="video/*"
             onChange={handleFileSelect}
             className="hidden"
           />
