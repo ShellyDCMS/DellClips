@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 export default function UploadClient() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -216,11 +217,39 @@ export default function UploadClient() {
             <p className="text-gray-600 text-xs mt-1">MP4, max 60s, max 200MB</p>
           </div>
 
+          <button
+            data-testid="record-video-button"
+            type="button"
+            onClick={() => cameraInputRef.current?.click()}
+            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-full text-sm
+                       font-semibold hover:bg-blue-700 transition-colors
+                       flex items-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
+            </svg>
+            Record video
+          </button>
+
           <input
             data-testid="file-input"
             ref={fileInputRef}
             type="file"
             accept="video/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <input
+            data-testid="camera-input"
+            ref={cameraInputRef}
+            type="file"
+            accept="video/*"
+            capture="environment"
             onChange={handleFileSelect}
             className="hidden"
           />
