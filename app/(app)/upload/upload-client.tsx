@@ -30,8 +30,16 @@ export default function UploadClient() {
 
     // Validate file size (200MB max)
     if (selectedFile.size > 200 * 1024 * 1024) {
-      setError("Video must be under 200MB");
+      setError(
+        "Video must be under 200MB. Try trimming your video or recording at a lower resolution."
+      );
       return;
+    }
+
+    // Warn about large files on mobile
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      const sizeMB = Math.round(selectedFile.size / (1024 * 1024));
+      console.warn(`[upload] Large file: ${sizeMB}MB — upload may take several minutes`);
     }
 
     setFile(selectedFile);
@@ -66,8 +74,19 @@ export default function UploadClient() {
     setStep("uploading");
     setError("");
 
+    // Keep the screen awake during upload (Android fix)
+    let wakeLock: WakeLockSentinel | null = null;
     try {
-      // Step 1: Get presigned upload URL from our API
+      if ("wakeLock" in navigator) {
+        wakeLock = await navigator.wakeLock.request("screen");
+        console.log("[upload] Wake Lock acquired — screen will stay on");
+      }
+    } catch (err) {
+      console.warn("[upload] Wake Lock not available:", err);
+    }
+
+    try {
+      // Step 1: Get presigned upload URL
       setUploadProgress(10);
       const urlRes = await fetch("/api/video/upload-url", {
         method: "POST",
@@ -81,17 +100,45 @@ export default function UploadClient() {
       setUploadProgress(20);
 
       // Step 2: Upload video directly to Cloudflare Stream
-      const formData = new FormData();
-      formData.append("file", file);
+      // Use XMLHttpRequest instead of fetch for progress tracking
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
 
-      const uploadRes = await fetch(uploadUrl, {
-        method: "POST",
-        body: formData,
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) {
+            // Map upload progress to 20-70% of our progress bar
+            const uploadPercent = (e.loaded / e.total) * 100;
+            const mappedProgress = 20 + uploadPercent * 0.5;
+            setUploadProgress(Math.round(mappedProgress));
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload failed — check your internet connection"));
+        });
+
+        xhr.addEventListener("timeout", () => {
+          reject(
+            new Error("Upload timed out — try a shorter video or better connection")
+          );
+        });
+
+        xhr.timeout = 300000; // 5 minute timeout
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        xhr.open("POST", uploadUrl);
+        xhr.send(formData);
       });
-
-      if (!uploadRes.ok) {
-        throw new Error("Failed to upload video");
-      }
 
       setUploadProgress(70);
 
@@ -116,9 +163,9 @@ export default function UploadClient() {
 
       setUploadProgress(100);
       setStep("done");
+
       trackEvent("video_upload", videoData.video.id, { title, hashtags });
 
-      // Redirect to feed after a short delay
       setTimeout(() => {
         router.push("/feed");
         router.refresh();
@@ -127,6 +174,12 @@ export default function UploadClient() {
       setError((err as Error).message || "Upload failed. Please try again.");
       setStep("details");
       setIsUploading(false);
+    } finally {
+      // Release Wake Lock
+      if (wakeLock) {
+        await wakeLock.release();
+        console.log("[upload] Wake Lock released");
+      }
     }
   };
 
@@ -315,10 +368,7 @@ export default function UploadClient() {
 
       {/* Step 3: Uploading */}
       {step === "uploading" && (
-        <div
-          data-testid="uploading-step"
-          className="flex flex-col items-center justify-center py-12"
-        >
+        <div className="flex flex-col items-center justify-center py-12">
           <div className="w-20 h-20 mb-6 relative">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
               <circle
@@ -350,12 +400,21 @@ export default function UploadClient() {
             {uploadProgress < 30
               ? "Preparing upload..."
               : uploadProgress < 70
-                ? "Sending to Cloudflare Stream..."
+                ? "Sending to server..."
                 : "Saving video details..."}
           </p>
+
+          {/* Android-specific tips */}
+          <div className="mt-6 bg-gray-900 border border-gray-800 rounded-lg p-3 max-w-xs">
+            <p className="text-yellow-400 text-xs font-semibold mb-1">
+              ⚠️ Keep this screen open
+            </p>
+            <p className="text-gray-500 text-xs">
+              Don&apos;t switch apps or lock your phone until the upload is complete.
+            </p>
+          </div>
         </div>
       )}
-
       {/* Step 4: Done */}
       {step === "done" && (
         <div
