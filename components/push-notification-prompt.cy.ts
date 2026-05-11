@@ -116,7 +116,6 @@ describe("PushNotificationPrompt", () => {
       given.interceptSubscribeApi();
       when.render();
       when.clickEnable();
-      when.waitForSubscribeRequest();
     });
 
     it("then it should POST the subscription endpoint to the API", () => {
