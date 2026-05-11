@@ -112,9 +112,9 @@ describe("AdminReportsClient", () => {
     beforeEach(() => {
       given.reportsResponse([report]);
       given.interceptReportPut(true);
-      given.confirmDialog(true);
       when.render();
       when.waitForFetchReports();
+      given.confirmDialog(true);
       when.clickDismiss();
       when.waitForReportPut();
     });
@@ -137,9 +137,9 @@ describe("AdminReportsClient", () => {
     beforeEach(() => {
       given.reportsResponse([report]);
       given.interceptReportPut(true);
-      given.confirmDialog(true);
       when.render();
       when.waitForFetchReports();
+      given.confirmDialog(true);
       when.clickRemoveVideo();
       when.waitForReportPut();
     });

@@ -39,7 +39,9 @@ export class AdminReportsClientDriver extends BaseTestDriver<ReportsClientDriver
       });
     },
     confirmDialog: (accept: boolean) => {
-      cy.on("window:confirm", () => accept);
+      cy.window().then((win) => {
+        cy.stub(win, "confirm").returns(accept);
+      });
     },
   };
 
