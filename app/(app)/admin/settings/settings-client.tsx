@@ -103,24 +103,33 @@ export default function AdminSettingsClient({ initialConfig }: Props) {
                 {/* Control */}
                 <div className="flex-shrink-0">
                   {isBool ? (
-                    <button
+                    <label
                       data-testid="config-toggle"
-                      onClick={() => handleToggle(item.key, item.value)}
-                      disabled={saving === item.key}
-                      className={`relative w-12 h-6 rounded-full transition-colors
-                                 disabled:opacity-50 ${
-                                   item.value === "true" ? "bg-blue-600" : "bg-gray-700"
-                                 }`}
+                      className="relative inline-flex items-center cursor-pointer"
                     >
-                      <span
-                        className={`absolute top-0.5 w-5 h-5 bg-white rounded-full
-                                    transition-transform ${
-                                      item.value === "true"
-                                        ? "translate-x-6"
-                                        : "translate-x-0.5"
-                                    }`}
+                      <input
+                        type="checkbox"
+                        checked={item.value === "true"}
+                        onChange={() => handleToggle(item.key, item.value)}
+                        disabled={saving === item.key}
+                        className="sr-only peer"
                       />
-                    </button>
+                      <div
+                        className="w-11 h-6 bg-gray-700 rounded-full
+                 peer-checked:bg-blue-600
+                 peer-disabled:opacity-50
+                 after:content-['']
+                 after:absolute
+                 after:top-[2px]
+                 after:start-[2px]
+                 after:bg-white
+                 after:rounded-full
+                 after:h-5
+                 after:w-5
+                 after:transition-all
+                 peer-checked:after:translate-x-full"
+                      />
+                    </label>
                   ) : (
                     <input
                       data-testid="config-text-input"
