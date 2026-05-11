@@ -85,7 +85,6 @@ export default function VideoPlayer({
     } else {
       video.pause();
       video.currentTime = 0;
-      setIsPlaying(false);
     }
   }, [isActive]);
 
