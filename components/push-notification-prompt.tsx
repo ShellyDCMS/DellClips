@@ -23,7 +23,7 @@ export default function PushNotificationPrompt() {
         if (subscription) {
           setIsSubscribed(true);
         } else {
-          setTimeout(() => setShowPrompt(true), 5000);
+          setShowPrompt(true);
         }
       } catch {
         // Push not supported

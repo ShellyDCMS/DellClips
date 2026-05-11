@@ -20,12 +20,10 @@ describe("PushNotificationPrompt", () => {
 
   describe("given push is supported and not previously dismissed", () => {
     beforeEach(() => {
-      given.fakeTimers();
       given.pushSupported();
       given.existingSubscription(null);
       given.storedDismissValue(null);
       when.render();
-      when.advanceShowDelay();
     });
 
     it("then the prompt container should be visible", () => {
@@ -47,11 +45,9 @@ describe("PushNotificationPrompt", () => {
 
   describe("given push is not supported by the browser", () => {
     beforeEach(() => {
-      given.fakeTimers();
       given.pushUnsupported();
       given.storedDismissValue(null);
       when.render();
-      when.advanceShowDelay();
     });
 
     it("then the prompt container should not exist", () => {
@@ -61,12 +57,10 @@ describe("PushNotificationPrompt", () => {
 
   describe("given the prompt was dismissed within the past 30 days", () => {
     beforeEach(() => {
-      given.fakeTimers();
       given.pushSupported();
       given.existingSubscription(null);
       given.storedDismissValue(new Date().toISOString());
       when.render();
-      when.advanceShowDelay();
     });
 
     it("then the prompt container should not exist", () => {
@@ -76,12 +70,10 @@ describe("PushNotificationPrompt", () => {
 
   describe("given the user is already subscribed", () => {
     beforeEach(() => {
-      given.fakeTimers();
       given.pushSupported();
       given.existingSubscription({ endpoint: "https://push.example.com/x" });
       given.storedDismissValue(null);
       when.render();
-      when.advanceShowDelay();
     });
 
     it("then the prompt container should not exist", () => {
@@ -91,13 +83,11 @@ describe("PushNotificationPrompt", () => {
 
   describe("given the user clicks dismiss on a visible prompt", () => {
     beforeEach(() => {
-      given.fakeTimers();
       given.pushSupported();
       given.existingSubscription(null);
       given.storedDismissValue(null);
       given.stubLocalStorageSetItem();
       when.render();
-      when.advanceShowDelay();
       when.clickDismiss();
     });
 
@@ -116,7 +106,6 @@ describe("PushNotificationPrompt", () => {
     const authKey = "auth-key";
 
     beforeEach(() => {
-      given.fakeTimers();
       given.pushSupported();
       given.existingSubscription(null);
       given.subscribeResult({
@@ -126,7 +115,6 @@ describe("PushNotificationPrompt", () => {
       given.storedDismissValue(null);
       given.interceptSubscribeApi();
       when.render();
-      when.advanceShowDelay();
       when.clickEnable();
       when.waitForSubscribeRequest();
     });
