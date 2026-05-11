@@ -3,20 +3,43 @@ import { BaseTestDriver } from "./__test-utils__/base-test-driver";
 interface PushNotificationPromptDriverProps {}
 
 export class PushNotificationPromptDriver extends BaseTestDriver<PushNotificationPromptDriverProps> {
-  private existingSubscription: any = null;
-  private subscribeResult: any = {
+  private existingSubscription: unknown = null;
+  private subscribeResult: { endpoint: string; toJSON: () => unknown } = {
     endpoint: "https://push.example.com/abc",
     toJSON: () => ({
       endpoint: "https://push.example.com/abc",
       keys: { p256dh: "p256", auth: "auth" },
     }),
   };
+  private originalServiceWorker: PropertyDescriptor | undefined;
+  private originalPushManager: PropertyDescriptor | undefined;
 
   beforeAndAfter = () => {
     this.helper.beforeAndAfter();
     beforeEach(() => {
       this.props = {};
       this.existingSubscription = null;
+      this.originalServiceWorker = Object.getOwnPropertyDescriptor(
+        Navigator.prototype,
+        "serviceWorker"
+      );
+      this.originalPushManager = Object.getOwnPropertyDescriptor(window, "PushManager");
+    });
+    afterEach(() => {
+      if (this.originalServiceWorker) {
+        Object.defineProperty(
+          Navigator.prototype,
+          "serviceWorker",
+          this.originalServiceWorker
+        );
+      } else {
+        delete (Navigator.prototype as { serviceWorker?: unknown }).serviceWorker;
+      }
+      if (this.originalPushManager) {
+        Object.defineProperty(window, "PushManager", this.originalPushManager);
+      } else {
+        delete (window as { PushManager?: unknown }).PushManager;
+      }
     });
   };
 
@@ -32,23 +55,24 @@ export class PushNotificationPromptDriver extends BaseTestDriver<PushNotificatio
           subscribe: () => Promise.resolve(this.subscribeResult),
         },
       };
-      Object.defineProperty(window.navigator, "serviceWorker", {
-        value: { ready: Promise.resolve(registration) },
+      Object.defineProperty(Navigator.prototype, "serviceWorker", {
         configurable: true,
+        get: () => ({ ready: Promise.resolve(registration) }),
       });
-      (window as any).PushManager = function () {};
+      Object.defineProperty(window, "PushManager", {
+        configurable: true,
+        writable: true,
+        value: function () {},
+      });
     },
     pushUnsupported: () => {
-      Object.defineProperty(window.navigator, "serviceWorker", {
-        value: undefined,
-        configurable: true,
-      });
-      delete (window as any).PushManager;
+      delete (Navigator.prototype as { serviceWorker?: unknown }).serviceWorker;
+      delete (window as { PushManager?: unknown }).PushManager;
     },
-    existingSubscription: (sub: any) => {
+    existingSubscription: (sub: unknown) => {
       this.existingSubscription = sub;
     },
-    subscribeResult: (sub: any) => {
+    subscribeResult: (sub: { endpoint: string; toJSON: () => unknown }) => {
       this.subscribeResult = sub;
     },
     storedDismissValue: (value: string | null) => {
