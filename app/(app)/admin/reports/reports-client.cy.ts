@@ -116,7 +116,6 @@ describe("AdminReportsClient", () => {
       when.waitForFetchReports();
       given.confirmDialog(true);
       when.clickDismiss();
-      when.waitForReportPut();
     });
 
     it("then it should send a PUT with action=dismiss", () => {
@@ -141,7 +140,6 @@ describe("AdminReportsClient", () => {
       when.waitForFetchReports();
       given.confirmDialog(true);
       when.clickRemoveVideo();
-      when.waitForReportPut();
     });
 
     it("then it should send a PUT with action=remove_video and videoId", () => {
