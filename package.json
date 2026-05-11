@@ -37,6 +37,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.12.2",
+    "web-push": "^3.6.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -48,6 +49,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/sinon": "^21.0.1",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^4.7.0",
     "chance": "^1.1.13",
     "drizzle-kit": "^0.31.10",
