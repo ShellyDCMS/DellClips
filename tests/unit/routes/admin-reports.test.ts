@@ -178,9 +178,7 @@ describe("PUT /api/admin/reports", () => {
       });
 
       it("then it should return invalid action error", () => {
-        expect(get.body().error).toBe(
-          "Invalid action. Use 'dismiss' or 'remove_video'"
-        );
+        expect(get.body().error).toBe("Invalid action. Use 'dismiss' or 'remove_video'");
       });
     });
 

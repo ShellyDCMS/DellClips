@@ -39,9 +39,7 @@ describe("AdminReportsClient", () => {
         type: AdminReportsClient,
         props: get.props() as any,
       }),
-      wrappers: () => [
-        { type: AppRouterContext.Provider, props: { value: mockRouter } },
-      ],
+      wrappers: () => [{ type: AppRouterContext.Provider, props: { value: mockRouter } }],
     });
 
     given.renderer(renderFactory.createRenderer());

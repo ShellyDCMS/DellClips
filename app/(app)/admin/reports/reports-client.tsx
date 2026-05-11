@@ -20,20 +20,19 @@ export default function AdminReportsClient() {
   const [processing, setProcessing] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchReports = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/admin/reports");
+        const data = await res.json();
+        setReports(data.reports || []);
+      } catch (err) {
+        console.error("Failed to fetch reports:", err);
+      }
+      setLoading(false);
+    };
     fetchReports();
   }, []);
-
-  const fetchReports = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/reports");
-      const data = await res.json();
-      setReports(data.reports || []);
-    } catch (err) {
-      console.error("Failed to fetch reports:", err);
-    }
-    setLoading(false);
-  };
 
   const handleAction = async (
     reportId: string,
