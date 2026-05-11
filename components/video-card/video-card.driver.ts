@@ -29,6 +29,8 @@ interface VideoCardDriverProps {
 }
 
 export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
+  toggleMuteSpy: unknown;
+
   beforeAndAfter = () => {
     this.helper.beforeAndAfter();
     beforeEach(() => {
@@ -45,7 +47,7 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
       this.props.isActive = value;
     },
     onToggleMuteSpy: () => {
-      this.helper.given.spy("onToggleMute");
+      this.toggleMuteSpy = this.helper.given.spy("onToggleMute");
     },
     onLikeSpy: () => {
       this.props.onLike = this.helper.given.spy("onLike");

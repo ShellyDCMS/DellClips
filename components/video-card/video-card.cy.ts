@@ -59,7 +59,7 @@ describe("VideoCard", () => {
               togglePlay: togglePlaySpy,
               toggleMute: () => {
                 toggleMuteSpy();
-                (get.onToggleMuteSpy() as unknown as () => void)();
+                (driver.toggleMuteSpy as () => void)?.();
               },
             },
           },
