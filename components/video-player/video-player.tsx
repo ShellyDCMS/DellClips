@@ -72,19 +72,13 @@ export default function VideoPlayer({
 
     const attemptPlay = () => {
       if (cancelled) return;
-      // Mobile browsers only allow autoplay when muted. If the user
-      // unmuted on a previous video, fall back to muted so scrolling
-      // back still autoplays — they can unmute again with the button.
       const playPromise = video.play();
       if (playPromise === undefined) return;
       playPromise.catch(() => {
-        if (cancelled) return;
-        if (!video.muted) {
-          video.muted = true;
-          video.play().catch(() => {
-            // Still blocked — show the tap-to-play overlay.
-          });
-        }
+        // Autoplay blocked (typically because video is unmuted and the
+        // browser requires a fresh user gesture). The tap-to-play overlay
+        // will be shown — do not silently mute, since that would override
+        // the user's global unmute preference.
       });
     };
 
