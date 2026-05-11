@@ -1,6 +1,6 @@
 "use client";
 
-import VideoPlayer from "@/components/video-player/video-player";
+import { useSharedVideo } from "@/components/shared-video-player/shared-video-context";
 import { trackEvent } from "@/lib/analytics";
 import { timeAgo } from "@/lib/utils";
 import Image from "next/image";
@@ -27,8 +27,6 @@ interface VideoCardProps {
   };
   isActive: boolean;
   currentUserId?: string;
-  isGlobalMuted: boolean;
-  onToggleMute: () => void;
   onLike: (videoId: string, liked: boolean) => void;
   onComment: (videoId: string) => void;
   onReport: (videoId: string) => void;
@@ -40,14 +38,13 @@ export default function VideoCard({
   video,
   isActive,
   currentUserId,
-  isGlobalMuted,
-  onToggleMute,
   onLike,
   onComment,
   onReport,
   onHashtagClick,
   onProfileClick,
 }: VideoCardProps) {
+  const { isPlaying, isMuted, togglePlay, toggleMute } = useSharedVideo();
   const [liked, setLiked] = useState(video.hasLiked);
   const [likeCount, setLikeCount] = useState(video.likeCount);
   const [showMenu, setShowMenu] = useState(false);
@@ -116,18 +113,11 @@ export default function VideoCard({
       data-testid="video-card"
       className="relative w-full h-full snap-start snap-always"
     >
-      {/* Video Player — only mount when active */}
-      {isActive ? (
-        <VideoPlayer
-          playbackUrl={video.playbackUrl}
-          isActive={isActive}
-          isMuted={isGlobalMuted}
-          onToggleMute={onToggleMute}
-        />
-      ) : (
+      {/* Inactive cards: opaque placeholder hides the shared video underneath */}
+      {!isActive && (
         <div
           data-testid="video-placeholder"
-          className="w-full h-full bg-gray-900 flex items-center justify-center"
+          className="absolute inset-0 bg-gray-900 flex items-center justify-center z-0"
         >
           <div className="text-center">
             <svg
@@ -144,6 +134,66 @@ export default function VideoCard({
             )}
           </div>
         </div>
+      )}
+
+      {/* Active card: tap-area + mute button + play overlay over the shared video */}
+      {isActive && (
+        <>
+          <div
+            data-testid="video-player"
+            className="absolute inset-0 z-0 cursor-pointer"
+            onClick={togglePlay}
+          />
+
+          <button
+            data-testid="mute-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMute();
+            }}
+            className="absolute right-4 z-20 w-12 h-12 bg-black/50 rounded-full
+                       flex items-center justify-center backdrop-blur-sm
+                       hover:bg-black/70 active:bg-black/80 transition-colors
+                       touch-manipulation"
+            style={{
+              top: "max(16px, env(safe-area-inset-top, 16px))",
+              WebkitTapHighlightColor: "transparent",
+              touchAction: "manipulation",
+            }}
+          >
+            {isMuted ? (
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            )}
+          </button>
+
+          {!isPlaying && (
+            <div
+              data-testid="play-overlay"
+              className="absolute inset-0 z-10 flex flex-col items-center justify-center
+                         pointer-events-none"
+            >
+              <div
+                className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center
+                           backdrop-blur-sm mb-3"
+              >
+                <svg
+                  className="w-8 h-8 text-white ml-1"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+              <p className="text-white/60 text-xs">Tap to play</p>
+            </div>
+          )}
+        </>
       )}
 
       {/* ============================================ */}

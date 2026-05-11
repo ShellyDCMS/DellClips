@@ -4,7 +4,7 @@ import CommentSection from "@/components/comment-section/comment-section";
 import ReportDialog from "@/components/report-dialog/report-dialog";
 import VideoFeed from "@/components/video-feed/video-feed";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Video {
   id: string;
@@ -33,6 +33,17 @@ interface FeedClientProps {
 
 export default function FeedClient({ initialVideos, currentUserId }: FeedClientProps) {
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!new URLSearchParams(window.location.search).has("debug")) return;
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/eruda";
+    script.onload = () => {
+      (window as unknown as { eruda?: { init: () => void } }).eruda?.init();
+    };
+    document.body.appendChild(script);
+  }, []);
   const [commentVideoId, setCommentVideoId] = useState<string | null>(null);
   const [reportVideoId, setReportVideoId] = useState<string | null>(null);
   const [isGlobalMuted, setIsGlobalMuted] = useState(true);
