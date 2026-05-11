@@ -34,6 +34,8 @@ describe("VideoCard", () => {
     given.onReportSpy();
     given.onHashtagClickSpy();
     given.onProfileClickSpy();
+    given.onToggleMuteSpy();
+    given.isGlobalMuted();
     given.fetchReturnsLikeSuccess();
 
     const renderFactory = new RenderFactory({
@@ -321,6 +323,19 @@ describe("VideoCard", () => {
 
     it("then the quick follow button should show checkmark", () => {
       then(get.quickFollowButtonText()).shouldInclude("\u2713");
+    });
+  });
+
+  describe("given an active video card and the mute button is clicked", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      when.render();
+      when.clickMute();
+    });
+
+    it("then onToggleMute should have been called", () => {
+      then(get.onToggleMuteSpy()).shouldHaveBeenCalled();
     });
   });
 });

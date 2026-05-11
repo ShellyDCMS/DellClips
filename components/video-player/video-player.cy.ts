@@ -11,6 +11,8 @@ describe("VideoPlayer", () => {
 
   beforeEach(() => {
     given.playbackUrl("https://example.com/test-video.m3u8");
+    given.isMuted();
+    given.onToggleMuteSpy();
 
     const renderFactory = new RenderFactory({
       getReactOptions: () => ({
@@ -65,6 +67,54 @@ describe("VideoPlayer", () => {
 
     it("then the mute button should still be visible", () => {
       then(get.muteButton()).shouldBeVisible();
+    });
+
+    it("then onToggleMute should have been called", () => {
+      then(get.onToggleMuteSpy()).shouldHaveBeenCalled();
+    });
+  });
+
+  describe("given the player is active and muted", () => {
+    beforeEach(() => {
+      given.isActive();
+      given.isMuted(true);
+      when.render();
+    });
+
+    it("then the unmute hint should not exist", () => {
+      then(get.unmuteHint()).shouldNotExist();
+    });
+
+    it("then the mute button should be visible", () => {
+      then(get.muteButton()).shouldBeVisible();
+    });
+  });
+
+  describe("given the player is active and unmuted", () => {
+    beforeEach(() => {
+      given.isActive();
+      given.isMuted(false);
+      when.render();
+    });
+
+    it("then the unmute hint should be visible", () => {
+      then(get.unmuteHint()).shouldBeVisible();
+    });
+
+    it("then the mute button should still be visible", () => {
+      then(get.muteButton()).shouldBeVisible();
+    });
+  });
+
+  describe("given the player is inactive and unmuted", () => {
+    beforeEach(() => {
+      given.isActive(false);
+      given.isMuted(false);
+      when.render();
+    });
+
+    it("then the unmute hint should not exist", () => {
+      then(get.unmuteHint()).shouldNotExist();
     });
   });
 

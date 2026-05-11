@@ -36,6 +36,8 @@ describe("VideoFeed", () => {
     given.onOpenReportSpy();
     given.onHashtagClickSpy();
     given.onProfileClickSpy();
+    given.onToggleMuteSpy();
+    given.isGlobalMuted();
 
     const renderFactory = new RenderFactory({
       getReactOptions: () => ({
@@ -78,6 +80,18 @@ describe("VideoFeed", () => {
 
     it("then the empty feed message should not exist", () => {
       then(get.emptyFeed()).shouldNotExist();
+    });
+  });
+
+  describe("given a list of videos and the active card's mute button is clicked", () => {
+    beforeEach(() => {
+      given.initialVideos(twoVideos);
+      when.render();
+      when.videoCard.clickMute();
+    });
+
+    it("then onToggleMute should have been called", () => {
+      then(get.onToggleMuteSpy()).shouldHaveBeenCalled();
     });
   });
 });

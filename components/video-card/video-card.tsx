@@ -27,6 +27,8 @@ interface VideoCardProps {
   };
   isActive: boolean;
   currentUserId?: string;
+  isGlobalMuted: boolean;
+  onToggleMute: () => void;
   onLike: (videoId: string, liked: boolean) => void;
   onComment: (videoId: string) => void;
   onReport: (videoId: string) => void;
@@ -38,6 +40,8 @@ export default function VideoCard({
   video,
   isActive,
   currentUserId,
+  isGlobalMuted,
+  onToggleMute,
   onLike,
   onComment,
   onReport,
@@ -114,7 +118,12 @@ export default function VideoCard({
     >
       {/* Video Player — only mount when active */}
       {isActive ? (
-        <VideoPlayer playbackUrl={video.playbackUrl} isActive={isActive} />
+        <VideoPlayer
+          playbackUrl={video.playbackUrl}
+          isActive={isActive}
+          isMuted={isGlobalMuted}
+          onToggleMute={onToggleMute}
+        />
       ) : (
         <div
           data-testid="video-placeholder"

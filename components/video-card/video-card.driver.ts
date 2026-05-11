@@ -22,6 +22,8 @@ interface VideoCardDriverProps {
   };
   isActive?: boolean;
   currentUserId?: string;
+  isGlobalMuted?: boolean;
+  onToggleMute?: () => void;
   onLike?: (videoId: string, liked: boolean) => void;
   onComment?: (videoId: string) => void;
   onReport?: (videoId: string) => void;
@@ -46,6 +48,12 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     },
     isActive: (value: boolean = true) => {
       this.props.isActive = value;
+    },
+    isGlobalMuted: (value: boolean = true) => {
+      this.props.isGlobalMuted = value;
+    },
+    onToggleMuteSpy: () => {
+      this.props.onToggleMute = this.helper.given.spy("onToggleMute");
     },
     onLikeSpy: () => {
       this.props.onLike = this.helper.given.spy("onLike");
@@ -88,6 +96,7 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     clickLike: () => this.helper.when.click("like-button"),
     clickComment: () => this.helper.when.click("comment-button"),
     clickMore: () => this.helper.when.click("more-button"),
+    clickMute: () => this.helper.when.click("mute-button"),
     clickReport: () => this.helper.when.click("report-menu-item"),
     clickProfile: () => this.helper.when.click("profile-button"),
     clickAuthorName: () => this.helper.when.click("author-name"),
@@ -117,6 +126,7 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     onReportSpy: () => this.helper.get.spy("onReport"),
     onHashtagClickSpy: () => this.helper.get.spy("onHashtagClick"),
     onProfileClickSpy: () => this.helper.get.spy("onProfileClick"),
+    onToggleMuteSpy: () => this.helper.get.spy("onToggleMute"),
     quickFollowButton: () => this.helper.get.elementByTestId("quick-follow-button"),
     quickFollowButtonText: () => this.helper.get.elementsText("quick-follow-button"),
     authorAvatar: () => this.helper.get.elementByTestId("author-avatar"),

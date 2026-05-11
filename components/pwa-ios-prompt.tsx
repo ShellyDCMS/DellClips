@@ -58,12 +58,18 @@ export default function PWAiOSPrompt() {
       <div className="flex items-start gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          data-testid="pwa-ios-prompt-logo"
           src="/icons/icon-192.png"
           alt="DellClips"
           className="w-10 h-10 rounded-xl flex-shrink-0"
         />
         <div className="flex-1">
-          <h3 className="text-white font-bold text-sm">Install DellClips</h3>
+          <h3
+            data-testid="pwa-ios-prompt-heading"
+            className="text-white font-bold text-sm"
+          >
+            Install DellClips
+          </h3>
           <p className="text-gray-400 text-xs mt-1">
             To install this app on your device:
           </p>
