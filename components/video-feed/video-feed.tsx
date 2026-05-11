@@ -1,5 +1,6 @@
 "use client";
 
+import SharedVideoPlayer from "@/components/shared-video-player/shared-video-player";
 import VideoCard from "@/components/video-card/video-card";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -132,47 +133,55 @@ export default function VideoFeed({
     );
   }
 
+  const activeVideo = videos[activeIndex];
+
   return (
-    <div
-      ref={containerRef}
-      data-testid="video-feed"
-      className="h-full w-full overflow-y-scroll snap-y snap-mandatory
-               scrollbar-hide overscroll-none"
-      style={{
-        scrollSnapType: "y mandatory",
-        WebkitOverflowScrolling: "touch",
-        overscrollBehavior: "none",
-      }}
-    >
-      {videos.map((video, index) => (
+    <div className="relative h-full w-full overflow-hidden">
+      <SharedVideoPlayer
+        playbackUrl={activeVideo?.playbackUrl ?? null}
+        isMuted={isGlobalMuted}
+        onToggleMute={onToggleMute}
+      >
         <div
-          key={video.id}
-          data-index={index}
-          className="h-full w-full snap-start snap-always"
+          ref={containerRef}
+          data-testid="video-feed"
+          className="relative h-full w-full overflow-y-scroll snap-y snap-mandatory
+                     scrollbar-hide overscroll-none z-10"
+          style={{
+            scrollSnapType: "y mandatory",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "none",
+          }}
         >
-          <VideoCard
-            video={video}
-            isActive={index === activeIndex}
-            currentUserId={currentUserId}
-            isGlobalMuted={isGlobalMuted}
-            onToggleMute={onToggleMute}
-            onLike={handleLike}
-            onComment={onOpenComments}
-            onReport={onOpenReport}
-            onHashtagClick={onHashtagClick}
-            onProfileClick={onProfileClick}
-          />
-        </div>
-      ))}
+          {videos.map((video, index) => (
+            <div
+              key={video.id}
+              data-index={index}
+              className="h-full w-full snap-start snap-always"
+            >
+              <VideoCard
+                video={video}
+                isActive={index === activeIndex}
+                currentUserId={currentUserId}
+                onLike={handleLike}
+                onComment={onOpenComments}
+                onReport={onOpenReport}
+                onHashtagClick={onHashtagClick}
+                onProfileClick={onProfileClick}
+              />
+            </div>
+          ))}
 
-      {/* Spacer at the end to prevent iOS scroll snap lock */}
-      <div className="h-1 w-full snap-start" aria-hidden="true" />
+          {/* Spacer at the end to prevent iOS scroll snap lock */}
+          <div className="h-1 w-full snap-start" aria-hidden="true" />
 
-      {isLoading && (
-        <div className="h-20 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          {isLoading && (
+            <div className="h-20 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
-      )}
+      </SharedVideoPlayer>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { then } from "@shellygo/cypress-test-utils";
 import { RenderFactory } from "../__test-utils__/renderer";
+import { SharedVideoContext } from "../shared-video-player/shared-video-context";
 import VideoCard from "./video-card";
 import { VideoCardDriver } from "./video-card.driver";
 
@@ -28,14 +29,19 @@ describe("VideoCard", () => {
 
   const { given, when, get } = driver;
 
+  const toggleMuteSpy = Cypress.sinon.stub();
+  const togglePlaySpy = Cypress.sinon.stub();
+
   beforeEach(() => {
+    toggleMuteSpy.reset();
+    togglePlaySpy.reset();
+
     given.onLikeSpy();
     given.onCommentSpy();
     given.onReportSpy();
     given.onHashtagClickSpy();
     given.onProfileClickSpy();
     given.onToggleMuteSpy();
-    given.isGlobalMuted();
     given.fetchReturnsLikeSuccess();
 
     const renderFactory = new RenderFactory({
@@ -43,6 +49,22 @@ describe("VideoCard", () => {
         type: VideoCard,
         props: get.props() as any,
       }),
+      wrappers: () => [
+        {
+          type: SharedVideoContext.Provider,
+          props: {
+            value: {
+              isPlaying: false,
+              isMuted: true,
+              togglePlay: togglePlaySpy,
+              toggleMute: () => {
+                toggleMuteSpy();
+                (get.onToggleMuteSpy() as unknown as () => void)();
+              },
+            },
+          },
+        },
+      ],
     });
 
     given.renderer(renderFactory.createRenderer());

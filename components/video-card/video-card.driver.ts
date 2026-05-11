@@ -1,5 +1,4 @@
 import { BaseTestDriver } from "../__test-utils__/base-test-driver";
-import { VideoPlayerDriver } from "../video-player/video-player.driver";
 
 interface VideoCardDriverProps {
   video?: {
@@ -22,8 +21,6 @@ interface VideoCardDriverProps {
   };
   isActive?: boolean;
   currentUserId?: string;
-  isGlobalMuted?: boolean;
-  onToggleMute?: () => void;
   onLike?: (videoId: string, liked: boolean) => void;
   onComment?: (videoId: string) => void;
   onReport?: (videoId: string) => void;
@@ -32,8 +29,6 @@ interface VideoCardDriverProps {
 }
 
 export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
-  private videoPlayerDriver = new VideoPlayerDriver();
-
   beforeAndAfter = () => {
     this.helper.beforeAndAfter();
     beforeEach(() => {
@@ -49,11 +44,8 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     isActive: (value: boolean = true) => {
       this.props.isActive = value;
     },
-    isGlobalMuted: (value: boolean = true) => {
-      this.props.isGlobalMuted = value;
-    },
     onToggleMuteSpy: () => {
-      this.props.onToggleMute = this.helper.given.spy("onToggleMute");
+      this.helper.given.spy("onToggleMute");
     },
     onLikeSpy: () => {
       this.props.onLike = this.helper.given.spy("onLike");
@@ -106,7 +98,6 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
 
   get = {
     ...this._get,
-    videoPlayer: this.videoPlayerDriver.get,
     videoCard: () => this.helper.get.elementByTestId("video-card"),
     profileButton: () => this.helper.get.elementByTestId("profile-button"),
     likeButton: () => this.helper.get.elementByTestId("like-button"),
