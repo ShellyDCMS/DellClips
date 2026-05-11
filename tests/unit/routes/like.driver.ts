@@ -13,14 +13,20 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 const mockGetVideoById = vi.fn();
+const mockGetUserById = vi.fn();
 const mockLikeVideo = vi.fn();
 const mockUnlikeVideo = vi.fn();
+const mockSendToUser = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
     getVideoById: (...args: unknown[]) => mockGetVideoById(...args),
+    getUserById: (...args: unknown[]) => mockGetUserById(...args),
     likeVideo: (...args: unknown[]) => mockLikeVideo(...args),
     unlikeVideo: (...args: unknown[]) => mockUnlikeVideo(...args),
+  },
+  notificationService: {
+    sendToUser: (...args: unknown[]) => mockSendToUser(...args),
   },
 }));
 
@@ -48,6 +54,12 @@ export class LikeDriver {
     },
     videoNotFound: () => {
       mockGetVideoById.mockResolvedValue(null);
+    },
+    liker: (user: any) => {
+      mockGetUserById.mockResolvedValue(user);
+    },
+    notificationSendSucceeds: () => {
+      mockSendToUser.mockResolvedValue(undefined);
     },
     likeSucceeds: () => {
       mockLikeVideo.mockResolvedValue(undefined);
@@ -91,5 +103,6 @@ export class LikeDriver {
     body: () => this.lastBody,
     likeVideoMock: () => mockLikeVideo,
     unlikeVideoMock: () => mockUnlikeVideo,
+    sendToUserMock: () => mockSendToUser,
   };
 }

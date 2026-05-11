@@ -65,13 +65,16 @@ export default function PushNotificationPrompt() {
 
   return (
     <div
+      data-testid="push-prompt"
       className="fixed top-4 left-4 right-4 z-50 bg-gray-900 border border-gray-700
                  rounded-2xl p-4 shadow-2xl max-w-sm mx-auto"
     >
       <div className="flex items-start gap-3">
         <div className="text-2xl">🔔</div>
         <div className="flex-1">
-          <h3 className="text-white font-bold text-sm">Stay in the loop</h3>
+          <h3 data-testid="push-prompt-heading" className="text-white font-bold text-sm">
+            Stay in the loop
+          </h3>
           <p className="text-gray-400 text-xs mt-0.5">
             Get notified when someone likes your video or when new content is posted
           </p>
@@ -80,6 +83,7 @@ export default function PushNotificationPrompt() {
 
       <div className="flex gap-2 mt-3">
         <button
+          data-testid="push-prompt-dismiss"
           onClick={handleDismiss}
           className="flex-1 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm
                      hover:bg-gray-700 transition-colors"
@@ -87,6 +91,7 @@ export default function PushNotificationPrompt() {
           Not now
         </button>
         <button
+          data-testid="push-prompt-enable"
           onClick={handleSubscribe}
           className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold
                      hover:bg-blue-700 transition-colors"

@@ -915,7 +915,7 @@ and instantiation in this one file:
 | :----------- | :-------- | :------------------------------------------------------------------------------------------------- |
 | **V1 (MVP)** | Weeks 1-2 | Core feed, upload, auth, likes, comments, PWA                                                      |
 | **V1.5**     | Weeks 3-4 | Content moderation dashboard, analytics, hashtags                                                  |
-| **V2**       | Month 2-3 | Enterprise SSO, push notifications, AI captions, follow/subscribe                                  |
+| **V2**       | Month 2-3 | Enterprise SSO, AI captions, broadcast push notifications (per-event push for like/comment/follow already shipped in V1.x), follow/subscribe |
 | **V3**       | Month 4+  | AI-powered feed ranking, department channels, live streaming, integration with Dell internal tools |
 
 ### 18.1 Architecture Evolution Path

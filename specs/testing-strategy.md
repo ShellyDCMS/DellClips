@@ -10,6 +10,7 @@
 │ ├── DatabasePort Driver (interface contract) │
 │ ├── Cloudflare Adapter Driver (API calls) │
 │ ├── Resend Adapter Driver (email sending) │
+│ ├── WebPush Adapter Driver (push notifications) │
 │ └── API Route Drivers (business logic) │
 │ │
 │ ❌ NO component unit tests │

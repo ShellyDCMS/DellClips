@@ -28,26 +28,38 @@ describe("POST /api/videos/[id]/like", () => {
     });
 
     describe("when the video does not exist", () => {
-      beforeEach(async () => {
-        given.videoNotFound();
-        await when.likeVideo("nonexistent");
-      });
-
-      it("then it should return 404", () => {
-        expect(get.status()).toBe(404);
-      });
-
-      it("then it should return Video not found error", () => {
-        expect(get.body().error).toBe("Video not found");
-      });
-    });
-
-    describe("when the video exists", () => {
       const videoId = chance.guid();
 
       beforeEach(async () => {
-        given.video({ id: videoId });
         given.likeSucceeds();
+        given.videoNotFound();
+        await when.likeVideo(videoId);
+      });
+
+      it("then it should still return liked true", () => {
+        expect(get.body().liked).toBe(true);
+      });
+
+      it("then it should not send a notification", () => {
+        expect(get.sendToUserMock()).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("when the video exists and is owned by someone else", () => {
+      const videoId = chance.guid();
+      const authorId = chance.guid();
+      const videoTitle = chance.sentence({ words: 3 });
+      const likerName = chance.name();
+
+      beforeEach(async () => {
+        given.video({
+          id: videoId,
+          title: videoTitle,
+          author: { id: authorId },
+        });
+        given.liker({ id: userId, name: likerName });
+        given.likeSucceeds();
+        given.notificationSendSucceeds();
         await when.likeVideo(videoId);
       });
 
@@ -58,13 +70,42 @@ describe("POST /api/videos/[id]/like", () => {
       it("then it should call likeVideo with correct arguments", () => {
         expect(get.likeVideoMock()).toHaveBeenCalledWith(userId, videoId);
       });
+
+      it("then it should notify the video author", () => {
+        expect(get.sendToUserMock()).toHaveBeenCalledWith(
+          authorId,
+          expect.objectContaining({
+            title: expect.stringContaining("Like"),
+            body: expect.stringContaining(likerName),
+            url: `/feed?video=${videoId}`,
+            tag: `like-${videoId}`,
+          })
+        );
+      });
+    });
+
+    describe("when the video is owned by the liker", () => {
+      const videoId = chance.guid();
+
+      beforeEach(async () => {
+        given.video({ id: videoId, author: { id: userId } });
+        given.likeSucceeds();
+        await when.likeVideo(videoId);
+      });
+
+      it("then it should return liked true", () => {
+        expect(get.body().liked).toBe(true);
+      });
+
+      it("then it should not send a notification", () => {
+        expect(get.sendToUserMock()).not.toHaveBeenCalled();
+      });
     });
 
     describe("when the database throws an error", () => {
       const videoId = chance.guid();
 
       beforeEach(async () => {
-        given.video({ id: videoId });
         given.likeFails(new Error("DB error"));
         await when.likeVideo(videoId);
       });

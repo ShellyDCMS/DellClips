@@ -96,14 +96,18 @@ describe("POST /api/videos/[id]/comments", () => {
       given.authenticatedUser(userId);
     });
 
-    describe("when sending a valid comment", () => {
+    describe("when sending a valid comment on someone else's video", () => {
       const videoId = chance.guid();
+      const authorId = chance.guid();
       const commentText = chance.sentence();
       const commentId = chance.guid();
+      const commenterName = chance.name();
 
       beforeEach(async () => {
-        given.video({ id: videoId });
+        given.video({ id: videoId, author: { id: authorId } });
         given.createComment({ id: commentId });
+        given.commenter({ id: userId, name: commenterName });
+        given.notificationSendSucceeds();
         await when.postComment(videoId, { text: commentText });
       });
 
@@ -121,6 +125,36 @@ describe("POST /api/videos/[id]/comments", () => {
           videoId,
           commentText
         );
+      });
+
+      it("then it should notify the video author", () => {
+        expect(get.sendToUserMock()).toHaveBeenCalledWith(
+          authorId,
+          expect.objectContaining({
+            title: expect.stringContaining("Comment"),
+            body: expect.stringContaining(commenterName),
+            url: `/feed?video=${videoId}`,
+            tag: `comment-${videoId}`,
+          })
+        );
+      });
+    });
+
+    describe("when sending a comment on own video", () => {
+      const videoId = chance.guid();
+
+      beforeEach(async () => {
+        given.video({ id: videoId, author: { id: userId } });
+        given.createComment({ id: chance.guid() });
+        await when.postComment(videoId, { text: chance.sentence() });
+      });
+
+      it("then it should return 201", () => {
+        expect(get.status()).toBe(201);
+      });
+
+      it("then it should not send a notification", () => {
+        expect(get.sendToUserMock()).not.toHaveBeenCalled();
       });
     });
 

@@ -14,13 +14,19 @@ vi.mock("@/lib/auth", () => ({
 
 const mockGetCommentsByVideoId = vi.fn();
 const mockGetVideoById = vi.fn();
+const mockGetUserById = vi.fn();
 const mockCreateComment = vi.fn();
+const mockSendToUser = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
     getCommentsByVideoId: (...args: unknown[]) => mockGetCommentsByVideoId(...args),
     getVideoById: (...args: unknown[]) => mockGetVideoById(...args),
+    getUserById: (...args: unknown[]) => mockGetUserById(...args),
     createComment: (...args: unknown[]) => mockCreateComment(...args),
+  },
+  notificationService: {
+    sendToUser: (...args: unknown[]) => mockSendToUser(...args),
   },
 }));
 
@@ -61,6 +67,12 @@ export class CommentsDriver {
     createCommentFails: (error: Error) => {
       mockCreateComment.mockRejectedValue(error);
     },
+    commenter: (user: any) => {
+      mockGetUserById.mockResolvedValue(user);
+    },
+    notificationSendSucceeds: () => {
+      mockSendToUser.mockResolvedValue(undefined);
+    },
   };
 
   when = {
@@ -94,5 +106,6 @@ export class CommentsDriver {
     body: () => this.lastBody,
     getCommentsMock: () => mockGetCommentsByVideoId,
     createCommentMock: () => mockCreateComment,
+    sendToUserMock: () => mockSendToUser,
   };
 }
