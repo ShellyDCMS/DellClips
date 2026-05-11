@@ -35,6 +35,7 @@ export default function FeedClient({ initialVideos, currentUserId }: FeedClientP
   const router = useRouter();
   const [commentVideoId, setCommentVideoId] = useState<string | null>(null);
   const [reportVideoId, setReportVideoId] = useState<string | null>(null);
+  const [isGlobalMuted, setIsGlobalMuted] = useState(true);
 
   const handleOpenComments = (videoId: string) => {
     setCommentVideoId(videoId);
@@ -80,21 +81,21 @@ export default function FeedClient({ initialVideos, currentUserId }: FeedClientP
     <>
       <VideoFeed
         initialVideos={initialVideos}
+        currentUserId={currentUserId}
+        isGlobalMuted={isGlobalMuted}
+        onToggleMute={() => setIsGlobalMuted((prev) => !prev)}
         onOpenComments={handleOpenComments}
         onOpenReport={handleOpenReport}
         onHashtagClick={handleHashtagClick}
         onProfileClick={handleProfileClick}
-        currentUserId={currentUserId}
       />
 
-      {/* Comment Panel */}
       <CommentSection
         videoId={commentVideoId || ""}
         isOpen={!!commentVideoId}
         onClose={handleCloseComments}
       />
 
-      {/* Report Dialog */}
       <ReportDialog
         videoId={reportVideoId || ""}
         isOpen={!!reportVideoId}

@@ -21,6 +21,9 @@ interface VideoFeedDriverProps {
     };
     hashtags: string[];
   }[];
+  currentUserId?: string;
+  isGlobalMuted?: boolean;
+  onToggleMute?: () => void;
   onOpenComments?: (videoId: string) => void;
   onOpenReport?: (videoId: string) => void;
   onHashtagClick?: (hashtag: string) => void;
@@ -41,6 +44,12 @@ export class VideoFeedDriver extends BaseTestDriver<VideoFeedDriverProps> {
     ...this._given,
     initialVideos: (videos: VideoFeedDriverProps["initialVideos"]) => {
       this.props.initialVideos = videos;
+    },
+    isGlobalMuted: (value: boolean = true) => {
+      this.props.isGlobalMuted = value;
+    },
+    onToggleMuteSpy: () => {
+      this.props.onToggleMute = this.helper.given.spy("onToggleMute");
     },
     onOpenCommentsSpy: () => {
       this.props.onOpenComments = this.helper.given.spy("onOpenComments");
@@ -71,5 +80,6 @@ export class VideoFeedDriver extends BaseTestDriver<VideoFeedDriverProps> {
     onOpenReportSpy: () => this.helper.get.spy("onOpenReport"),
     onHashtagClickSpy: () => this.helper.get.spy("onHashtagClick"),
     onProfileClickSpy: () => this.helper.get.spy("onProfileClick"),
+    onToggleMuteSpy: () => this.helper.get.spy("onToggleMute"),
   };
 }

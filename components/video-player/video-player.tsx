@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface VideoPlayerProps {
   playbackUrl: string;
   isActive: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
   onPlay?: () => void;
   onPause?: () => void;
 }
@@ -13,13 +15,14 @@ interface VideoPlayerProps {
 export default function VideoPlayer({
   playbackUrl,
   isActive,
+  isMuted, // ← From parent (global state)
+  onToggleMute,
   onPlay,
   onPause,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   // Detect if this is a Google Drive URL
@@ -64,6 +67,13 @@ export default function VideoPlayer({
       video.currentTime = 0;
     }
   }, [isActive]);
+
+  // Sync mute state to video element when it changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = isMuted;
+  }, [isMuted]);
 
   // iOS PWA audio unlock
   const unlockAudio = useCallback(() => {
@@ -134,18 +144,15 @@ export default function VideoPlayer({
       if (!video) return;
 
       unlockAudio();
+      onToggleMute(); // ← Call parent instead of local state
 
-      const newMuted = !video.muted;
-      video.muted = newMuted;
-      setIsMuted(newMuted);
-
-      if (!newMuted && video.paused) {
+      // If unmuting, ensure the video is playing
+      if (isMuted && video.paused) {
         video.play().catch(() => {});
       }
     },
-    [unlockAudio]
+    [unlockAudio, onToggleMute, isMuted]
   );
-
   // Google Drive: Use iframe (can't use <video> element)
   if (isGoogleDrive) {
     return (

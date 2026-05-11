@@ -25,20 +25,24 @@ interface Video {
 
 interface VideoFeedProps {
   initialVideos: Video[];
+  currentUserId?: string;
+  isGlobalMuted: boolean;
+  onToggleMute: () => void;
   onOpenComments: (videoId: string) => void;
   onOpenReport: (videoId: string) => void;
   onHashtagClick: (hashtag: string) => void;
   onProfileClick: (userId: string) => void;
-  currentUserId: string;
 }
 
 export default function VideoFeed({
   initialVideos,
+  currentUserId,
+  isGlobalMuted,
+  onToggleMute,
   onOpenComments,
   onOpenReport,
   onHashtagClick,
   onProfileClick,
-  currentUserId,
 }: VideoFeedProps) {
   const [videos, setVideos] = useState<Video[]>(initialVideos);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -131,8 +135,7 @@ export default function VideoFeed({
     <div
       ref={containerRef}
       data-testid="video-feed"
-      className="h-full w-full overflow-y-scroll snap-y snap-mandatory
-                 scrollbar-hide"
+      className="h-full w-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
       style={{ scrollSnapType: "y mandatory" }}
     >
       {videos.map((video, index) => (
@@ -144,12 +147,14 @@ export default function VideoFeed({
           <VideoCard
             video={video}
             isActive={index === activeIndex}
+            currentUserId={currentUserId}
+            isGlobalMuted={isGlobalMuted}
+            onToggleMute={onToggleMute}
             onLike={handleLike}
             onComment={onOpenComments}
             onReport={onOpenReport}
             onHashtagClick={onHashtagClick}
             onProfileClick={onProfileClick}
-            currentUserId={currentUserId}
           />
         </div>
       ))}
