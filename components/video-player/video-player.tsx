@@ -62,30 +62,52 @@ export default function VideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
-    if (isActive) {
-      // Attempt to auto-play
-      const playPromise = video.play();
-
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            // Auto-play succeeded
-            setIsPlaying(true);
-          })
-          .catch(() => {
-            // Auto-play was blocked by iOS
-            // This is NORMAL — user needs to tap the play button
-            // Common causes:
-            // - Low Power Mode is ON
-            // - Weak internet connection
-            // - No prior user gesture in this session
-            setIsPlaying(false);
-          });
-      }
-    } else {
+    if (!isActive) {
       video.pause();
       video.currentTime = 0;
+      return;
     }
+
+    let cancelled = false;
+
+    const attemptPlay = () => {
+      if (cancelled) return;
+      // Mobile browsers only allow autoplay when muted. If the user
+      // unmuted on a previous video, fall back to muted so scrolling
+      // back still autoplays — they can unmute again with the button.
+      const playPromise = video.play();
+      if (playPromise === undefined) return;
+      playPromise.catch(() => {
+        if (cancelled) return;
+        if (!video.muted) {
+          video.muted = true;
+          video.play().catch(() => {
+            // Still blocked — show the tap-to-play overlay.
+          });
+        }
+      });
+    };
+
+    if (video.readyState >= 2) {
+      attemptPlay();
+    } else {
+      const onReady = () => attemptPlay();
+      video.addEventListener("canplay", onReady, { once: true });
+      // Nudge iOS to start loading the source if it was unloaded.
+      try {
+        video.load();
+      } catch {
+        // ignore
+      }
+      return () => {
+        cancelled = true;
+        video.removeEventListener("canplay", onReady);
+      };
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [isActive]);
 
   // Sync mute state to video element when it changes
