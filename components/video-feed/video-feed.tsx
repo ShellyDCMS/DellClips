@@ -68,7 +68,8 @@ export default function VideoFeed({
       },
       {
         root: container,
-        threshold: 0.6,
+        threshold: 0.5, // ← Changed from 0.6 to 0.5 (more reliable on iOS)
+        rootMargin: "0px", // ← Explicit root margin
       }
     );
 
@@ -135,8 +136,13 @@ export default function VideoFeed({
     <div
       ref={containerRef}
       data-testid="video-feed"
-      className="h-full w-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
-      style={{ scrollSnapType: "y mandatory" }}
+      className="h-full w-full overflow-y-scroll snap-y snap-mandatory
+               scrollbar-hide overscroll-none"
+      style={{
+        scrollSnapType: "y mandatory",
+        WebkitOverflowScrolling: "touch",
+        overscrollBehavior: "none",
+      }}
     >
       {videos.map((video, index) => (
         <div
@@ -158,6 +164,9 @@ export default function VideoFeed({
           />
         </div>
       ))}
+
+      {/* Spacer at the end to prevent iOS scroll snap lock */}
+      <div className="h-1 w-full snap-start" aria-hidden="true" />
 
       {isLoading && (
         <div className="h-20 flex items-center justify-center">

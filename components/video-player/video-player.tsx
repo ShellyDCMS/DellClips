@@ -55,16 +55,37 @@ export default function VideoPlayer({
     }
   }, [playbackUrl]);
 
-  // Effect 2: Auto-play/pause based on scroll
+  // ============================================
+  // EFFECT 2: Auto-play/pause based on scroll position
+  // ============================================
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     if (isActive) {
-      video.play().catch(() => {});
+      // Attempt to auto-play
+      const playPromise = video.play();
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            // Auto-play succeeded
+            setIsPlaying(true);
+          })
+          .catch(() => {
+            // Auto-play was blocked by iOS
+            // This is NORMAL — user needs to tap the play button
+            // Common causes:
+            // - Low Power Mode is ON
+            // - Weak internet connection
+            // - No prior user gesture in this session
+            setIsPlaying(false);
+          });
+      }
     } else {
       video.pause();
       video.currentTime = 0;
+      setIsPlaying(false);
     }
   }, [isActive]);
 
@@ -202,13 +223,20 @@ export default function VideoPlayer({
         onPause={() => setIsPlaying(false)}
       />
 
-      {/* Play/Pause overlay */}
+      {/* Play/Pause overlay — shown when auto-play is blocked or user paused */}
       {!isPlaying && isActive && (
         <div
           data-testid="play-overlay"
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex flex-col items-center justify-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            togglePlay();
+          }}
         >
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+          <div
+            className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center
+                    backdrop-blur-sm mb-3"
+          >
             <svg
               className="w-8 h-8 text-white ml-1"
               fill="currentColor"
@@ -217,6 +245,7 @@ export default function VideoPlayer({
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
+          <p className="text-white/60 text-xs">Tap to play</p>
         </div>
       )}
 

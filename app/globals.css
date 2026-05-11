@@ -47,3 +47,11 @@ body {
     height: 100dvh;
   }
 }
+
+/* Fix iOS scroll snap issues */
+@supports (-webkit-touch-callout: none) {
+  /* iOS-specific styles */
+  .snap-y {
+    -webkit-overflow-scrolling: touch;
+  }
+}
