@@ -9,6 +9,7 @@ interface SharedVideoPlayerProps {
   playbackUrl: string | null;
   isMuted: boolean;
   onToggleMute: () => void;
+  onMutedFallback?: () => void;
   children: ReactNode;
 }
 
@@ -16,11 +17,13 @@ export default function SharedVideoPlayer({
   playbackUrl,
   isMuted,
   onToggleMute,
+  onMutedFallback,
   children,
 }: SharedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const audioUnlockedRef = useRef(false);
+  const userWantsUnmutedRef = useRef(!isMuted);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const isGoogleDrive = !!playbackUrl?.includes("drive.google.com");
@@ -53,18 +56,30 @@ export default function SharedVideoPlayer({
     };
   }, [playbackUrl, isGoogleDrive]);
 
-  // Autoplay on source change
+  // Autoplay on source change — try unmuted, fall back to muted if blocked
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !playbackUrl || isGoogleDrive) return;
 
     let cancelled = false;
-    const attemptPlay = () => {
+    const attemptPlay = async () => {
       if (cancelled) return;
-      video.play().catch(() => {
-        // Autoplay was blocked. The tap-to-play overlay in the active
-        // card will let the user start it manually.
-      });
+      try {
+        await video.play();
+      } catch {
+        if (cancelled) return;
+        // Unmuted autoplay blocked — fall back to muted and retry so the
+        // video at least plays; user can tap unmute to enable audio.
+        if (!video.muted) {
+          video.muted = true;
+          onMutedFallback?.();
+          try {
+            await video.play();
+          } catch {
+            // Even muted autoplay blocked — overlay tap will start it.
+          }
+        }
+      }
     };
 
     if (video.readyState >= 2) {
@@ -72,6 +87,9 @@ export default function SharedVideoPlayer({
     } else {
       const onReady = () => attemptPlay();
       video.addEventListener("canplay", onReady, { once: true });
+      // Nudge the browser to actually fetch enough data to fire canplay
+      // (iOS often won't fire it with preload="metadata" alone).
+      video.load();
       return () => {
         cancelled = true;
         video.removeEventListener("canplay", onReady);
@@ -81,7 +99,13 @@ export default function SharedVideoPlayer({
     return () => {
       cancelled = true;
     };
-  }, [playbackUrl, isGoogleDrive]);
+  }, [playbackUrl, isGoogleDrive, onMutedFallback]);
+
+  // Track when the user explicitly wants audio so we can restore unmuted
+  // playback on the first interaction after a muted-fallback.
+  useEffect(() => {
+    if (!isMuted) userWantsUnmutedRef.current = true;
+  }, [isMuted]);
 
   // Sync mute prop to video element
   useEffect(() => {
@@ -156,7 +180,7 @@ export default function SharedVideoPlayer({
             webkit-playsinline=""
             muted={isMuted}
             loop
-            preload="metadata"
+            preload="auto"
             onPlay={() => {
               setIsPlaying(true);
               trackEvent("video_view");
