@@ -178,19 +178,19 @@ export const emailService = new ResendEmailService();
 
 ### 3. Technology Stack
 
-| Layer              | Technology              | Port Interface     | Free Tier?   | Purpose                                                 |
-| :----------------- | :---------------------- | :----------------- | :----------- | :------------------------------------------------------ |
-| **Framework**      | Next.js 15 (App Router) | —                  | ✅ OSS       | Full-stack React: UI + Server Actions + API Routes      |
-| **Language**       | TypeScript              | —                  | ✅ OSS       | Type safety across the entire codebase                  |
-| **Styling**        | Tailwind CSS            | —                  | ✅ OSS       | Utility-first CSS for rapid mobile-first UI development |
-| **PWA**            | Serwist                 | —                  | ✅ OSS       | Service worker, manifest, install prompts               |
-| **Authentication** | Auth.js + Resend        | `AuthPort`         | ✅ Free      | Magic Link login restricted to `@dell.com`              |
-| **Database**       | PostgreSQL on Neon      | `DatabasePort`     | ✅ Free      | All relational data (users, videos, likes, comments)    |
-| **ORM**            | Drizzle ORM             | (Part of DB layer) | ✅ OSS       | Type-safe queries and schema migrations                 |
-| **Video Platform** | Cloudflare Stream       | `VideoPort`        | ⚠️ ~$5-10/mo | Upload, transcode, HLS adaptive streaming, global CDN   |
-| **Video Player**   | hls.js (or Video.js)    | `PlayerPort`       | ✅ OSS       | Vendor-neutral HLS player; works with any HLS source    |
-| **Hosting**        | Vercel                  | —                  | ✅ Free      | Zero-config deployment, edge network, auto-scaling      |
-| **Email**          | Resend                  | `EmailPort`        | ✅ Free      | Transactional email for magic links (3,000/mo free)     |
+| Layer              | Technology                    | Port Interface     | Free Tier?    | Purpose                                                                                                            |
+| :----------------- | :---------------------------- | :----------------- | :------------ | :----------------------------------------------------------------------------------------------------------------- |
+| **Framework**      | Next.js 15 (App Router)       | —                  | ✅ OSS        | Full-stack React: UI + Server Actions + API Routes                                                                 |
+| **Language**       | TypeScript                    | —                  | ✅ OSS        | Type safety across the entire codebase                                                                             |
+| **Styling**        | Tailwind CSS                  | —                  | ✅ OSS        | Utility-first CSS for rapid mobile-first UI development                                                            |
+| **PWA**            | Serwist                       | —                  | ✅ OSS        | Service worker, manifest, install prompts                                                                          |
+| **Authentication** | Auth.js + Resend              | `AuthPort`         | ✅ Free       | Magic Link login restricted to `@dell.com`                                                                         |
+| **Database**       | PostgreSQL on Neon            | `DatabasePort`     | ✅ Free       | All relational data (users, videos, likes, comments)                                                               |
+| **ORM**            | Drizzle ORM                   | (Part of DB layer) | ✅ OSS        | Type-safe queries and schema migrations                                                                            |
+| **Video Platform** | Cloudflare Stream             | `VideoPort`        | ⚠️ ~$5-10/mo  | Upload, transcode, HLS adaptive streaming, global CDN                                                              |
+| **Video Player**   | hls.js (or Video.js)          | `PlayerPort`       | ✅ OSS        | Vendor-neutral HLS player; works with any HLS source                                                               |
+| **Hosting**        | Vercel                        | —                  | ✅ Free       | Zero-config deployment, edge network, auto-scaling                                                                 |
+| **Email**          | Resend                        | `EmailPort`        | ✅ Free       | Transactional email for magic links (3,000/mo free)                                                                |
 | **Push**           | Web Push (`web-push` + VAPID) | `NotificationPort` | ✅ OSS / Free | Like, comment, and follow notifications delivered via service worker; subscriptions stored in `push_subscriptions` |
 
 ---

@@ -17,7 +17,7 @@ const {
   mockSelectFrom: vi.fn(),
   mockWhere: vi.fn(),
   mockDeleteWhere: vi.fn(),
-  subscriptionsByQuery: { all: [] as any[], forUser: [] as any[] },
+  subscriptionsByQuery: { all: [] as unknown[], forUser: [] as unknown[] },
 }));
 
 vi.mock("web-push", () => ({
@@ -37,7 +37,7 @@ vi.mock("@/lib/db", () => ({
             mockWhere(...args);
             return Promise.resolve(subscriptionsByQuery.forUser);
           },
-          then: (resolve: (rows: any[]) => any) =>
+          then: (resolve: (rows: unknown[]) => unknown) =>
             resolve(subscriptionsByQuery.all),
         };
       },
@@ -64,7 +64,8 @@ vi.mock("drizzle-orm", () => ({
 
 import { WebPushNotificationService } from "@/lib/adapters/web-push-notification-service";
 
-const aSub = (overrides: Partial<any> = {}) => ({
+type Sub = { id: string; endpoint: string; p256dh: string; auth: string };
+const aSub = (overrides: Partial<Sub> = {}): Sub => ({
   id: `sub-${Math.random().toString(36).slice(2, 8)}`,
   endpoint: `https://push.example.com/${Math.random().toString(36).slice(2)}`,
   p256dh: "p256dh-key",
@@ -86,8 +87,15 @@ describe("WebPushNotificationService", () => {
   });
 
   describe("given VAPID configuration", () => {
-    it("then it should configure web-push on import", () => {
-      expect(mockSetVapidDetails).toHaveBeenCalled();
+    it("then it should configure web-push on first send with the env values", async () => {
+      mockSendNotification.mockResolvedValue(undefined);
+      subscriptionsByQuery.forUser = [];
+      await service.sendToUser("user", { title: "T", body: "B" });
+      expect(mockSetVapidDetails).toHaveBeenCalledWith(
+        "mailto:test@dell.com",
+        "test-public-key",
+        "test-private-key"
+      );
     });
   });
 

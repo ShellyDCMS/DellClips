@@ -7,14 +7,26 @@ import type {
 import { eq } from "drizzle-orm";
 import webPush from "web-push";
 
-webPush.setVapidDetails(
-  process.env.VAPID_EMAIL || "mailto:noreply@dellclips.app",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+let vapidConfigured = false;
+function ensureVapidConfigured(): boolean {
+  if (vapidConfigured) return true;
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!publicKey || !privateKey) {
+    return false;
+  }
+  webPush.setVapidDetails(
+    process.env.VAPID_EMAIL || "mailto:noreply@dellclips.app",
+    publicKey,
+    privateKey
+  );
+  vapidConfigured = true;
+  return true;
+}
 
 export class WebPushNotificationService implements NotificationService {
   async sendToUser(userId: string, payload: NotificationPayload): Promise<void> {
+    if (!ensureVapidConfigured()) return;
     const subscriptions = await db
       .select()
       .from(pushSubscriptions)
@@ -39,8 +51,9 @@ export class WebPushNotificationService implements NotificationService {
             },
             notification
           );
-        } catch (error: any) {
-          if (error.statusCode === 410 || error.statusCode === 404) {
+        } catch (error: unknown) {
+          const statusCode = (error as { statusCode?: number })?.statusCode;
+          if (statusCode === 410 || statusCode === 404) {
             // Subscription expired — remove it
             await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
             console.log(`[push] Removed expired subscription ${sub.id}`);
@@ -53,6 +66,7 @@ export class WebPushNotificationService implements NotificationService {
   }
 
   async sendToAll(payload: NotificationPayload): Promise<void> {
+    if (!ensureVapidConfigured()) return;
     const subscriptions = await db.select().from(pushSubscriptions);
 
     const notification = JSON.stringify({
@@ -74,8 +88,9 @@ export class WebPushNotificationService implements NotificationService {
             },
             notification
           );
-        } catch (error: any) {
-          if (error.statusCode === 410 || error.statusCode === 404) {
+        } catch (error: unknown) {
+          const statusCode = (error as { statusCode?: number })?.statusCode;
+          if (statusCode === 410 || statusCode === 404) {
             await db.delete(pushSubscriptions).where(eq(pushSubscriptions.id, sub.id));
           }
         }

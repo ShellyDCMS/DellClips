@@ -7,31 +7,30 @@ export default function PushNotificationPrompt() {
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
+    const checkSubscription = async () => {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
+      const dismissed = localStorage.getItem("push-prompt-dismissed");
+      if (dismissed) {
+        const daysSince =
+          (Date.now() - new Date(dismissed).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSince < 30) return;
+      }
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          setIsSubscribed(true);
+        } else {
+          setTimeout(() => setShowPrompt(true), 5000);
+        }
+      } catch {
+        // Push not supported
+      }
+    };
     checkSubscription();
   }, []);
-
-  const checkSubscription = async () => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-    const dismissed = localStorage.getItem("push-prompt-dismissed");
-    if (dismissed) {
-      const daysSince =
-        (Date.now() - new Date(dismissed).getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSince < 30) return;
-    }
-
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) {
-        setIsSubscribed(true);
-      } else {
-        setTimeout(() => setShowPrompt(true), 5000);
-      }
-    } catch {
-      // Push not supported
-    }
-  };
 
   const handleSubscribe = async () => {
     try {

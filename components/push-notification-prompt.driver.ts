@@ -26,11 +26,10 @@ export class PushNotificationPromptDriver extends BaseTestDriver<PushNotificatio
       this.helper.when.clock();
     },
     pushSupported: () => {
-      const driver = this;
       const registration = {
         pushManager: {
-          getSubscription: () => Promise.resolve(driver.existingSubscription),
-          subscribe: () => Promise.resolve(driver.subscribeResult),
+          getSubscription: () => Promise.resolve(this.existingSubscription),
+          subscribe: () => Promise.resolve(this.subscribeResult),
         },
       };
       Object.defineProperty(window.navigator, "serviceWorker", {
