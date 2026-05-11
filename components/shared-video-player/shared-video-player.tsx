@@ -9,7 +9,6 @@ interface SharedVideoPlayerProps {
   playbackUrl: string | null;
   isMuted: boolean;
   onToggleMute: () => void;
-  onMutedFallback?: () => void;
   children: ReactNode;
 }
 
@@ -17,18 +16,19 @@ export default function SharedVideoPlayer({
   playbackUrl,
   isMuted,
   onToggleMute,
-  onMutedFallback,
   children,
 }: SharedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const audioUnlockedRef = useRef(false);
-  const userWantsUnmutedRef = useRef(!isMuted);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const isGoogleDrive = !!playbackUrl?.includes("drive.google.com");
 
-  // Source initialization — runs whenever playbackUrl changes
+  // Swap source + autoplay whenever playbackUrl changes. We always call
+  // play() with whatever .muted state the element currently has. iOS keeps
+  // the unmuted-playback credential on a persistent <video> element after
+  // the user has unmuted it via a gesture, so subsequent src swaps continue
+  // to autoplay with audio without needing a new gesture per video.
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !playbackUrl || isGoogleDrive) return;
@@ -48,6 +48,12 @@ export default function SharedVideoPlayer({
       video.src = playbackUrl;
     }
 
+    video.play().catch(() => {
+      // Autoplay blocked — only realistic when the user hasn't yet tapped
+      // unmute and the element somehow lost its muted credential. Overlay
+      // tap will start it.
+    });
+
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -56,62 +62,10 @@ export default function SharedVideoPlayer({
     };
   }, [playbackUrl, isGoogleDrive]);
 
-  // Autoplay on source change. iOS Safari only allows inline autoplay when
-  // the element is muted at play-time, so we always start muted, then try to
-  // unmute right after if the user wants audio. If the unmute attempt is
-  // rejected (no user gesture yet), we stay muted and surface that to the
-  // parent so the mute icon reflects reality.
+  // Sync mute prop to the element. Toggling .muted = false here only
+  // succeeds (i.e. iOS permits subsequent audio playback) because the
+  // caller invokes this via a user tap on the mute button.
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !playbackUrl || isGoogleDrive) return;
-
-    let cancelled = false;
-
-    const tryUnmute = async () => {
-      if (cancelled || !userWantsUnmutedRef.current) return;
-      video.muted = false;
-      try {
-        await video.play();
-      } catch {
-        if (cancelled) return;
-        video.muted = true;
-        onMutedFallback?.();
-        video.play().catch(() => {});
-      }
-    };
-
-    const attemptPlay = async () => {
-      if (cancelled) return;
-      video.muted = true;
-      try {
-        await video.play();
-        await tryUnmute();
-      } catch {
-        // Even muted autoplay blocked — overlay tap will start it.
-      }
-    };
-
-    if (video.readyState >= 2) {
-      attemptPlay();
-    } else {
-      const onReady = () => attemptPlay();
-      video.addEventListener("canplay", onReady, { once: true });
-      video.load();
-      return () => {
-        cancelled = true;
-        video.removeEventListener("canplay", onReady);
-      };
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [playbackUrl, isGoogleDrive, onMutedFallback]);
-
-  // Sync mute prop to video element and remember user intent so the next
-  // source change can try unmuted again.
-  useEffect(() => {
-    userWantsUnmutedRef.current = !isMuted;
     const video = videoRef.current;
     if (!video) return;
     video.muted = isMuted;
@@ -120,46 +74,19 @@ export default function SharedVideoPlayer({
     }
   }, [isMuted]);
 
-  // iOS PWA audio unlock — primes AudioContext so first user gesture
-  // can flip muted → unmuted without further restrictions.
-  const unlockAudio = useCallback(() => {
-    if (audioUnlockedRef.current) return;
-    audioUnlockedRef.current = true;
-
-    try {
-      const AC =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext?: typeof window.AudioContext })
-          .webkitAudioContext;
-      if (AC) {
-        const ctx = new AC();
-        const buffer = ctx.createBuffer(1, 1, 22050);
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(ctx.destination);
-        source.start(0);
-        if (ctx.state === "suspended") ctx.resume();
-      }
-    } catch {
-      // AudioContext not available
-    }
-  }, []);
-
   const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
-    unlockAudio();
     if (video.paused) {
       video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [unlockAudio]);
+  }, []);
 
   const toggleMute = useCallback(() => {
-    unlockAudio();
     onToggleMute();
-  }, [unlockAudio, onToggleMute]);
+  }, [onToggleMute]);
 
   const contextValue = useMemo<SharedVideoState>(
     () => ({ isPlaying, isMuted, togglePlay, toggleMute }),
@@ -185,7 +112,6 @@ export default function SharedVideoPlayer({
             playsInline
             webkit-playsinline=""
             muted
-            autoPlay
             loop
             preload="auto"
             onPlay={() => {

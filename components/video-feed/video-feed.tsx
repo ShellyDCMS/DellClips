@@ -29,7 +29,6 @@ interface VideoFeedProps {
   currentUserId?: string;
   isGlobalMuted: boolean;
   onToggleMute: () => void;
-  onMutedFallback?: () => void;
   onOpenComments: (videoId: string) => void;
   onOpenReport: (videoId: string) => void;
   onHashtagClick: (hashtag: string) => void;
@@ -41,7 +40,6 @@ export default function VideoFeed({
   currentUserId,
   isGlobalMuted,
   onToggleMute,
-  onMutedFallback,
   onOpenComments,
   onOpenReport,
   onHashtagClick,
@@ -143,7 +141,6 @@ export default function VideoFeed({
         playbackUrl={activeVideo?.playbackUrl ?? null}
         isMuted={isGlobalMuted}
         onToggleMute={onToggleMute}
-        onMutedFallback={onMutedFallback}
       >
         <div
           ref={containerRef}
