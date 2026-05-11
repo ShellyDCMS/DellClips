@@ -56,29 +56,38 @@ export default function SharedVideoPlayer({
     };
   }, [playbackUrl, isGoogleDrive]);
 
-  // Autoplay on source change — try unmuted, fall back to muted if blocked
+  // Autoplay on source change. iOS Safari only allows inline autoplay when
+  // the element is muted at play-time, so we always start muted, then try to
+  // unmute right after if the user wants audio. If the unmute attempt is
+  // rejected (no user gesture yet), we stay muted and surface that to the
+  // parent so the mute icon reflects reality.
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !playbackUrl || isGoogleDrive) return;
 
     let cancelled = false;
-    const attemptPlay = async () => {
-      if (cancelled) return;
+
+    const tryUnmute = async () => {
+      if (cancelled || !userWantsUnmutedRef.current) return;
+      video.muted = false;
       try {
         await video.play();
       } catch {
         if (cancelled) return;
-        // Unmuted autoplay blocked — fall back to muted and retry so the
-        // video at least plays; user can tap unmute to enable audio.
-        if (!video.muted) {
-          video.muted = true;
-          onMutedFallback?.();
-          try {
-            await video.play();
-          } catch {
-            // Even muted autoplay blocked — overlay tap will start it.
-          }
-        }
+        video.muted = true;
+        onMutedFallback?.();
+        video.play().catch(() => {});
+      }
+    };
+
+    const attemptPlay = async () => {
+      if (cancelled) return;
+      video.muted = true;
+      try {
+        await video.play();
+        await tryUnmute();
+      } catch {
+        // Even muted autoplay blocked — overlay tap will start it.
       }
     };
 
@@ -87,8 +96,6 @@ export default function SharedVideoPlayer({
     } else {
       const onReady = () => attemptPlay();
       video.addEventListener("canplay", onReady, { once: true });
-      // Nudge the browser to actually fetch enough data to fire canplay
-      // (iOS often won't fire it with preload="metadata" alone).
       video.load();
       return () => {
         cancelled = true;
@@ -101,17 +108,16 @@ export default function SharedVideoPlayer({
     };
   }, [playbackUrl, isGoogleDrive, onMutedFallback]);
 
-  // Track when the user explicitly wants audio so we can restore unmuted
-  // playback on the first interaction after a muted-fallback.
+  // Sync mute prop to video element and remember user intent so the next
+  // source change can try unmuted again.
   useEffect(() => {
-    if (!isMuted) userWantsUnmutedRef.current = true;
-  }, [isMuted]);
-
-  // Sync mute prop to video element
-  useEffect(() => {
+    userWantsUnmutedRef.current = !isMuted;
     const video = videoRef.current;
     if (!video) return;
     video.muted = isMuted;
+    if (!isMuted && video.paused) {
+      video.play().catch(() => {});
+    }
   }, [isMuted]);
 
   // iOS PWA audio unlock — primes AudioContext so first user gesture
@@ -178,7 +184,8 @@ export default function SharedVideoPlayer({
             className="w-full h-full object-cover"
             playsInline
             webkit-playsinline=""
-            muted={isMuted}
+            muted
+            autoPlay
             loop
             preload="auto"
             onPlay={() => {
