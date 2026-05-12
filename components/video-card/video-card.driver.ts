@@ -111,10 +111,8 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     moreMenu: () => this.helper.get.elementByTestId("more-menu"),
     reportMenuItem: () => this.helper.get.elementByTestId("report-menu-item"),
     deleteMenuItem: () => this.helper.get.elementByTestId("delete-menu-item"),
-    deleteConfirmDialog: () =>
-      this.helper.get.elementByTestId("delete-confirm-dialog"),
-    deleteConfirmButton: () =>
-      this.helper.get.elementByTestId("delete-confirm-button"),
+    deleteConfirmDialog: () => this.helper.get.elementByTestId("delete-confirm-dialog"),
+    deleteConfirmButton: () => this.helper.get.elementByTestId("delete-confirm-button"),
     deleteCancelButton: () => this.helper.get.elementByTestId("delete-cancel-button"),
     authorName: () => this.helper.get.elementByTestId("author-name"),
     authorNameText: () => this.helper.get.elementsText("author-name"),
