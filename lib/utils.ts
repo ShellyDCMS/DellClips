@@ -37,7 +37,25 @@ export function timeAgo(date: Date): string {
 
 // Email validation
 export function isDellEmail(email: string): boolean {
-  return email.toLowerCase().endsWith("@dell.com");
+  if (!email || typeof email !== "string") return false;
+
+  const normalized = email.toLowerCase().trim();
+
+  // Must be a valid email format
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(normalized)) return false;
+
+  // Must end with exactly @dell.com
+  // This prevents @subdomain.dell.com, @dell.com.evil.com, etc.
+  const domain = normalized.split("@")[1];
+  if (domain !== "dell.com") return false;
+
+  // Block obviously fake local parts
+  const localPart = normalized.split("@")[0];
+  if (localPart.length < 2) return false;
+  if (localPart.length > 64) return false;
+
+  return true;
 }
 
 // Display name from email (e.g. "shelly.goldblit@dell.com" → "Shelly Goldblit")
