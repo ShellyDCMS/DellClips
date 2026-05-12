@@ -57,37 +57,40 @@ export async function DELETE(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Only the video owner or an admin can delete
     const currentUser = await databaseService.getUserById(session.user.id);
     if (video.author.id !== session.user.id && currentUser?.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Step 1: Delete from Cloudflare Stream
+    // Use videoAssetId — this is the Cloudflare Stream UID
+    const assetId = video.videoPlaybackId;
+    console.log(
+      `[delete] Attempting to delete video from provider. Asset ID: ${assetId}`
+    );
+
+    let providerDeleteSuccess = false;
     try {
-      // Use the asset ID (Cloudflare Stream UID) for deletion
-      await videoService.deleteVideo(video.videoPlaybackId);
-      console.log(
-        `[delete] Video ${video.videoPlaybackId} deleted from Cloudflare Stream`
-      );
+      await videoService.deleteVideo(assetId);
+      providerDeleteSuccess = true;
+      console.log(`[delete] Successfully deleted ${assetId} from video provider`);
     } catch (err) {
-      // Log but don't fail — we still want to remove from our database
-      // The video might have already been deleted from Cloudflare,
-      // or it might be a demo/gdrive video that doesn't exist there
-      console.error(
-        "[delete] Failed to delete from video provider (continuing with DB deletion):",
-        err
-      );
+      console.error(`[delete] FAILED to delete ${assetId} from video provider:`, err);
+      // Don't return error — still delete from DB
+      // But log it clearly so we can investigate
     }
 
-    // Step 2: Delete from database (cascades to likes, comments, reports)
+    // Step 2: Delete from database
     await databaseService.deleteVideo(id);
-    console.log(`[delete] Video ${id} deleted from database`);
+    console.log(`[delete] Deleted video ${id} from database`);
 
     revalidatePath("/feed");
     revalidatePath(`/profile/${session.user.id}`);
 
-    return NextResponse.json({ deleted: true });
+    return NextResponse.json({
+      deleted: true,
+      providerDeleted: providerDeleteSuccess,
+    });
   } catch (error) {
     console.error("[api/videos/[id]] DELETE error:", error);
     return NextResponse.json({ error: "Failed to delete video" }, { status: 500 });
