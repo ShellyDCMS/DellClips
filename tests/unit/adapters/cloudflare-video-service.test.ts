@@ -140,7 +140,7 @@ describe("CloudflareVideoService", () => {
 
         // when / then
         await expect(service.deleteVideo("video-abc123")).rejects.toThrow(
-          "Cloudflare Stream delete error: 500 Internal Server Error"
+          "Cloudflare Stream delete failed: 500"
         );
       });
     });

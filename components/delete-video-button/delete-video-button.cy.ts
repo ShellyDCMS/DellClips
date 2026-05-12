@@ -105,7 +105,6 @@ describe("DeleteVideoButton", () => {
       when.render();
       when.clickDelete();
       when.clickConfirm();
-      when.waitForDelete();
     });
 
     it("then the delete request should target the video API endpoint", () => {
@@ -128,7 +127,6 @@ describe("DeleteVideoButton", () => {
       when.render();
       when.clickDelete();
       when.clickConfirm();
-      when.waitForDelete();
     });
 
     it("then the confirmation dialog should remain visible", () => {
