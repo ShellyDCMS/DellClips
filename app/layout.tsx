@@ -1,3 +1,4 @@
+import PushNotificationPrompt from "@/components/push-notification-prompt";
 import PWAInstallPrompt from "@/components/pwa-install-prompt";
 import PWAiOSPrompt from "@/components/pwa-ios-prompt";
 import PWARegister from "@/components/pwa-register";
@@ -47,6 +48,7 @@ export default function RootLayout({
           <PWARegister />
           <PWAInstallPrompt />
           <PWAiOSPrompt />
+          <PushNotificationPrompt />
           {children}
         </AuthSessionProvider>
       </body>

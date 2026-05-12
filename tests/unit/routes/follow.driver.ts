@@ -15,12 +15,16 @@ vi.mock("@/lib/auth", () => ({
 const mockGetUserById = vi.fn();
 const mockFollowUser = vi.fn();
 const mockUnfollowUser = vi.fn();
+const mockSendToUser = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
     getUserById: (...args: unknown[]) => mockGetUserById(...args),
     followUser: (...args: unknown[]) => mockFollowUser(...args),
     unfollowUser: (...args: unknown[]) => mockUnfollowUser(...args),
+  },
+  notificationService: {
+    sendToUser: (...args: unknown[]) => mockSendToUser(...args),
   },
 }));
 
@@ -48,6 +52,12 @@ export class FollowDriver {
     },
     targetUserNotFound: () => {
       mockGetUserById.mockResolvedValue(null);
+    },
+    usersById: (lookup: Record<string, any>) => {
+      mockGetUserById.mockImplementation(async (id: string) => lookup[id] ?? null);
+    },
+    notificationSendSucceeds: () => {
+      mockSendToUser.mockResolvedValue(undefined);
     },
     followSucceeds: () => {
       mockFollowUser.mockResolvedValue(undefined);
@@ -91,5 +101,6 @@ export class FollowDriver {
     body: () => this.lastBody,
     followUserMock: () => mockFollowUser,
     unfollowUserMock: () => mockUnfollowUser,
+    sendToUserMock: () => mockSendToUser,
   };
 }

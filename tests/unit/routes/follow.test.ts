@@ -58,10 +58,15 @@ describe("POST /api/users/[id]/follow", () => {
 
     describe("when the target user exists", () => {
       const targetId = chance.guid();
+      const followerName = chance.name();
 
       beforeEach(async () => {
-        given.targetUser({ id: targetId, name: chance.name() });
+        given.usersById({
+          [targetId]: { id: targetId, name: chance.name() },
+          [userId]: { id: userId, name: followerName },
+        });
         given.followSucceeds();
+        given.notificationSendSucceeds();
         await when.follow(targetId);
       });
 
@@ -74,6 +79,18 @@ describe("POST /api/users/[id]/follow", () => {
           followerId: userId,
           followingId: targetId,
         });
+      });
+
+      it("then it should notify the target user", () => {
+        expect(get.sendToUserMock()).toHaveBeenCalledWith(
+          targetId,
+          expect.objectContaining({
+            title: expect.stringContaining("Follower"),
+            body: expect.stringContaining(followerName),
+            url: `/profile/${userId}`,
+            tag: `follow-${userId}`,
+          })
+        );
       });
     });
 

@@ -27,8 +27,6 @@ export default async function VerifyPage({
           <p className="text-gray-500 text-sm">
             💡 The code expires in <strong className="text-gray-300">10 minutes</strong>.
             It may take <strong className="text-gray-300">1-3 minutes</strong> to arrive.
-            Add <strong className="text-gray-300">dell.clips@dell.com</strong> to your
-            contacts for faster delivery.
           </p>
         </div>
 

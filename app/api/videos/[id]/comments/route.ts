@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { databaseService } from "@/lib/services";
+import { databaseService, notificationService } from "@/lib/services";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -66,6 +66,16 @@ export async function POST(
       id,
       parsed.data.text
     );
+
+    if (video && video.author.id !== session.user.id) {
+      const commenter = await databaseService.getUserById(session.user.id);
+      await notificationService.sendToUser(video.author.id, {
+        title: "New Comment 💬",
+        body: `${commenter?.name || "Someone"} commented on your video`,
+        url: `/feed?video=${id}`,
+        tag: `comment-${id}`,
+      });
+    }
     revalidatePath("/feed");
 
     return NextResponse.json({ comment }, { status: 201 });

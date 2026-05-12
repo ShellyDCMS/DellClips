@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { databaseService } from "@/lib/services";
+import { databaseService, notificationService } from "@/lib/services";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,13 +18,18 @@ export async function POST(
 
     const { id } = await params;
 
-    // Verify video exists
-    const video = await databaseService.getVideoById(id);
-    if (!video) {
-      return NextResponse.json({ error: "Video not found" }, { status: 404 });
-    }
-
+    // After the like is saved, notify the video owner:
     await databaseService.likeVideo(session.user.id, id);
+    const video = await databaseService.getVideoById(id);
+    if (video && video.author.id !== session.user.id) {
+      const liker = await databaseService.getUserById(session.user.id);
+      await notificationService.sendToUser(video.author.id, {
+        title: "New Like ❤️",
+        body: `${liker?.name || "Someone"} liked your video "${video.title || "Untitled"}"`,
+        url: `/feed?video=${id}`,
+        tag: `like-${id}`,
+      });
+    }
     revalidatePath("/feed");
 
     return NextResponse.json({ liked: true });

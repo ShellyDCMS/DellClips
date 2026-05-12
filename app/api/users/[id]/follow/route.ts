@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { databaseService } from "@/lib/services";
+import { databaseService, notificationService } from "@/lib/services";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -32,6 +32,14 @@ export async function POST(
     await databaseService.followUser({
       followerId: session.user.id,
       followingId: id,
+    });
+
+    const follower = await databaseService.getUserById(session.user.id);
+    await notificationService.sendToUser(id, {
+      title: "New Follower 👤",
+      body: `${follower?.name || "Someone"} started following you`,
+      url: `/profile/${session.user.id}`,
+      tag: `follow-${session.user.id}`,
     });
     revalidatePath("/feed");
     revalidatePath(`/profile/${id}`);

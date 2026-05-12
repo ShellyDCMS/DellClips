@@ -72,3 +72,59 @@ self.addEventListener("fetch", (event) => {
       })
   );
 });
+
+// ============================================
+// PUSH NOTIFICATIONS
+// ============================================
+
+// Handle incoming push messages
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+
+    const options = {
+      body: data.body || "",
+      icon: data.icon || "/icons/icon-192.png",
+      badge: data.badge || "/icons/icon-96.png",
+      tag: data.tag || "dellclips-notification",
+      renotify: true,
+      data: data.data || { url: "/feed" },
+      actions: [
+        { action: "open", title: "Open" },
+        { action: "dismiss", title: "Dismiss" },
+      ],
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || "DellClips", options)
+    );
+  } catch (err) {
+    console.error("[SW] Failed to show notification:", err);
+  }
+});
+
+// Handle notification click
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  if (event.action === "dismiss") return;
+
+  const url = event.notification.data?.url || "/feed";
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // If app is already open, focus it and navigate
+      for (const client of clientList) {
+        if (client.url.includes("dellclips") && "focus" in client) {
+          client.focus();
+          client.navigate(url);
+          return;
+        }
+      }
+      // Otherwise open a new window
+      return clients.openWindow(url);
+    })
+  );
+});

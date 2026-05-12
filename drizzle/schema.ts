@@ -279,3 +279,24 @@ export const analyticsEvents = pgTable(
     createdAtIdx: index("idx_analytics_created_at").on(table.createdAt),
   })
 );
+
+// ============================================
+// PUSH SUBSCRIPTIONS
+// ============================================
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("idx_push_subs_user").on(table.userId),
+    endpointIdx: unique().on(table.endpoint),
+  })
+);

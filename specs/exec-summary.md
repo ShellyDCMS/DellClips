@@ -92,14 +92,14 @@ following departments:
 
 #### 3.2 Nice-to-Have Features (Phase 2 — V2)
 
-| #   | Feature                          | Description                                                                                          |
-| :-- | :------------------------------- | :--------------------------------------------------------------------------------------------------- |
-| F12 | **Enterprise SSO (Okta/Entra)**  | Replace Magic Links with Dell's official SSO provider for tighter IT compliance.                     |
-| F13 | **Push Notifications**           | Web Push API notifications for replies, likes, or company-wide featured videos.                      |
-| F14 | **Content Moderation Dashboard** | Admin panel for HR/IT to review reported videos, take action (remove/warn), and manage report queue. |
-| F15 | **In-App Video Editing**         | Basic trim, crop, and text-overlay tools before publishing.                                          |
-| F16 | **Analytics Dashboard**          | View counts, engagement rates, and trending content metrics for leadership.                          |
-| F17 | **Video Captions (AI)**          | Auto-generated captions/subtitles for accessibility compliance.                                      |
+| #   | Feature                          | Description                                                                                                                                                                                               |
+| :-- | :------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F12 | **Enterprise SSO (Okta/Entra)**  | Replace Magic Links with Dell's official SSO provider for tighter IT compliance.                                                                                                                          |
+| F13 | **Push Notifications**           | Web Push (VAPID) notifications for likes, comments, and new followers via a `NotificationPort` adapter; opt-in prompt + service worker installed. Broadcast / featured-video pushes still on the roadmap. |
+| F14 | **Content Moderation Dashboard** | Admin panel for HR/IT to review reported videos, take action (remove/warn), and manage report queue.                                                                                                      |
+| F15 | **In-App Video Editing**         | Basic trim, crop, and text-overlay tools before publishing.                                                                                                                                               |
+| F16 | **Analytics Dashboard**          | View counts, engagement rates, and trending content metrics for leadership.                                                                                                                               |
+| F17 | **Video Captions (AI)**          | Auto-generated captions/subtitles for accessibility compliance.                                                                                                                                           |
 
 ---
 

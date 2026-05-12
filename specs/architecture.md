@@ -178,19 +178,20 @@ export const emailService = new ResendEmailService();
 
 ### 3. Technology Stack
 
-| Layer              | Technology              | Port Interface     | Free Tier?   | Purpose                                                 |
-| :----------------- | :---------------------- | :----------------- | :----------- | :------------------------------------------------------ |
-| **Framework**      | Next.js 15 (App Router) | —                  | ✅ OSS       | Full-stack React: UI + Server Actions + API Routes      |
-| **Language**       | TypeScript              | —                  | ✅ OSS       | Type safety across the entire codebase                  |
-| **Styling**        | Tailwind CSS            | —                  | ✅ OSS       | Utility-first CSS for rapid mobile-first UI development |
-| **PWA**            | Serwist                 | —                  | ✅ OSS       | Service worker, manifest, install prompts               |
-| **Authentication** | Auth.js + Resend        | `AuthPort`         | ✅ Free      | Magic Link login restricted to `@dell.com`              |
-| **Database**       | PostgreSQL on Neon      | `DatabasePort`     | ✅ Free      | All relational data (users, videos, likes, comments)    |
-| **ORM**            | Drizzle ORM             | (Part of DB layer) | ✅ OSS       | Type-safe queries and schema migrations                 |
-| **Video Platform** | Cloudflare Stream       | `VideoPort`        | ⚠️ ~$5-10/mo | Upload, transcode, HLS adaptive streaming, global CDN   |
-| **Video Player**   | hls.js (or Video.js)    | `PlayerPort`       | ✅ OSS       | Vendor-neutral HLS player; works with any HLS source    |
-| **Hosting**        | Vercel                  | —                  | ✅ Free      | Zero-config deployment, edge network, auto-scaling      |
-| **Email**          | Resend                  | `EmailPort`        | ✅ Free      | Transactional email for magic links (3,000/mo free)     |
+| Layer              | Technology                    | Port Interface     | Free Tier?    | Purpose                                                                                                            |
+| :----------------- | :---------------------------- | :----------------- | :------------ | :----------------------------------------------------------------------------------------------------------------- |
+| **Framework**      | Next.js 15 (App Router)       | —                  | ✅ OSS        | Full-stack React: UI + Server Actions + API Routes                                                                 |
+| **Language**       | TypeScript                    | —                  | ✅ OSS        | Type safety across the entire codebase                                                                             |
+| **Styling**        | Tailwind CSS                  | —                  | ✅ OSS        | Utility-first CSS for rapid mobile-first UI development                                                            |
+| **PWA**            | Serwist                       | —                  | ✅ OSS        | Service worker, manifest, install prompts                                                                          |
+| **Authentication** | Auth.js + Resend              | `AuthPort`         | ✅ Free       | Magic Link login restricted to `@dell.com`                                                                         |
+| **Database**       | PostgreSQL on Neon            | `DatabasePort`     | ✅ Free       | All relational data (users, videos, likes, comments)                                                               |
+| **ORM**            | Drizzle ORM                   | (Part of DB layer) | ✅ OSS        | Type-safe queries and schema migrations                                                                            |
+| **Video Platform** | Cloudflare Stream             | `VideoPort`        | ⚠️ ~$5-10/mo  | Upload, transcode, HLS adaptive streaming, global CDN                                                              |
+| **Video Player**   | hls.js (or Video.js)          | `PlayerPort`       | ✅ OSS        | Vendor-neutral HLS player; works with any HLS source                                                               |
+| **Hosting**        | Vercel                        | —                  | ✅ Free       | Zero-config deployment, edge network, auto-scaling                                                                 |
+| **Email**          | Resend                        | `EmailPort`        | ✅ Free       | Transactional email for magic links (3,000/mo free)                                                                |
+| **Push**           | Web Push (`web-push` + VAPID) | `NotificationPort` | ✅ OSS / Free | Like, comment, and follow notifications delivered via service worker; subscriptions stored in `push_subscriptions` |
 
 ---
 
@@ -681,6 +682,8 @@ dellclips/
 │       ├── users/
 │       │   └── [id]/
 │       │       └── follow/route.ts     # POST/DELETE follow a user
+│       ├── push/
+│       │   └── subscribe/route.ts      # POST/DELETE Web Push subscription
 │       └── hashtags/
 │           └── route.ts                # GET trending hashtags
 │
@@ -690,13 +693,15 @@ dellclips/
 │   │   ├── database-service.ts             #   DatabasePort interface
 │   │   ├── video-service.ts                #   VideoPort interface
 │   │   ├── email-service.ts                #   EmailPort interface
+│   │   ├── notification-service.ts         #   NotificationPort interface
 │   │   └── player-config.ts                #   PlayerPort interface
 │   │
 │   ├── adapters/                           # Vendor Implementations (swappable)
 │   │   ├── authjs-auth-service.ts          #   Auth.js Magic Link adapter
 │   │   ├── neon-database-service.ts        #   Neon + Drizzle adapter
 │   │   ├── cloudflare-video-service.ts     #   Cloudflare Stream adapter
-│   │   └── resend-email-service.ts         #   Resend adapter
+│   │   ├── resend-email-service.ts         #   Resend adapter
+│   │   └── web-push-notification-service.ts #  Web Push (VAPID) adapter
 │   │
 │   ├── services.ts                         # Composition Root (swap vendors here)
 │   └── utils.ts
@@ -711,6 +716,7 @@ dellclips/
 │   ├── follow-button.tsx              # Follow/unfollow toggle
 │   ├── hashtag-input.tsx              # Hashtag picker for uploads
 │   ├── search-bar.tsx                 # Search by title/hashtag
+│   ├── push-notification-prompt.tsx   # Web Push opt-in prompt
 │   └── nav-bar.tsx
 │
 ├── drizzle/
