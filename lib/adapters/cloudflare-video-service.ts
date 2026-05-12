@@ -42,9 +42,8 @@ export class CloudflareVideoService implements VideoService {
   getPlaybackUrl(assetId: string): string {
     return `https://customer-${this.customerSubdomain}.cloudflarestream.com/${assetId}/manifest/video.m3u8`;
   }
-
   async deleteVideo(assetId: string): Promise<void> {
-    await fetch(
+    const response = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/stream/${assetId}`,
       {
         method: "DELETE",
@@ -53,6 +52,18 @@ export class CloudflareVideoService implements VideoService {
         },
       }
     );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(
+        `[cloudflare] Delete failed for ${assetId}: ${response.status} ${errorText}`
+      );
+      throw new Error(
+        `Cloudflare Stream delete error: ${response.status} ${response.statusText}`
+      );
+    }
+
+    console.log(`[cloudflare] Successfully deleted video ${assetId}`);
   }
 
   parseWebhook(body: string): WebhookResult {

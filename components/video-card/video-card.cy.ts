@@ -244,10 +244,11 @@ describe("VideoCard", () => {
     });
   });
 
-  describe("given the more button is clicked", () => {
+  describe("given the more button is clicked on someone else's video", () => {
     beforeEach(() => {
       given.video(mockVideo);
       given.isActive();
+      given.currentUserId("different-user");
       when.render();
       when.clickMore();
     });
@@ -258,6 +259,71 @@ describe("VideoCard", () => {
 
     it("then the report menu item should be visible", () => {
       then(get.reportMenuItem()).shouldBeVisible();
+    });
+
+    it("then the delete menu item should not exist", () => {
+      then(get.deleteMenuItem()).shouldNotExist();
+    });
+  });
+
+  describe("given the more button is clicked on the user's own video", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      given.currentUserId("author-1");
+      when.render();
+      when.clickMore();
+    });
+
+    it("then the delete menu item should be visible", () => {
+      then(get.deleteMenuItem()).shouldBeVisible();
+    });
+
+    it("then the report menu item should not exist", () => {
+      then(get.reportMenuItem()).shouldNotExist();
+    });
+  });
+
+  describe("given the delete menu item is clicked on the user's own video", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      given.currentUserId("author-1");
+      when.render();
+      when.clickMore();
+      when.clickDeleteMenuItem();
+    });
+
+    it("then the delete confirm dialog should be visible", () => {
+      then(get.deleteConfirmDialog()).shouldBeVisible();
+    });
+
+    it("then the more menu should be closed", () => {
+      then(get.moreMenu()).shouldNotExist();
+    });
+
+    it("then the delete confirm button should be visible", () => {
+      then(get.deleteConfirmButton()).shouldBeVisible();
+    });
+
+    it("then the delete cancel button should be visible", () => {
+      then(get.deleteCancelButton()).shouldBeVisible();
+    });
+  });
+
+  describe("given the delete confirm dialog is open and cancel is clicked", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      given.currentUserId("author-1");
+      when.render();
+      when.clickMore();
+      when.clickDeleteMenuItem();
+      when.clickDeleteCancel();
+    });
+
+    it("then the delete confirm dialog should not exist", () => {
+      then(get.deleteConfirmDialog()).shouldNotExist();
     });
   });
 

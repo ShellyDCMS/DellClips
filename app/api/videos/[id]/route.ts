@@ -57,23 +57,36 @@ export async function DELETE(
       return NextResponse.json({ error: "Video not found" }, { status: 404 });
     }
 
-    // Only the video owner can delete it
-    if (video.author.id !== session.user.id) {
+    // Only the video owner or an admin can delete
+    const currentUser = await databaseService.getUserById(session.user.id);
+    if (video.author.id !== session.user.id && currentUser?.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Delete from Cloudflare Stream
+    // Step 1: Delete from Cloudflare Stream
     try {
+      // Use the asset ID (Cloudflare Stream UID) for deletion
       await videoService.deleteVideo(video.videoPlaybackId);
+      console.log(
+        `[delete] Video ${video.videoPlaybackId} deleted from Cloudflare Stream`
+      );
     } catch (err) {
-      console.error("[api/videos/[id]] Failed to delete from video provider:", err);
-      // Continue deleting from DB even if provider deletion fails
+      // Log but don't fail — we still want to remove from our database
+      // The video might have already been deleted from Cloudflare,
+      // or it might be a demo/gdrive video that doesn't exist there
+      console.error(
+        "[delete] Failed to delete from video provider (continuing with DB deletion):",
+        err
+      );
     }
 
-    // Delete from database (cascades to likes, comments, reports)
+    // Step 2: Delete from database (cascades to likes, comments, reports)
     await databaseService.deleteVideo(id);
+    console.log(`[delete] Video ${id} deleted from database`);
 
     revalidatePath("/feed");
+    revalidatePath(`/profile/${session.user.id}`);
+
     return NextResponse.json({ deleted: true });
   } catch (error) {
     console.error("[api/videos/[id]] DELETE error:", error);

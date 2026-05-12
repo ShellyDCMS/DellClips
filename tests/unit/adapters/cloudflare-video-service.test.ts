@@ -104,7 +104,7 @@ describe("CloudflareVideoService", () => {
     describe("when deleting a video", () => {
       it("then it should call Cloudflare delete API", async () => {
         // given
-        mockFetch.mockResolvedValueOnce({ ok: true });
+        mockFetch.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve("") });
 
         // when
         await service.deleteVideo("video-abc123");
@@ -114,7 +114,33 @@ describe("CloudflareVideoService", () => {
           "https://api.cloudflare.com/client/v4/accounts/test-account-id/stream/video-abc123",
           expect.objectContaining({
             method: "DELETE",
+            headers: expect.objectContaining({
+              Authorization: "Bearer test-api-token",
+            }),
           })
+        );
+      });
+
+      it("then it should resolve when the API returns ok", async () => {
+        // given
+        mockFetch.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve("") });
+
+        // when / then
+        await expect(service.deleteVideo("video-abc123")).resolves.toBeUndefined();
+      });
+
+      it("then it should throw when the API returns a non-OK response", async () => {
+        // given
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          statusText: "Internal Server Error",
+          text: () => Promise.resolve("boom"),
+        });
+
+        // when / then
+        await expect(service.deleteVideo("video-abc123")).rejects.toThrow(
+          "Cloudflare Stream delete error: 500 Internal Server Error"
         );
       });
     });

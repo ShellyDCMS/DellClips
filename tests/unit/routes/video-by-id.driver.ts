@@ -17,12 +17,14 @@ const mockHasUserLikedVideo = vi.fn();
 const mockDeleteVideo = vi.fn();
 const mockGetPlaybackUrl = vi.fn();
 const mockDeleteVideoFromProvider = vi.fn();
+const mockGetUserById = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
     getVideoById: (...args: unknown[]) => mockGetVideoById(...args),
     hasUserLikedVideo: (...args: unknown[]) => mockHasUserLikedVideo(...args),
     deleteVideo: (...args: unknown[]) => mockDeleteVideo(...args),
+    getUserById: (...args: unknown[]) => mockGetUserById(...args),
   },
   videoService: {
     getPlaybackUrl: (...args: unknown[]) => mockGetPlaybackUrl(...args),
@@ -72,6 +74,9 @@ export class VideoByIdDriver {
     },
     deleteFromProviderFails: (error: Error) => {
       mockDeleteVideoFromProvider.mockRejectedValue(error);
+    },
+    currentUser: (user: { id: string; role: string } | null) => {
+      mockGetUserById.mockResolvedValue(user);
     },
   };
 
