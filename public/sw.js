@@ -1,20 +1,24 @@
-const CACHE_NAME = "dellclips-v3";
+const CACHE_NAME = "dellclips-v4";
 
-// Files to cache for offline app shell
-const STATIC_ASSETS = ["/", "/login", "/feed", "/verify", "/icons/icon.svg"];
+// Files to cache for offline app shell (static assets only)
+const STATIC_ASSETS = ["/icons/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png"];
 
-// Install: cache the app shell
+// ============================================
+// INSTALL: Cache the static assets only
+// ============================================
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
     })
   );
-  // Activate immediately
+  // Activate immediately — don't wait for old SW to finish
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
+// ============================================
+// ACTIVATE: Clean up ALL old caches
+// ============================================
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -27,19 +31,41 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first strategy for API, cache-first for static assets
+// ============================================
+// FETCH: Network-first for everything
+// Only cache static assets (icons, fonts, CSS)
+// NEVER cache pages, API calls, or video streams
+// ============================================
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Skip non-GET requests
+  // Skip non-GET requests entirely (POST, PUT, DELETE, etc.)
   if (event.request.method !== "GET") return;
 
-  // Skip API routes and auth routes — always go to network
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/api/auth/")) {
+  // ---- NEVER CACHE: Let browser handle directly ----
+
+  // API routes — must always hit the server for fresh data
+  if (url.pathname.startsWith("/api/")) return;
+
+  // Next.js data routes — server-rendered page data
+  if (url.pathname.startsWith("/_next/data/")) return;
+
+  // App pages — must always get fresh content from server
+  if (
+    url.pathname === "/" ||
+    url.pathname === "/feed" ||
+    url.pathname === "/login" ||
+    url.pathname === "/verify" ||
+    url.pathname === "/upload" ||
+    url.pathname === "/search" ||
+    url.pathname.startsWith("/profile") ||
+    url.pathname.startsWith("/admin") ||
+    url.pathname.startsWith("/confirm")
+  ) {
     return;
   }
 
-  // Skip video streams — don't cache HLS content
+  // Video streams — HLS manifests and segments
   if (
     url.pathname.includes(".m3u8") ||
     url.pathname.includes(".ts") ||
@@ -51,11 +77,43 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // For everything else: try network first, fall back to cache
+  // Google Drive video URLs
+  if (url.hostname.includes("drive.google.com")) return;
+
+  // ---- CACHE-FIRST: Only for true static assets ----
+  // Icons, fonts, CSS, JS bundles
+
+  const isStaticAsset =
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.endsWith(".woff2") ||
+    url.pathname.endsWith(".woff") ||
+    url.pathname.endsWith(".css");
+
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+
+        return fetch(event.request).then((response) => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // ---- NETWORK-FIRST: Everything else ----
+  // JS bundles from _next that aren't in /static/
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone and cache successful responses
         if (response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -65,7 +123,6 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => {
-        // Network failed — try cache
         return caches.match(event.request).then((cached) => {
           return cached || new Response("Offline", { status: 503 });
         });
@@ -115,15 +172,13 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      // If app is already open, focus it and navigate
       for (const client of clientList) {
-        if (client.url.includes("dellclips") && "focus" in client) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
           client.focus();
           client.navigate(url);
           return;
         }
       }
-      // Otherwise open a new window
       return clients.openWindow(url);
     })
   );
