@@ -44,7 +44,11 @@ export class CloudflareVideoService implements VideoService {
   }
 
   async deleteVideo(assetId: string): Promise<void> {
-    await fetch(
+    console.log(
+      `[cloudflare] DELETE request: https://api.cloudflare.com/client/v4/accounts/${this.accountId}/stream/${assetId}`
+    );
+
+    const response = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/stream/${assetId}`,
       {
         method: "DELETE",
@@ -53,6 +57,20 @@ export class CloudflareVideoService implements VideoService {
         },
       }
     );
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`[cloudflare] Delete failed:`);
+      console.error(`[cloudflare]   Status: ${response.status}`);
+      console.error(`[cloudflare]   Body: ${errorBody}`);
+      console.error(`[cloudflare]   Account ID: ${this.accountId}`);
+      console.error(`[cloudflare]   Asset ID: ${assetId}`);
+      throw new Error(
+        `Cloudflare Stream delete failed: ${response.status} — ${errorBody}`
+      );
+    }
+
+    console.log(`[cloudflare] Successfully deleted video ${assetId}`);
   }
 
   parseWebhook(body: string): WebhookResult {

@@ -123,7 +123,7 @@ describe("DELETE /api/videos/[id]", () => {
       });
     });
 
-    describe("when the user is not the video owner", () => {
+    describe("when the user is not the video owner and not an admin", () => {
       const videoId = chance.guid();
 
       beforeEach(async () => {
@@ -132,6 +132,7 @@ describe("DELETE /api/videos/[id]", () => {
           videoPlaybackId: chance.guid(),
           author: { id: chance.guid() },
         });
+        given.currentUser({ id: userId, role: "user" });
         await when.deleteVideo(videoId);
       });
 
@@ -141,6 +142,35 @@ describe("DELETE /api/videos/[id]", () => {
 
       it("then it should return Forbidden error", () => {
         expect(get.body().error).toBe("Forbidden");
+      });
+    });
+
+    describe("when the user is an admin deleting someone else's video", () => {
+      const videoId = chance.guid();
+      const playbackId = chance.guid();
+
+      beforeEach(async () => {
+        given.video({
+          id: videoId,
+          videoPlaybackId: playbackId,
+          author: { id: chance.guid() },
+        });
+        given.currentUser({ id: userId, role: "admin" });
+        given.deleteFromProviderSucceeds();
+        given.deleteVideoSucceeds();
+        await when.deleteVideo(videoId);
+      });
+
+      it("then it should return 200", () => {
+        expect(get.status()).toBe(200);
+      });
+
+      it("then it should return deleted true", () => {
+        expect(get.body().deleted).toBe(true);
+      });
+
+      it("then it should delete from database", () => {
+        expect(get.deleteVideoMock()).toHaveBeenCalledWith(videoId);
       });
     });
 
@@ -177,6 +207,10 @@ describe("DELETE /api/videos/[id]", () => {
 
       it("then it should revalidate the feed path", () => {
         expect(get.revalidatePathMock()).toHaveBeenCalledWith("/feed");
+      });
+
+      it("then it should revalidate the owner profile path", () => {
+        expect(get.revalidatePathMock()).toHaveBeenCalledWith(`/profile/${userId}`);
       });
     });
 

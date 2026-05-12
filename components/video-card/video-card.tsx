@@ -49,9 +49,34 @@ export default function VideoCard({
   const [likeCount, setLikeCount] = useState(video.likeCount);
   const [showMenu, setShowMenu] = useState(false);
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(video.isFollowingAuthor);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isOwnVideo = currentUserId === video.author.id;
+  const handleDelete = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
 
+    try {
+      const res = await fetch(`/api/videos/${video.id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setShowDeleteConfirm(false);
+        // Reload the feed to remove the deleted video
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        alert(`Failed to delete: ${data.error}`);
+      }
+    } catch (err) {
+      console.error("Failed to delete video:", err);
+      alert("Failed to delete video. Please try again.");
+    }
+
+    setIsDeleting(false);
+  };
   const handleLike = async () => {
     const newLiked = !liked;
     setLiked(newLiked);
@@ -306,22 +331,44 @@ export default function VideoCard({
             <div
               data-testid="more-menu"
               className="absolute right-14 bottom-0 bg-gray-900/95 rounded-lg shadow-xl
-                         border border-gray-700 overflow-hidden z-20 w-48 backdrop-blur-sm"
+               border border-gray-700 overflow-hidden z-20 w-48 backdrop-blur-sm"
             >
-              <button
-                data-testid="report-menu-item"
-                onClick={() => {
-                  setShowMenu(false);
-                  onReport(video.id);
-                }}
-                className="w-full px-4 py-3 text-left text-sm text-red-400
-                           hover:bg-gray-800 transition-colors flex items-center gap-2"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
-                </svg>
-                Report Video
-              </button>
+              {/* Delete — only shown for own videos */}
+              {isOwnVideo && (
+                <button
+                  data-testid="delete-menu-item"
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="w-full px-4 py-3 text-left text-sm text-red-400
+                   hover:bg-gray-800 transition-colors flex items-center gap-2
+                   border-b border-gray-800"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                  </svg>
+                  Delete Video
+                </button>
+              )}
+
+              {/* Report — shown for OTHER people's videos */}
+              {!isOwnVideo && (
+                <button
+                  data-testid="report-menu-item"
+                  onClick={() => {
+                    setShowMenu(false);
+                    onReport(video.id);
+                  }}
+                  className="w-full px-4 py-3 text-left text-sm text-red-400
+                   hover:bg-gray-800 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
+                  </svg>
+                  Report Video
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -406,6 +453,56 @@ export default function VideoCard({
           </p>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div
+          data-testid="delete-confirm-dialog"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-gray-900 rounded-xl p-6 max-w-sm mx-4 border border-gray-700">
+            <h3 className="text-white font-bold text-lg mb-2">Delete Video?</h3>
+            <p className="text-gray-400 text-sm mb-1">
+              {video.title && (
+                <span className="text-white">&ldquo;{video.title}&rdquo;</span>
+              )}
+            </p>
+            <p className="text-gray-500 text-xs mb-4">
+              This will permanently delete the video, all likes, and all comments. This
+              action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                data-testid="delete-cancel-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteConfirm(false);
+                }}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 bg-gray-800 text-gray-300 rounded-lg text-sm
+                     hover:bg-gray-700 transition-colors
+                     disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                data-testid="delete-confirm-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold
+                     hover:bg-red-700 transition-colors
+                     disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

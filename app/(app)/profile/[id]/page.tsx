@@ -1,3 +1,4 @@
+import DeleteVideoButton from "@/components/delete-video-button/delete-video-button";
 import FollowButton from "@/components/follow-button/follow-button";
 import { auth, signOut } from "@/lib/auth";
 import { databaseService, videoService } from "@/lib/services";
@@ -240,9 +241,14 @@ export default async function ProfilePage({
                 key={video.id}
                 href={`/feed?video=${video.id}`}
                 className="aspect-[9/16] bg-gray-800 rounded-lg overflow-hidden
-                     relative cursor-pointer hover:opacity-80 transition-opacity
-                     block"
+                 relative cursor-pointer hover:opacity-80 transition-opacity
+                 block"
               >
+                {/* Delete button — only on own profile */}
+                {isOwnProfile && (
+                  <DeleteVideoButton videoId={video.id} videoTitle={video.title} />
+                )}
+
                 {/* Video Thumbnail */}
                 <div className="absolute inset-0">
                   <video
@@ -255,10 +261,7 @@ export default async function ProfilePage({
                 </div>
 
                 {/* Play Icon Overlay */}
-                <div
-                  className="absolute inset-0 flex items-center justify-center
-                          bg-black/20"
-                >
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                   <svg
                     className="w-8 h-8 text-white/80"
                     fill="currentColor"
@@ -288,7 +291,7 @@ export default async function ProfilePage({
 
                 {/* Hashtags */}
                 {video.hashtags.length > 0 && (
-                  <div className="absolute top-1 left-1 right-1">
+                  <div className="absolute top-1 left-1 right-8">
                     <p className="text-blue-400 text-[8px] truncate">
                       {video.hashtags.map((t) => `#${t}`).join(" ")}
                     </p>
