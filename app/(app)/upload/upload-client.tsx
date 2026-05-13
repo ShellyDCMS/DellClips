@@ -1,11 +1,9 @@
 "use client";
 
 import { trackEvent } from "@/lib/analytics";
-import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 export default function UploadClient() {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -168,8 +166,11 @@ export default function UploadClient() {
       trackEvent("video_upload", videoData.video.id, { title, hashtags });
 
       setTimeout(() => {
-        router.push("/feed");
-        router.refresh();
+        // Hard navigation so the feed page remounts with freshly-fetched
+        // server data. router.push reuses the App Router client cache, which
+        // in an installed PWA persists across the session and would keep the
+        // stale feed.
+        window.location.assign("/feed");
       }, 2000);
     } catch (err) {
       setError((err as Error).message || "Upload failed. Please try again.");
