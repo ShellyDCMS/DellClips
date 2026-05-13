@@ -199,6 +199,27 @@ export class NeonDatabaseService implements DatabaseService {
       .where(eq(videos.videoAssetId, videoAssetId));
   }
 
+  async updateVideoDetails(
+    videoId: string,
+    data: { title?: string; description?: string; hashtags?: string[] }
+  ): Promise<void> {
+    const updates: Record<string, unknown> = {};
+    if (data.title !== undefined) updates.title = data.title;
+    if (data.description !== undefined) updates.description = data.description;
+
+    if (Object.keys(updates).length > 0) {
+      await db.update(videos).set(updates).where(eq(videos.id, videoId));
+    }
+
+    if (data.hashtags !== undefined) {
+      // Remove existing hashtags and re-attach
+      await db.delete(videoHashtags).where(eq(videoHashtags.videoId, videoId));
+      if (data.hashtags.length > 0) {
+        await this.attachHashtags(videoId, data.hashtags);
+      }
+    }
+  }
+
   async deleteVideo(videoId: string): Promise<void> {
     await db.delete(videos).where(eq(videos.id, videoId));
   }

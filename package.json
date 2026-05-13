@@ -22,7 +22,8 @@
     "seed": "npx tsx --env-file=.env.local scripts/seed-demo-videos.ts",
     "seed:users": "npx tsx --env-file=.env.local scripts/seed-user-videos.ts",
     "seed:gdrive": "npx tsx --env-file=.env.local scripts/seed-gdrive-videos.ts",
-    "seed:cf": "npx tsx --env-file=.env.local scripts/seed-cf-videos.ts"
+    "seed:cf": "npx tsx --env-file=.env.local scripts/seed-cf-videos.ts",
+    "update-logo": "npx tsx scripts/update-logo.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

@@ -1,7 +1,9 @@
 import { auth } from "@/lib/auth";
 import { databaseService, videoService } from "@/lib/services";
+import { parseHashtags } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 // ============================================
@@ -94,5 +96,65 @@ export async function DELETE(
   } catch (error) {
     console.error("[api/videos/[id]] DELETE error:", error);
     return NextResponse.json({ error: "Failed to delete video" }, { status: 500 });
+  }
+}
+
+// ============================================
+// PATCH /api/videos/:id — Edit own video details
+// ============================================
+const updateVideoSchema = z.object({
+  title: z.string().max(500).optional(),
+  description: z.string().max(2000).optional(),
+  hashtags: z.string().max(500).optional(),
+});
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const video = await databaseService.getVideoById(id);
+
+    if (!video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
+
+    if (video.author.id !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const parsed = updateVideoSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const updateData: { title?: string; description?: string; hashtags?: string[] } = {};
+    if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
+    if (parsed.data.description !== undefined)
+      updateData.description = parsed.data.description;
+    if (parsed.data.hashtags !== undefined) {
+      updateData.hashtags = parseHashtags(parsed.data.hashtags);
+    }
+
+    await databaseService.updateVideoDetails(id, updateData);
+
+    revalidatePath("/feed");
+    revalidatePath(`/profile/${session.user.id}`);
+
+    return NextResponse.json({ updated: true });
+  } catch (error) {
+    console.error("[api/videos/[id]] PATCH error:", error);
+    return NextResponse.json({ error: "Failed to update video" }, { status: 500 });
   }
 }

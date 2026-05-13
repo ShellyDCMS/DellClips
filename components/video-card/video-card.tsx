@@ -51,8 +51,57 @@ export default function VideoCard({
   const [isFollowingAuthor, setIsFollowingAuthor] = useState(video.isFollowingAuthor);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editTitle, setEditTitle] = useState(video.title || "");
+  const [editDescription, setEditDescription] = useState(video.description || "");
+  const [editHashtags, setEditHashtags] = useState(
+    video.hashtags.map((t) => `#${t}`).join(" ")
+  );
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [displayTitle, setDisplayTitle] = useState(video.title);
+  const [displayDescription, setDisplayDescription] = useState(video.description);
+  const [displayHashtags, setDisplayHashtags] = useState(video.hashtags);
 
   const isOwnVideo = currentUserId === video.author.id;
+
+  const handleEditSave = async () => {
+    if (isSavingEdit) return;
+    setIsSavingEdit(true);
+    setEditError("");
+
+    try {
+      const res = await fetch(`/api/videos/${video.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle,
+          description: editDescription,
+          hashtags: editHashtags,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save");
+      }
+
+      setDisplayTitle(editTitle || null);
+      setDisplayDescription(editDescription || null);
+      const newTags = editHashtags
+        .split(/[\s,]+/)
+        .map((t) => t.replace(/^#/, "").trim().toLowerCase())
+        .filter(Boolean);
+      setDisplayHashtags(newTags);
+      setShowEditDialog(false);
+      trackEvent("video_edit", video.id);
+    } catch (err) {
+      setEditError((err as Error).message);
+    }
+
+    setIsSavingEdit(false);
+  };
+
   const handleDelete = async () => {
     if (isDeleting) return;
     setIsDeleting(true);
@@ -78,6 +127,7 @@ export default function VideoCard({
     setIsDeleting(false);
   };
   const handleLike = async () => {
+    if (isOwnVideo) return;
     const newLiked = !liked;
     setLiked(newLiked);
     setLikeCount((prev) => (newLiked ? prev + 1 : prev - 1));
@@ -277,7 +327,8 @@ export default function VideoCard({
         <button
           data-testid="like-button"
           onClick={handleLike}
-          className="flex flex-col items-center"
+          disabled={isOwnVideo}
+          className={`flex flex-col items-center ${isOwnVideo ? "opacity-40 cursor-not-allowed" : ""}`}
         >
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center ${
@@ -333,6 +384,25 @@ export default function VideoCard({
               className="absolute right-14 bottom-0 bg-gray-900/95 rounded-lg shadow-xl
                border border-gray-700 overflow-hidden z-20 w-48 backdrop-blur-sm"
             >
+              {/* Edit — only shown for own videos */}
+              {isOwnVideo && (
+                <button
+                  data-testid="edit-menu-item"
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowEditDialog(true);
+                  }}
+                  className="w-full px-4 py-3 text-left text-sm text-white
+                   hover:bg-gray-800 transition-colors flex items-center gap-2
+                   border-b border-gray-800"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                  </svg>
+                  Edit Video
+                </button>
+              )}
+
               {/* Delete — only shown for own videos */}
               {isOwnVideo && (
                 <button
@@ -405,34 +475,34 @@ export default function VideoCard({
           </button>
 
           {/* Title */}
-          {video.title && (
+          {displayTitle && (
             <p
               data-testid="video-title"
               className="text-white text-sm mt-1 line-clamp-1"
               style={textShadow}
             >
-              {video.title}
+              {displayTitle}
             </p>
           )}
 
           {/* Description (truncated to 2 lines) */}
-          {video.description && (
+          {displayDescription && (
             <p
               data-testid="video-description"
               className="text-gray-200 text-xs mt-1 line-clamp-2"
               style={textShadow}
             >
-              {video.description}
+              {displayDescription}
             </p>
           )}
 
           {/* Hashtags (wrap, don't overflow) */}
-          {video.hashtags.length > 0 && (
+          {displayHashtags.length > 0 && (
             <div
               data-testid="hashtags"
               className="flex flex-wrap gap-1 mt-2 overflow-hidden max-h-10"
             >
-              {video.hashtags.map((tag) => (
+              {displayHashtags.map((tag) => (
                 <button
                   key={tag}
                   data-testid={`hashtag-${tag}`}
@@ -453,6 +523,98 @@ export default function VideoCard({
           </p>
         </div>
       </div>
+
+      {/* Edit Dialog */}
+      {showEditDialog && (
+        <div
+          data-testid="edit-dialog"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-gray-900 rounded-xl p-6 max-w-sm mx-4 border border-gray-700 w-full">
+            <h3 className="text-white font-bold text-lg mb-4">Edit Video</h3>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Title</label>
+                <input
+                  data-testid="edit-title-input"
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  maxLength={500}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg
+                             text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Video title"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Description</label>
+                <textarea
+                  data-testid="edit-description-input"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  maxLength={2000}
+                  rows={3}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg
+                             text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
+                             resize-none"
+                  placeholder="Video description"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Hashtags</label>
+                <input
+                  data-testid="edit-hashtags-input"
+                  type="text"
+                  value={editHashtags}
+                  onChange={(e) => setEditHashtags(e.target.value)}
+                  maxLength={500}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg
+                             text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="#tag1 #tag2"
+                />
+              </div>
+            </div>
+
+            {editError && (
+              <p data-testid="edit-error" className="text-red-400 text-sm mt-3">
+                {editError}
+              </p>
+            )}
+
+            <div className="flex gap-3 mt-4">
+              <button
+                data-testid="edit-cancel-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowEditDialog(false);
+                  setEditError("");
+                }}
+                disabled={isSavingEdit}
+                className="flex-1 py-2.5 bg-gray-800 text-gray-300 rounded-lg text-sm
+                           hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                data-testid="edit-save-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditSave();
+                }}
+                disabled={isSavingEdit}
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold
+                           hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {isSavingEdit ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (

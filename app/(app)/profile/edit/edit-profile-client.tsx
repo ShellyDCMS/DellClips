@@ -39,8 +39,8 @@ export default function EditProfileClient({ user }: Props) {
       return;
     }
 
-    if (file.size > 1 * 1024 * 1024) {
-      setError("Image must be under 1MB");
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be under 5MB");
       return;
     }
 
@@ -57,7 +57,7 @@ export default function EditProfileClient({ user }: Props) {
         const x = (img.width - size) / 2;
         const y = (img.height - size) / 2;
         ctx.drawImage(img, x, y, size, size, 0, 0, 256, 256);
-        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.6);
         setAvatarPreview(resizedDataUrl);
         setAvatarData(resizedDataUrl);
         setError("");
@@ -93,8 +93,14 @@ export default function EditProfileClient({ user }: Props) {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to save");
+        let message = "Failed to save";
+        try {
+          const data = await res.json();
+          message = data.error || message;
+        } catch {
+          // Response may not be JSON (e.g., 413 Payload Too Large)
+        }
+        throw new Error(message);
       }
 
       setSuccess("Profile updated!");

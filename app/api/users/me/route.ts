@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
@@ -59,13 +60,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Validate avatar size (base64 images can be large)
-    if (parsed.data.image && parsed.data.image.startsWith("data:")) {
-      const sizeInBytes = (parsed.data.image.length * 3) / 4;
-      const maxSizeBytes = 1 * 1024 * 1024; // 1MB max
-      if (sizeInBytes > maxSizeBytes) {
+    // Compress avatar server-side with sharp
+    let imageToSave = parsed.data.image;
+    if (imageToSave && imageToSave.startsWith("data:")) {
+      try {
+        const base64Data = imageToSave.split(",")[1];
+        const inputBuffer = Buffer.from(base64Data, "base64");
+        const compressedBuffer = await sharp(inputBuffer)
+          .resize(256, 256, { fit: "cover" })
+          .jpeg({ quality: 70 })
+          .toBuffer();
+        imageToSave = `data:image/jpeg;base64,${compressedBuffer.toString("base64")}`;
+      } catch (compressError) {
+        console.error("[api/users/me] Image compression error:", compressError);
         return NextResponse.json(
-          { error: "Profile picture must be under 1MB" },
+          { error: "Failed to process profile picture" },
           { status: 400 }
         );
       }
@@ -75,6 +84,7 @@ export async function PUT(request: NextRequest) {
       .update(users)
       .set({
         ...parsed.data,
+        ...(imageToSave !== undefined ? { image: imageToSave } : {}),
         updatedAt: new Date(),
       })
       .where(eq(users.id, session.user.id));

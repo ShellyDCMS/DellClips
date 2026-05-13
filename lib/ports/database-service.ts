@@ -61,6 +61,10 @@ export interface DatabaseService {
     duration?: number
   ): Promise<void>;
   deleteVideo(videoId: string): Promise<void>;
+  updateVideoDetails(
+    videoId: string,
+    data: { title?: string; description?: string; hashtags?: string[] }
+  ): Promise<void>;
 
   // Likes
   likeVideo(userId: string, videoId: string): Promise<void>;

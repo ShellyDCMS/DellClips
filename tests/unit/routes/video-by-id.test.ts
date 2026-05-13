@@ -238,3 +238,119 @@ describe("DELETE /api/videos/[id]", () => {
     });
   });
 });
+
+describe("PATCH /api/videos/[id]", () => {
+  const driver = new VideoByIdDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
+
+  describe("given an unauthenticated user", () => {
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.patchVideo("video-1", { title: "New" });
+    });
+
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
+    });
+  });
+
+  describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
+    beforeEach(() => {
+      given.authenticatedUser(userId);
+    });
+
+    describe("when the video does not exist", () => {
+      beforeEach(async () => {
+        given.videoNotFound();
+        await when.patchVideo("nonexistent", { title: "New" });
+      });
+
+      it("then it should return 404", () => {
+        expect(get.status()).toBe(404);
+      });
+    });
+
+    describe("when the user is not the video owner", () => {
+      const videoId = chance.guid();
+
+      beforeEach(async () => {
+        given.video({
+          id: videoId,
+          author: { id: chance.guid() },
+        });
+        await when.patchVideo(videoId, { title: "New" });
+      });
+
+      it("then it should return 403", () => {
+        expect(get.status()).toBe(403);
+      });
+    });
+
+    describe("when the user is the video owner", () => {
+      const videoId = chance.guid();
+      const newTitle = chance.sentence({ words: 3 });
+      const newDescription = chance.sentence();
+      const newHashtags = "#react #typescript";
+
+      beforeEach(async () => {
+        given.video({
+          id: videoId,
+          author: { id: userId },
+        });
+        given.updateVideoDetailsSucceeds();
+        await when.patchVideo(videoId, {
+          title: newTitle,
+          description: newDescription,
+          hashtags: newHashtags,
+        });
+      });
+
+      it("then it should return 200", () => {
+        expect(get.status()).toBe(200);
+      });
+
+      it("then it should return updated true", () => {
+        expect(get.body().updated).toBe(true);
+      });
+
+      it("then it should call updateVideoDetails with correct arguments", () => {
+        expect(get.updateVideoDetailsMock()).toHaveBeenCalledWith(
+          videoId,
+          expect.objectContaining({
+            title: newTitle,
+            description: newDescription,
+            hashtags: expect.arrayContaining(["react", "typescript"]),
+          })
+        );
+      });
+
+      it("then it should revalidate paths", () => {
+        expect(get.revalidatePathMock()).toHaveBeenCalledWith("/feed");
+      });
+    });
+
+    describe("when the database throws an error", () => {
+      const videoId = chance.guid();
+
+      beforeEach(async () => {
+        given.video({
+          id: videoId,
+          author: { id: userId },
+        });
+        given.updateVideoDetailsFails(new Error("DB error"));
+        await when.patchVideo(videoId, { title: "New" });
+      });
+
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
+
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to update video");
+      });
+    });
+  });
+});
