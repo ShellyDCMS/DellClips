@@ -7,6 +7,7 @@ type EventType =
   | "video_comment"
   | "video_report"
   | "video_upload"
+  | "video_edit"
   | "user_follow"
   | "user_unfollow"
   | "hashtag_subscribe"

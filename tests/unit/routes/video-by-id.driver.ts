@@ -1,4 +1,4 @@
-import { DELETE, GET } from "@/app/api/videos/[id]/route";
+import { DELETE, GET, PATCH } from "@/app/api/videos/[id]/route";
 import { NextRequest } from "next/server";
 import { beforeEach, vi } from "vitest";
 
@@ -18,6 +18,7 @@ const mockDeleteVideo = vi.fn();
 const mockGetPlaybackUrl = vi.fn();
 const mockDeleteVideoFromProvider = vi.fn();
 const mockGetUserById = vi.fn();
+const mockUpdateVideoDetails = vi.fn();
 
 vi.mock("@/lib/services", () => ({
   databaseService: {
@@ -25,6 +26,7 @@ vi.mock("@/lib/services", () => ({
     hasUserLikedVideo: (...args: unknown[]) => mockHasUserLikedVideo(...args),
     deleteVideo: (...args: unknown[]) => mockDeleteVideo(...args),
     getUserById: (...args: unknown[]) => mockGetUserById(...args),
+    updateVideoDetails: (...args: unknown[]) => mockUpdateVideoDetails(...args),
   },
   videoService: {
     getPlaybackUrl: (...args: unknown[]) => mockGetPlaybackUrl(...args),
@@ -78,6 +80,12 @@ export class VideoByIdDriver {
     currentUser: (user: { id: string; role: string } | null) => {
       mockGetUserById.mockResolvedValue(user);
     },
+    updateVideoDetailsSucceeds: () => {
+      mockUpdateVideoDetails.mockResolvedValue(undefined);
+    },
+    updateVideoDetailsFails: (error: Error) => {
+      mockUpdateVideoDetails.mockRejectedValue(error);
+    },
   };
 
   when = {
@@ -100,6 +108,20 @@ export class VideoByIdDriver {
       });
       this.lastBody = await this.lastResponse.json();
     },
+    patchVideo: async (id: string, body: Record<string, unknown>) => {
+      const request = new NextRequest(
+        new URL(`/api/videos/${id}`, "http://localhost:3000"),
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+      this.lastResponse = await PATCH(request, {
+        params: Promise.resolve({ id }),
+      });
+      this.lastBody = await this.lastResponse.json();
+    },
   };
 
   get = {
@@ -108,5 +130,6 @@ export class VideoByIdDriver {
     deleteVideoMock: () => mockDeleteVideo,
     deleteFromProviderMock: () => mockDeleteVideoFromProvider,
     revalidatePathMock: () => mockRevalidatePath,
+    updateVideoDetailsMock: () => mockUpdateVideoDetails,
   };
 }

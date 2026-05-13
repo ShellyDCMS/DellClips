@@ -93,8 +93,16 @@ describe("POST /api/videos/[id]/like", () => {
         await when.likeVideo(videoId);
       });
 
-      it("then it should return liked true", () => {
-        expect(get.body().liked).toBe(true);
+      it("then it should return 403", () => {
+        expect(get.status()).toBe(403);
+      });
+
+      it("then it should return self-like error message", () => {
+        expect(get.body().error).toBe("You cannot like your own video");
+      });
+
+      it("then it should not call likeVideo", () => {
+        expect(get.likeVideoMock()).not.toHaveBeenCalled();
       });
 
       it("then it should not send a notification", () => {
@@ -106,6 +114,7 @@ describe("POST /api/videos/[id]/like", () => {
       const videoId = chance.guid();
 
       beforeEach(async () => {
+        given.videoNotFound();
         given.likeFails(new Error("DB error"));
         await when.likeVideo(videoId);
       });

@@ -18,9 +18,16 @@ export async function POST(
 
     const { id } = await params;
 
-    // After the like is saved, notify the video owner:
-    await databaseService.likeVideo(session.user.id, id);
+    // Prevent self-likes
     const video = await databaseService.getVideoById(id);
+    if (video && video.author.id === session.user.id) {
+      return NextResponse.json(
+        { error: "You cannot like your own video" },
+        { status: 403 }
+      );
+    }
+
+    await databaseService.likeVideo(session.user.id, id);
     if (video && video.author.id !== session.user.id) {
       const liker = await databaseService.getUserById(session.user.id);
       await notificationService.sendToUser(video.author.id, {
