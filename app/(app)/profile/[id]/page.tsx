@@ -1,5 +1,6 @@
 import DeleteVideoButton from "@/components/delete-video-button/delete-video-button";
 import FollowButton from "@/components/follow-button/follow-button";
+import ShareQrDialog from "@/components/share-qr-dialog/share-qr-dialog";
 import { auth, signOut } from "@/lib/auth";
 import { databaseService, videoService } from "@/lib/services";
 import Image from "next/image";
@@ -133,6 +134,8 @@ export default async function ProfilePage({
               >
                 Edit Profile
               </Link>
+              {/* Share with a Friend */}
+              <ShareQrDialog />
               {/* Sign Out */}
               <form
                 action={async () => {

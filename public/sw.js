@@ -1,4 +1,4 @@
-const CACHE_NAME = "dellclips-v4";
+const CACHE_NAME = "dellclips-v5";
 
 // Files to cache for offline app shell (static assets only)
 const STATIC_ASSETS = ["/icons/icon.svg", "/icons/icon-192.png", "/icons/icon-512.png"];
