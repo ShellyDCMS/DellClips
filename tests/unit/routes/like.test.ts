@@ -4,6 +4,83 @@ import { LikeDriver } from "./like.driver";
 
 const chance = new Chance();
 
+describe("GET /api/videos/[id]/like", () => {
+  const driver = new LikeDriver();
+  const { given, when, get } = driver;
+  driver.beforeAndAfter();
+
+  describe("given an unauthenticated user", () => {
+    beforeEach(async () => {
+      given.unauthenticated();
+      await when.getLikers("video-1");
+    });
+
+    it("then it should return 401", () => {
+      expect(get.status()).toBe(401);
+    });
+  });
+
+  describe("given an authenticated user", () => {
+    const userId = chance.guid();
+
+    beforeEach(() => {
+      given.authenticatedUser(userId);
+    });
+
+    describe("when fetching likers for a video", () => {
+      const videoId = chance.guid();
+      const likers = [
+        {
+          id: chance.guid(),
+          name: chance.name(),
+          email: chance.email(),
+          avatarUrl: null,
+        },
+        {
+          id: chance.guid(),
+          name: chance.name(),
+          email: chance.email(),
+          avatarUrl: chance.url(),
+        },
+      ];
+
+      beforeEach(async () => {
+        given.likersReturns(likers);
+        await when.getLikers(videoId);
+      });
+
+      it("then it should return 200", () => {
+        expect(get.status()).toBe(200);
+      });
+
+      it("then it should return the likers array", () => {
+        expect(get.body().likers).toEqual(likers);
+      });
+
+      it("then it should call getVideoLikers with the video id", () => {
+        expect(get.getVideoLikersMock()).toHaveBeenCalledWith(videoId);
+      });
+    });
+
+    describe("when the database throws an error", () => {
+      const videoId = chance.guid();
+
+      beforeEach(async () => {
+        given.likersFails(new Error("DB error"));
+        await when.getLikers(videoId);
+      });
+
+      it("then it should return 500", () => {
+        expect(get.status()).toBe(500);
+      });
+
+      it("then it should return failure message", () => {
+        expect(get.body().error).toBe("Failed to get likers");
+      });
+    });
+  });
+});
+
 describe("POST /api/videos/[id]/like", () => {
   const driver = new LikeDriver();
   const { given, when, get } = driver;

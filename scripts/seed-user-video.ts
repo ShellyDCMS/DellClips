@@ -7,19 +7,30 @@ import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "../drizzle/schema";
 
 const sql = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql, { schema });
+const db = drizzle({ client: sql, schema });
 
+// ============================================
+// EDIT THIS ARRAY WITH YOUR ACTUAL DATA
+//
+// cloudflareUid: The Video UID from Cloudflare Stream dashboard
+//                (upload videos there first, then copy the UID)
+//
+// If you don't have Cloudflare UIDs yet, upload videos at:
+//   https://dash.cloudflare.com → Stream → Videos → Upload
+// ============================================
 const USER_VIDEOS = [
   {
     userEmail: "john.doe@dell.com",
     userName: "John Doe",
     videos: [
       {
+        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
         title: "Q4 Engineering Highlights",
         description: "A look back at our biggest achievements this quarter",
         hashtags: ["engineering", "highlights", "q4"],
       },
       {
+        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
         title: "New CI/CD Pipeline Demo",
         description: "How we cut build times by 50%",
         hashtags: ["devops", "cicd", "demo"],
@@ -31,6 +42,7 @@ const USER_VIDEOS = [
     userName: "Jane Smith",
     videos: [
       {
+        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
         title: "Sales Kickoff 2026",
         description: "Key takeaways from this year's SKO",
         hashtags: ["sales", "sko", "2026"],
@@ -42,6 +54,7 @@ const USER_VIDEOS = [
     userName: "Mike Chen",
     videos: [
       {
+        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
         title: "Customer Success Story",
         description: "How we helped Acme Corp transform their infrastructure",
         hashtags: ["customer", "success", "infrastructure"],
@@ -50,11 +63,44 @@ const USER_VIDEOS = [
   },
 ];
 
+// ============================================
+// Helper: Generate name from email (for new users)
+// ============================================
+function generateNameFromEmail(email: string): string {
+  const localPart = email.split("@")[0];
+  return (
+    localPart
+      .replace(/[._-]/g, " ")
+      .replace(/\d+/g, "")
+      .trim()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ")
+      .trim() || localPart
+  );
+}
+
 async function seed() {
+  // Validate that all Cloudflare UIDs are filled in
+  const missingUids = USER_VIDEOS.flatMap((u) =>
+    u.videos
+      .filter((v) => v.cloudflareUid.startsWith("PASTE"))
+      .map((v) => `${u.userEmail}: "${v.title}"`)
+  );
+
+  if (missingUids.length > 0) {
+    console.error("❌ The following videos are missing Cloudflare UIDs:\n");
+    missingUids.forEach((v) => console.error(`   - ${v}`));
+    console.error("\n📹 Upload videos to Cloudflare Stream first:");
+    console.error("   https://dash.cloudflare.com → Stream → Videos → Upload");
+    console.error("   Then copy each Video UID and paste it into this script.\n");
+    process.exit(1);
+  }
+
   console.log("🌱 Seeding user videos...\n");
 
   for (const userData of USER_VIDEOS) {
-    // Create user if they don't exist
+    // Find or create user
     let [user] = await db
       .select()
       .from(schema.users)
@@ -62,32 +108,52 @@ async function seed() {
       .limit(1);
 
     if (!user) {
+      const name = userData.userName || generateNameFromEmail(userData.userEmail);
       [user] = await db
         .insert(schema.users)
         .values({
           email: userData.userEmail,
-          name: userData.userName,
+          name,
           role: "user",
         })
         .returning();
-      console.log(`👤 Created user: ${userData.userEmail}`);
+      console.log(`👤 Created user: ${userData.userEmail} (${name})`);
     } else {
-      console.log(`👤 Found existing user: ${userData.userEmail}`);
+      // Update name if user exists but has no name
+      if (!user.name && userData.userName) {
+        await db
+          .update(schema.users)
+          .set({ name: userData.userName })
+          .where(eq(schema.users.id, user.id));
+        console.log(`👤 Updated name for: ${userData.userEmail}`);
+      } else {
+        console.log(`👤 Found existing user: ${userData.userEmail}`);
+      }
     }
 
-    // Create videos for this user
+    // Create videos
     for (const videoData of userData.videos) {
-      const assetId = `demo-${userData.userEmail.split("@")[0]}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      // Check if video with this Cloudflare UID already exists
+      const [existingByUid] = await db
+        .select()
+        .from(schema.videos)
+        .where(eq(schema.videos.videoAssetId, videoData.cloudflareUid))
+        .limit(1);
 
-      // Check if video already exists
-      const [existing] = await db
+      if (existingByUid) {
+        console.log(`  ⏭️  Skipping "${videoData.title}" (Cloudflare UID already in DB)`);
+        continue;
+      }
+
+      // Also check by title (prevent duplicates from re-runs with different UIDs)
+      const [existingByTitle] = await db
         .select()
         .from(schema.videos)
         .where(eq(schema.videos.title, videoData.title))
         .limit(1);
 
-      if (existing) {
-        console.log(`  ⏭️  Skipping "${videoData.title}" (already exists)`);
+      if (existingByTitle) {
+        console.log(`  ⏭️  Skipping "${videoData.title}" (title already exists)`);
         continue;
       }
 
@@ -97,10 +163,10 @@ async function seed() {
           userId: user.id,
           title: videoData.title,
           description: videoData.description,
-          videoAssetId: assetId,
-          videoPlaybackId: assetId,
+          videoAssetId: videoData.cloudflareUid,
+          videoPlaybackId: videoData.cloudflareUid,
           status: "ready",
-          duration: 30 + Math.floor(Math.random() * 30),
+          duration: 30,
         })
         .returning({ id: schema.videos.id });
 
@@ -122,7 +188,9 @@ async function seed() {
           .onConflictDoNothing();
       }
 
-      console.log(`  ✅ "${videoData.title}" → attributed to ${userData.userEmail}`);
+      console.log(
+        `  ✅ "${videoData.title}" → ${userData.userEmail} (CF: ${videoData.cloudflareUid.slice(0, 8)}...)`
+      );
     }
   }
 

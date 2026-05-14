@@ -1,6 +1,6 @@
+import { BaseTestDriver } from "@/components/__test-utils__/base-test-driver";
 import { HashtagSubscribeDriver } from "@/components/hashtag-subscribe/hashtag-subscribe.driver";
 import { SearchBarDriver } from "@/components/search-bar/search-bar.driver";
-import { BaseTestDriver } from "@/components/__test-utils__/base-test-driver";
 
 interface SearchClientDriverProps {
   initialVideos?: {
@@ -83,6 +83,10 @@ export class SearchClientDriver extends BaseTestDriver<SearchClientDriverProps> 
     ...this._when,
     searchBar: this.searchBarDriver.when,
     hashtagSubscribe: this.hashtagSubscribeDriver.when,
+    clickHashtagsTab: () => this.helper.when.click("tab-hashtags"),
+    clickPeopleTab: () => this.helper.when.click("tab-people"),
+    typeUserSearch: (text: string) => this.helper.when.type("user-search-input", text),
+    waitUntil: (checkFunction: () => any) => this.helper.when.waitUntil(checkFunction),
   };
 
   get = {
@@ -101,5 +105,14 @@ export class SearchClientDriver extends BaseTestDriver<SearchClientDriverProps> 
     searchResultsGrid: () => this.helper.get.elementByTestId("search-results-grid"),
     searchBar: this.searchBarDriver.get,
     hashtagSubscribe: this.hashtagSubscribeDriver.get,
+    hashtagCloud: () => this.helper.get.elementByTestId("hashtag-cloud"),
+    tabHashtags: () => this.helper.get.elementByTestId("tab-hashtags"),
+    tabHashtagsText: () => this.helper.get.elementsText("tab-hashtags"),
+    tabPeople: () => this.helper.get.elementByTestId("tab-people"),
+    tabPeopleText: () => this.helper.get.elementsText("tab-people"),
+    userSearchInput: () => this.helper.get.elementByTestId("user-search-input"),
+    userResults: () => this.helper.get.elementByTestId("user-results"),
+    noUserResults: () => this.helper.get.elementByTestId("no-user-results"),
+    noUserResultsText: () => this.helper.get.elementsText("no-user-results"),
   };
 }
