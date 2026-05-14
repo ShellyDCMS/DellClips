@@ -4,6 +4,29 @@ import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 // ============================================
+// GET /api/videos/:id/like — Get users who liked this video
+// ============================================
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const likers = await databaseService.getVideoLikers(id);
+
+    return NextResponse.json({ likers });
+  } catch (error) {
+    console.error("[api/videos/[id]/like] GET error:", error);
+    return NextResponse.json({ error: "Failed to get likers" }, { status: 500 });
+  }
+}
+
+// ============================================
 // POST /api/videos/:id/like — Like a video
 // ============================================
 export async function POST(

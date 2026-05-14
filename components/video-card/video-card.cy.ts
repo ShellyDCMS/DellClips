@@ -414,6 +414,75 @@ describe("VideoCard", () => {
     });
   });
 
+  describe("given the like button is clicked on the user's own video with likers", () => {
+    const likers = [
+      { id: "liker-1", name: "Alice Smith", email: "alice@dell.com", avatarUrl: null },
+      { id: "liker-2", name: "Bob Jones", email: "bob@dell.com", avatarUrl: null },
+    ];
+
+    beforeEach(() => {
+      given.video({ ...mockVideo, likeCount: 2 });
+      given.isActive();
+      given.currentUserId("author-1");
+      given.fetchReturnsLikers(likers);
+      when.render();
+      when.clickLike();
+    });
+
+    it("then the likers dialog should be visible", () => {
+      when.waitUntil(() => get.likersDialog());
+      then(get.likersDialog()).shouldBeVisible();
+    });
+
+    it("then the likers close button should be visible", () => {
+      when.waitUntil(() => get.likersCloseButton());
+      then(get.likersCloseButton()).shouldBeVisible();
+    });
+
+    it("then the onLike callback should not be called", () => {
+      then(get.onLikeSpy()).shouldNotHaveBeenCalled();
+    });
+  });
+
+  describe("given the likers dialog is open and close is clicked", () => {
+    const likers = [
+      { id: "liker-1", name: "Alice Smith", email: "alice@dell.com", avatarUrl: null },
+    ];
+
+    beforeEach(() => {
+      given.video({ ...mockVideo, likeCount: 1 });
+      given.isActive();
+      given.currentUserId("author-1");
+      given.fetchReturnsLikers(likers);
+      when.render();
+      when.clickLike();
+      when.waitUntil(() => get.likersCloseButton());
+      when.clickLikersClose();
+    });
+
+    it("then the likers dialog should not exist", () => {
+      then(get.likersDialog()).shouldNotExist();
+    });
+  });
+
+  describe("given the like button is clicked on someone else's video (not own)", () => {
+    beforeEach(() => {
+      given.video(mockVideo);
+      given.isActive();
+      given.currentUserId("different-user");
+      when.render();
+      when.clickLike();
+    });
+
+    it("then the likers dialog should not exist", () => {
+      then(get.likersDialog()).shouldNotExist();
+    });
+
+    it("then the onLike callback should be called", () => {
+      then(get.onLikeSpy()).shouldHaveBeenCalledWith("video-1", true);
+    });
+  });
+
   describe("given an active video card and the mute button is clicked", () => {
     beforeEach(() => {
       given.video(mockVideo);

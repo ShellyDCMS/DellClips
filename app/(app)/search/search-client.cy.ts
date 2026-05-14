@@ -1,7 +1,7 @@
-import { then } from "@shellygo/cypress-test-utils";
-import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { RenderFactory } from "@/components/__test-utils__/renderer";
+import { then } from "@shellygo/cypress-test-utils";
 import Chance from "chance";
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import SearchClient from "./search-client";
 import { SearchClientDriver } from "./search-client.driver";
 
@@ -161,6 +161,91 @@ describe("SearchClient", () => {
 
     it("then the hashtag header should not exist", () => {
       then(get.hashtagHeader()).shouldNotExist();
+    });
+  });
+
+  describe("given trending hashtags on default landing (hashtag cloud)", () => {
+    const trendingTags = [
+      { name: chance.word(), count: chance.integer({ min: 10, max: 50 }) },
+      { name: chance.word(), count: chance.integer({ min: 1, max: 5 }) },
+      { name: chance.word(), count: chance.integer({ min: 20, max: 100 }) },
+    ];
+
+    beforeEach(() => {
+      given.trendingHashtags(trendingTags);
+      when.render();
+    });
+
+    it("then the hashtag cloud should be visible", () => {
+      then(get.hashtagCloud()).shouldBeVisible();
+    });
+
+    it("then the hashtags tab should be visible", () => {
+      then(get.tabHashtags()).shouldBeVisible();
+    });
+
+    it("then the hashtags tab text should display 'Hashtags'", () => {
+      then(get.tabHashtagsText()).shouldInclude("Hashtags");
+    });
+
+    it("then the people tab should be visible", () => {
+      then(get.tabPeople()).shouldBeVisible();
+    });
+
+    it("then the people tab text should display 'People'", () => {
+      then(get.tabPeopleText()).shouldInclude("People");
+    });
+  });
+
+  describe("given no trending hashtags on default landing", () => {
+    beforeEach(() => {
+      given.trendingHashtags([]);
+      when.render();
+    });
+
+    it("then the hashtag cloud should not exist", () => {
+      then(get.hashtagCloud()).shouldNotExist();
+    });
+  });
+
+  describe("given the people tab is clicked", () => {
+    beforeEach(() => {
+      given.trendingHashtags([]);
+      when.render();
+      when.clickPeopleTab();
+    });
+
+    it("then the user search input should be visible", () => {
+      then(get.userSearchInput()).shouldBeVisible();
+    });
+
+    it("then the hashtag cloud should not exist", () => {
+      then(get.hashtagCloud()).shouldNotExist();
+    });
+
+    it("then the trending header should not exist", () => {
+      then(get.trendingHeader()).shouldNotExist();
+    });
+  });
+
+  describe("given the people tab is active and switching back to hashtags tab", () => {
+    const trendingTags = [
+      { name: chance.word(), count: chance.integer({ min: 1, max: 50 }) },
+    ];
+
+    beforeEach(() => {
+      given.trendingHashtags(trendingTags);
+      when.render();
+      when.clickPeopleTab();
+      when.clickHashtagsTab();
+    });
+
+    it("then the trending header should be visible", () => {
+      then(get.trendingHeader()).shouldBeVisible();
+    });
+
+    it("then the user search input should not exist", () => {
+      then(get.userSearchInput()).shouldNotExist();
     });
   });
 

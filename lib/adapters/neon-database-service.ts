@@ -260,6 +260,33 @@ export class NeonDatabaseService implements DatabaseService {
     return result.length > 0;
   }
 
+  async getVideoLikers(
+    videoId: string,
+    limit = 50
+  ): Promise<
+    { id: string; name: string | null; email: string; avatarUrl: string | null }[]
+  > {
+    const result = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        avatarUrl: users.image,
+      })
+      .from(likes)
+      .innerJoin(users, eq(likes.userId, users.id))
+      .where(eq(likes.videoId, videoId))
+      .orderBy(desc(likes.createdAt))
+      .limit(limit);
+
+    return result.map((r) => ({
+      id: r.id,
+      name: r.name || displayNameFromEmail(r.email),
+      email: r.email,
+      avatarUrl: r.avatarUrl,
+    }));
+  }
+
   // ============================================
   // COMMENTS
   // ============================================
@@ -681,6 +708,33 @@ export class NeonDatabaseService implements DatabaseService {
       .limit(1);
 
     return result[0] || null;
+  }
+
+  async searchUsers(
+    query: string,
+    limit = 20
+  ): Promise<
+    { id: string; name: string | null; email: string; avatarUrl: string | null }[]
+  > {
+    const searchTerm = `%${query.toLowerCase()}%`;
+
+    const result = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        avatarUrl: users.image,
+      })
+      .from(users)
+      .where(or(ilike(users.name, searchTerm), ilike(users.email, searchTerm)))
+      .limit(limit);
+
+    return result.map((r) => ({
+      id: r.id,
+      name: r.name || displayNameFromEmail(r.email),
+      email: r.email,
+      avatarUrl: r.avatarUrl,
+    }));
   }
 
   // ============================================

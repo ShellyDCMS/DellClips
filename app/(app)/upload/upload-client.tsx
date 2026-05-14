@@ -187,7 +187,8 @@ export default function UploadClient() {
   return (
     <div
       data-testid="upload-container"
-      className="h-full overflow-y-auto px-4 pt-8 pb-20"
+      className="h-full overflow-y-auto px-4 pb-20"
+      style={{ paddingTop: "max(32px, calc(env(safe-area-inset-top, 0px) + 16px))" }}
     >
       <h1
         data-testid="upload-title"

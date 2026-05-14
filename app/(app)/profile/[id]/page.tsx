@@ -51,7 +51,10 @@ export default async function ProfilePage({
     : [];
 
   return (
-    <div className="h-full flex flex-col pt-12 px-4 overflow-y-auto pb-20">
+    <div
+      className="h-full flex flex-col px-4 overflow-y-auto pb-20"
+      style={{ paddingTop: "max(48px, calc(env(safe-area-inset-top, 0px) + 16px))" }}
+    >
       {/* Avatar */}
       <div className="flex flex-col items-center">
         <div

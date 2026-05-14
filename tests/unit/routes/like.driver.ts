@@ -1,4 +1,4 @@
-import { DELETE, POST } from "@/app/api/videos/[id]/like/route";
+import { DELETE, GET, POST } from "@/app/api/videos/[id]/like/route";
 import { NextRequest } from "next/server";
 import { beforeEach, vi } from "vitest";
 
@@ -16,6 +16,7 @@ const mockGetVideoById = vi.fn();
 const mockGetUserById = vi.fn();
 const mockLikeVideo = vi.fn();
 const mockUnlikeVideo = vi.fn();
+const mockGetVideoLikers = vi.fn();
 const mockSendToUser = vi.fn();
 
 vi.mock("@/lib/services", () => ({
@@ -24,6 +25,7 @@ vi.mock("@/lib/services", () => ({
     getUserById: (...args: unknown[]) => mockGetUserById(...args),
     likeVideo: (...args: unknown[]) => mockLikeVideo(...args),
     unlikeVideo: (...args: unknown[]) => mockUnlikeVideo(...args),
+    getVideoLikers: (...args: unknown[]) => mockGetVideoLikers(...args),
   },
   notificationService: {
     sendToUser: (...args: unknown[]) => mockSendToUser(...args),
@@ -73,9 +75,25 @@ export class LikeDriver {
     unlikeFails: (error: Error) => {
       mockUnlikeVideo.mockRejectedValue(error);
     },
+    likersReturns: (likers: any[]) => {
+      mockGetVideoLikers.mockResolvedValue(likers);
+    },
+    likersFails: (error: Error) => {
+      mockGetVideoLikers.mockRejectedValue(error);
+    },
   };
 
   when = {
+    getLikers: async (videoId: string) => {
+      const request = new NextRequest(
+        new URL(`/api/videos/${videoId}/like`, "http://localhost:3000"),
+        { method: "GET" }
+      );
+      this.lastResponse = await GET(request, {
+        params: Promise.resolve({ id: videoId }),
+      });
+      this.lastBody = await this.lastResponse.json();
+    },
     likeVideo: async (videoId: string) => {
       const request = new NextRequest(
         new URL(`/api/videos/${videoId}/like`, "http://localhost:3000"),
@@ -103,6 +121,7 @@ export class LikeDriver {
     body: () => this.lastBody,
     likeVideoMock: () => mockLikeVideo,
     unlikeVideoMock: () => mockUnlikeVideo,
+    getVideoLikersMock: () => mockGetVideoLikers,
     sendToUserMock: () => mockSendToUser,
   };
 }

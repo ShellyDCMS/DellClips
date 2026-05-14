@@ -56,7 +56,8 @@ export default function AnalyticsClient() {
   return (
     <div
       data-testid="analytics-container"
-      className="h-full overflow-y-auto px-4 pt-12 pb-20"
+      className="h-full overflow-y-auto px-4 pb-20"
+      style={{ paddingTop: "max(48px, calc(env(safe-area-inset-top, 0px) + 16px))" }}
     >
       <div className="flex items-center justify-between mb-6">
         <h1 data-testid="analytics-title" className="text-white text-xl font-bold">

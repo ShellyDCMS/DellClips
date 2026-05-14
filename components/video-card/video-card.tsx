@@ -52,6 +52,11 @@ export default function VideoCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showLikers, setShowLikers] = useState(false);
+  const [likers, setLikers] = useState<
+    { id: string; name: string | null; email: string; avatarUrl: string | null }[]
+  >([]);
+  const [isLoadingLikers, setIsLoadingLikers] = useState(false);
   const [editTitle, setEditTitle] = useState(video.title || "");
   const [editDescription, setEditDescription] = useState(video.description || "");
   const [editHashtags, setEditHashtags] = useState(
@@ -126,6 +131,21 @@ export default function VideoCard({
 
     setIsDeleting(false);
   };
+  const handleShowLikers = async () => {
+    setShowLikers(true);
+    setIsLoadingLikers(true);
+    try {
+      const res = await fetch(`/api/videos/${video.id}/like`);
+      if (res.ok) {
+        const data = await res.json();
+        setLikers(data.likers || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch likers:", err);
+    }
+    setIsLoadingLikers(false);
+  };
+
   const handleLike = async () => {
     if (isOwnVideo) return;
     const newLiked = !liked;
@@ -323,20 +343,19 @@ export default function VideoCard({
           )}
         </div>
 
-        {/* Like */}
+        {/* Like / View Likers */}
         <button
           data-testid="like-button"
-          onClick={handleLike}
-          disabled={isOwnVideo}
-          className={`flex flex-col items-center ${isOwnVideo ? "opacity-40 cursor-not-allowed" : ""}`}
+          onClick={isOwnVideo ? handleShowLikers : handleLike}
+          className="flex flex-col items-center"
         >
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              liked ? "text-red-500" : "text-white"
+              isOwnVideo ? "text-pink-400" : liked ? "text-red-500" : "text-white"
             }`}
           >
             <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-              {liked ? (
+              {liked || isOwnVideo ? (
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               ) : (
                 <path d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z" />
@@ -611,6 +630,85 @@ export default function VideoCard({
               >
                 {isSavingEdit ? "Saving..." : "Save"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Likers Dialog */}
+      {showLikers && (
+        <div
+          data-testid="likers-dialog"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowLikers(false);
+          }}
+        >
+          <div
+            className="bg-gray-900 rounded-t-2xl w-full max-w-lg max-h-[60vh] flex flex-col
+                       border-t border-gray-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+              <h3 className="text-white font-bold text-base">
+                {likeCount} {likeCount === 1 ? "Like" : "Likes"}
+              </h3>
+              <button
+                data-testid="likers-close-button"
+                onClick={() => setShowLikers(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 px-4 py-2">
+              {isLoadingLikers ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : likers.length === 0 ? (
+                <p className="text-gray-500 text-sm text-center py-8">No likes yet</p>
+              ) : (
+                <div className="space-y-1">
+                  {likers.map((liker) => (
+                    <button
+                      key={liker.id}
+                      onClick={() => {
+                        setShowLikers(false);
+                        onProfileClick(liker.id);
+                      }}
+                      className="flex items-center gap-3 w-full px-2 py-2.5 rounded-lg
+                                 hover:bg-gray-800 transition-colors"
+                    >
+                      <div
+                        className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center
+                                      text-white font-bold text-xs flex-shrink-0"
+                      >
+                        {liker.avatarUrl ? (
+                          <Image
+                            src={liker.avatarUrl}
+                            alt={liker.name || ""}
+                            width={36}
+                            height={36}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          (liker.name?.charAt(0) || liker.email.charAt(0)).toUpperCase()
+                        )}
+                      </div>
+                      <div className="text-left min-w-0">
+                        <p className="text-white text-sm font-medium truncate">
+                          {liker.name || liker.email.split("@")[0]}
+                        </p>
+                        <p className="text-gray-500 text-xs truncate">{liker.email}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

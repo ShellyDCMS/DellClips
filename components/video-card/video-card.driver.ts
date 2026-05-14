@@ -83,6 +83,21 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
         })
       );
     },
+    fetchReturnsLikers: (
+      likers: {
+        id: string;
+        name: string | null;
+        email: string;
+        avatarUrl: string | null;
+      }[]
+    ) => {
+      (window.fetch as any).resolves(
+        new Response(JSON.stringify({ likers }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    },
   };
 
   when = {
@@ -99,6 +114,8 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     clickAuthorName: () => this.helper.when.click("author-name"),
     clickHashtag: (tag: string) => this.helper.when.click(`hashtag-${tag}`),
     clickQuickFollow: () => this.helper.when.click("quick-follow-button"),
+    clickLikersClose: () => this.helper.when.click("likers-close-button"),
+    waitUntil: (checkFunction: () => any) => this.helper.when.waitUntil(checkFunction),
   };
 
   get = {
@@ -130,5 +147,7 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
     quickFollowButton: () => this.helper.get.elementByTestId("quick-follow-button"),
     quickFollowButtonText: () => this.helper.get.elementsText("quick-follow-button"),
     authorAvatar: () => this.helper.get.elementByTestId("author-avatar"),
+    likersDialog: () => this.helper.get.elementByTestId("likers-dialog"),
+    likersCloseButton: () => this.helper.get.elementByTestId("likers-close-button"),
   };
 }
