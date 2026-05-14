@@ -20,44 +20,15 @@ const db = drizzle({ client: sql, schema });
 // ============================================
 const USER_VIDEOS = [
   {
-    userEmail: "john.doe@dell.com",
-    userName: "John Doe",
+    userEmail: "Kevin.Mcmahon@Dell.com",
+    userName: "Kevin Mcmahon",
     videos: [
       {
-        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
-        title: "Q4 Engineering Highlights",
-        description: "A look back at our biggest achievements this quarter",
-        hashtags: ["engineering", "highlights", "q4"],
-      },
-      {
-        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
-        title: "New CI/CD Pipeline Demo",
-        description: "How we cut build times by 50%",
-        hashtags: ["devops", "cicd", "demo"],
-      },
-    ],
-  },
-  {
-    userEmail: "jane.smith@dell.com",
-    userName: "Jane Smith",
-    videos: [
-      {
-        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
-        title: "Sales Kickoff 2026",
-        description: "Key takeaways from this year's SKO",
-        hashtags: ["sales", "sko", "2026"],
-      },
-    ],
-  },
-  {
-    userEmail: "mike.chen@dell.com",
-    userName: "Mike Chen",
-    videos: [
-      {
-        cloudflareUid: "PASTE_CLOUDFLARE_UID_HERE",
-        title: "Customer Success Story",
-        description: "How we helped Acme Corp transform their infrastructure",
-        hashtags: ["customer", "success", "infrastructure"],
+        cloudflareUid: "0576cd43a59c4c96a48db6bf1bda3683",
+        title: "Contry name and time difference from country code",
+        description:
+          "Getting contry name and time difference from country code automatically",
+        hashtags: ["supply-chain"],
       },
     ],
   },
