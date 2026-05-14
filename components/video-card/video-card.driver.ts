@@ -91,7 +91,7 @@ export class VideoCardDriver extends BaseTestDriver<VideoCardDriverProps> {
         avatarUrl: string | null;
       }[]
     ) => {
-      this.helper.given.stubObjectMethod(window, "fetch").resolves(
+      (window.fetch as any).resolves(
         new Response(JSON.stringify({ likers }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
