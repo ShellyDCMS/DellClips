@@ -118,7 +118,11 @@ export default function EditProfileClient({ user }: Props) {
   const initial = name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase();
 
   return (
-    <div data-testid="edit-profile" className="h-full overflow-y-auto px-4 pt-12 pb-20">
+    <div
+      data-testid="edit-profile"
+      className="h-full overflow-y-auto px-4 pb-20"
+      style={{ paddingTop: "max(48px, calc(env(safe-area-inset-top, 0px) + 16px))" }}
+    >
       <h1
         data-testid="edit-profile-title"
         className="text-white text-xl font-bold mb-6 text-center"

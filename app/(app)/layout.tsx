@@ -6,7 +6,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-black">
-      <main className="h-[calc(100vh-56px)]">{children}</main>
+      <main
+        className="overflow-hidden"
+        style={{
+          height: "calc(100dvh - 56px - env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        {children}
+      </main>
       <NavBar />
     </div>
   );

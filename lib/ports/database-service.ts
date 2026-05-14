@@ -70,6 +70,12 @@ export interface DatabaseService {
   likeVideo(userId: string, videoId: string): Promise<void>;
   unlikeVideo(userId: string, videoId: string): Promise<void>;
   hasUserLikedVideo(userId: string, videoId: string): Promise<boolean>;
+  getVideoLikers(
+    videoId: string,
+    limit?: number
+  ): Promise<
+    { id: string; name: string | null; email: string; avatarUrl: string | null }[]
+  >;
 
   // Comments
   getCommentsByVideoId(videoId: string): Promise<
@@ -141,6 +147,12 @@ export interface DatabaseService {
   getUserByEmail(
     email: string
   ): Promise<{ id: string; email: string; name: string | null } | null>;
+  searchUsers(
+    query: string,
+    limit?: number
+  ): Promise<
+    { id: string; name: string | null; email: string; avatarUrl: string | null }[]
+  >;
 
   // Hashtag Subscriptions
   subscribeToHashtag(userId: string, hashtagName: string): Promise<void>;
